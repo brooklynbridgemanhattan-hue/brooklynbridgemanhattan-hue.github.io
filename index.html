@@ -55,7 +55,14 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .row button.on{background:var(--ink);color:var(--paper)}
 .row button:not(.on){background:transparent;color:var(--ink);border:2px solid var(--line)}
 #result{display:none;margin-top:6px}
-#result img{width:100%;border:1px solid var(--line);display:block;margin-bottom:10px}
+#result img{width:100%;border:1px solid var(--line);display:block;margin-bottom:10px;cursor:zoom-in}
+/* full-screen photo viewer: tap to open, pinch / double-tap to zoom (like Google Photos) */
+.viewer{position:fixed;inset:0;background:#000;z-index:70;touch-action:none;overflow:hidden;user-select:none;-webkit-user-select:none}
+.viewer img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;-webkit-user-drag:none;pointer-events:none}
+.viewer img.anim{transition:transform .22s ease-out}
+.vclose{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.35);z-index:2}
+.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;background:#2F7A55;color:#fff;font-size:17px;font-weight:800;padding:12px 26px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.3);pointer-events:none}
+.toast.ng{background:#B8432C}
 .msg{font-size:13px;color:var(--soft);margin:6px 0}
 .back{background:transparent;color:var(--ink);padding:6px 0;font-size:14px;margin-bottom:8px}
 .note{font-size:12px;color:var(--soft);margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
@@ -167,6 +174,9 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
  <input type="file" class="vh" id="fBefore" accept="image/*" capture="environment" tabindex="-1">
  <input type="file" class="vh" id="fAfter" accept="image/*" capture="environment" tabindex="-1" disabled>
 </div>
+
+<div class="viewer" id="viewer" hidden><img id="vImg" alt="比較写真(拡大)"><button class="vclose" id="vClose" aria-label="閉じる">✕</button></div>
+<div class="toast" id="toast" hidden role="status"></div>
 
 <div class="med" id="med" hidden>
  <p class="mt">交換する機器を枠で囲んでください<small>枠の中は施工前後で比べません。新しい機器が大きくなる場合は、少し大きめに囲んでください。枠の中を引っぱると移動、角の丸で大きさを変えられます。</small></p>
@@ -618,6 +628,72 @@ async function make(){
  c.toBlob(b=>{lastBlob=b;$("out").src=blobUrl(b);$("result").style.display="block";$("saveMsg").textContent="";$("result").scrollIntoView({behavior:"smooth",block:"start"});},"image/jpeg",0.9);
 }
 $("bMake").onclick=make;
+let toastT=null;
+function toast(t,ng){const e=$("toast");e.textContent=t;e.classList.toggle("ng",!!ng);e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{e.hidden=true;},2200);}
+function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
+
+/* ---------- photo viewer ---------- */
+const vw={s:1,fit:1,x:0,y:0,nw:1,nh:1,pts:new Map(),pinch:null,pan:null,lastTap:0,tapX:0,tapY:0,down:null};
+function openViewer(src){const im=$("vImg");$("viewer").hidden=false;im.onload=()=>{vw.nw=im.naturalWidth;vw.nh=im.naturalHeight;im.style.width=vw.nw+"px";im.style.height=vw.nh+"px";vFit(false);};im.src=src;if(im.complete&&im.naturalWidth)im.onload();}
+function closeViewer(){$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
+function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
+function vApply(anim){
+ const [W,H]=vSize(), w=vw.nw*vw.s, h=vw.nh*vw.s;
+ vw.x=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,vw.x));
+ vw.y=h<=H?(H-h)/2:Math.min(0,Math.max(H-h,vw.y));
+ const im=$("vImg");im.classList.toggle("anim",!!anim);
+ im.style.transform="translate("+vw.x+"px,"+vw.y+"px) scale("+vw.s+")";
+}
+// Zoom to scale s keeping screen point (px,py) still.
+function vZoomAt(s,px,py,anim){const cx=(px-vw.x)/vw.s, cy=(py-vw.y)/vw.s;vw.s=s;vw.x=px-cx*s;vw.y=py-cy*s;vApply(anim);}
+const vMax=()=>Math.max(vw.fit*6,1.5);
+$("viewer").addEventListener("pointerdown",e=>{
+ if(e.target.id==="vClose")return;
+ $("viewer").setPointerCapture(e.pointerId);
+ vw.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(vw.pts.size===2){
+  const [a,b]=[...vw.pts.values()];
+  vw.pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,s:vw.s,mx:(a.x+b.x)/2,my:(a.y+b.y)/2,x:vw.x,y:vw.y};vw.pan=null;vw.down=null;
+ }else if(vw.pts.size===1){
+  vw.pan={x0:e.clientX,y0:e.clientY,x:vw.x,y:vw.y};vw.down={x:e.clientX,y:e.clientY,t:performance.now()};
+ }
+});
+$("viewer").addEventListener("pointermove",e=>{
+ if(!vw.pts.has(e.pointerId))return;
+ vw.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(vw.pinch&&vw.pts.size>=2){
+  const [a,b]=[...vw.pts.values()], P=vw.pinch;
+  const s=Math.min(vMax(),Math.max(vw.fit*0.8,P.s*Math.hypot(a.x-b.x,a.y-b.y)/P.d));
+  const mx=(a.x+b.x)/2, my=(a.y+b.y)/2, cx=(P.mx-P.x)/P.s, cy=(P.my-P.y)/P.s;
+  vw.s=s;vw.x=mx-cx*s;vw.y=my-cy*s;vApply(false);
+ }else if(vw.pan){
+  vw.x=vw.pan.x+(e.clientX-vw.pan.x0);vw.y=vw.pan.y+(e.clientY-vw.pan.y0);vApply(false);
+ }
+});
+function vUp(e){
+ if(!vw.pts.has(e.pointerId))return;
+ vw.pts.delete(e.pointerId);
+ if(vw.pts.size<2&&vw.pinch){vw.pinch=null;if(vw.s<vw.fit)vFit(true);
+  if(vw.pts.size===1){const p=[...vw.pts.values()][0];vw.pan={x0:p.x,y0:p.y,x:vw.x,y:vw.y};}return;}
+ if(vw.pts.size===0){
+  vw.pan=null;
+  const d=vw.down;vw.down=null;
+  if(d&&Math.hypot(e.clientX-d.x,e.clientY-d.y)<12&&performance.now()-d.t<300){
+   const now=performance.now();
+   if(now-vw.lastTap<320&&Math.hypot(e.clientX-vw.tapX,e.clientY-vw.tapY)<40){
+    // Double tap: zoom in where tapped, or back to the whole photo.
+    vw.lastTap=0;
+    if(vw.s>vw.fit*1.05)vFit(true);else vZoomAt(Math.min(vMax(),vw.fit*2.5),e.clientX,e.clientY,true);
+   }else{vw.lastTap=now;vw.tapX=e.clientX;vw.tapY=e.clientY;}
+  }
+ }
+}
+$("viewer").addEventListener("pointerup",vUp);$("viewer").addEventListener("pointercancel",vUp);
+$("viewer").addEventListener("wheel",e=>{e.preventDefault();vZoomAt(Math.min(vMax(),Math.max(vw.fit,vw.s*(e.deltaY<0?1.15:1/1.15))),e.clientX,e.clientY,false);},{passive:false});
+$("vClose").onclick=closeViewer;
+window.addEventListener("resize",()=>{if(!$("viewer").hidden)vFit(false);});
+$("out").onclick=()=>{if($("out").src)openViewer($("out").src);};
 
 function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
 async function saveBlob(blob,kind,t){
@@ -629,11 +705,11 @@ async function saveBlob(blob,kind,t){
  const android=/Android/i.test(navigator.userAgent);
  if(!android&&navigator.canShare&&navigator.canShare({files:[file]})){
   try{await navigator.share({files:[file]});$("saveMsg").textContent="共有メニューから「画像を保存」を選ぶと写真アプリに保存されます。";}
-  catch(err){$("saveMsg").textContent=(err&&err.name==="AbortError")?"保存をやめました。":"保存できませんでした。写真を長押しして保存してください。";}
+  catch(err){if(err&&err.name==="AbortError")$("saveMsg").textContent="保存をやめました。";else saved(false,"保存できませんでした。写真を長押しして保存してください。");}
   return;
  }
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
- $("saveMsg").textContent="スマホに保存しました(Downloadフォルダ):"+name;
+ saved(true,"保存しました");
 }
 $("bSave").onclick=()=>{if(lastBlob)saveBlob(lastBlob,"施工前後",Date.now());};
 $("svB").onclick=()=>{if(job.before)saveBlob(job.before,"施工前",job.beforeAt);};
