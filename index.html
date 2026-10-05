@@ -133,11 +133,17 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .camhud{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none}
 .cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(0,0,0,.5);display:flex;flex-direction:column;gap:6px;padding:6px 12px}
 .cam .camhud .shoot .shot{flex:4;font-size:26px}
+.cam .camhud .shoot .cancel{font-size:22px}
+.cam .camhud .bar #zoomRow span{font-size:17px;font-weight:800}
+.cam .camhud .bar #zoomRow b{font-size:20px}
+.cam.clean .cmask{display:none!important}
 /* sideways: the tool buttons stand in a column in the free space on the right */
-.cam .camhud .tools{position:absolute;right:8px;top:8px;flex-direction:column;justify-content:center;gap:8px;pointer-events:auto}
-.cam .camhud .tools button{flex:none;padding:10px 6px;font-size:13px;line-height:1.3}
+.cam .camhud .tools{position:absolute;right:8px;top:8px;display:grid;grid-template-columns:1fr 1fr;align-content:center;gap:8px;pointer-events:auto}
+.cam .tools .sh{display:none}
+.cam .camhud .tools .sh{display:inline}
+.cam .camhud .tools .lg{display:none}
+.cam .camhud .tools button{flex:none;padding:10px 4px;font-size:19px;font-weight:800;line-height:1.2;white-space:nowrap}
 .cam .camhud .tools .fl{border-radius:8px}
-.cam .camhud .tools button{padding:6px 4px;font-size:12px}
 .cam .camhud .bar .r{font-size:12px}
 .cam .camhud .shoot button{padding:8px 6px;font-size:15px}
 .camhud .flab{top:10px}
@@ -162,7 +168,8 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .mbtns .o2{background:transparent;color:#eee;border:2px solid #666;font-size:14px}
 .cam .bar{background:#111;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
 .cam .bar .r{display:flex;align-items:center;gap:10px;font-size:13px}
-.cam .zr b{min-width:3.2em;text-align:right;font-size:15px;font-variant-numeric:tabular-nums}
+.cam .zr span{font-size:15px;font-weight:700}
+.cam .zr b{min-width:3.2em;text-align:right;font-size:18px;font-variant-numeric:tabular-nums}
 .cam .fl{flex:none;font-size:14px;font-weight:800;padding:8px 12px;background:#222;color:#eee;border:1px solid #444;border-radius:999px}
 .cam .fl.on{background:#FACC15;color:#1C2B3A;border-color:#FACC15}
 .cam .fl.auto{background:#1C2B3A;color:#FACC15;border-color:#FACC15}
@@ -173,7 +180,7 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .cam .tools button.on{background:#E5AE00;color:#1C2B3A;border-color:#E5AE00}
 .cam .shoot{display:flex;gap:10px}
 .cam .shoot button{flex:1}
-.cam .shoot .cancel{background:transparent;color:#eee;border:2px solid #666}
+.cam .shoot .cancel{background:transparent;color:#eee;border:2px solid #666;font-size:19px}
 .cam .shoot .shot{flex:2;font-size:22px}
 .cam .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;transition:opacity .25s}
 .cam .flash.on{opacity:.7;transition:none}
@@ -273,9 +280,9 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <div class="r" id="opRow"><span>重ね具合</span><input type="range" id="op" min="0" max="80" value="35"></div>
   <div class="tools">
    <button id="tGrid">グリッド</button>
-   <button id="tGhost" class="on">施工前を重ねる</button>
-   <button id="tLine">線で重ねる</button>
-   <button id="tDiff" class="on">色で判定</button>
+   <button id="tGhost" class="on"><span class="lg">施工前を重ねる</span><span class="sh">重ねる</span></button>
+   <button id="tLine"><span class="lg">線で重ねる</span><span class="sh">線表示</span></button>
+   <button id="tDiff" class="on"><span class="lg">色で判定</span><span class="sh">色判定</span></button>
    <button id="tAllOff">表示オフ</button>
   </div>
   <div class="shoot"><button class="cancel" id="cCancel">やめる</button><button class="y shot" id="cShot">撮影</button></div>
@@ -486,7 +493,7 @@ async function startCam(mode){
  const after=mode==="after";
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
  $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff","tAllOff"].forEach(id=>$(id).style.display=after?"":"none");
- savedLook=null;$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");
+ savedLook=null;$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");
  $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
  $("cam").classList.toggle("judging",after&&$("tDiff").classList.contains("on"));
  setFrame("na","比べています…");lvlShown=null;
@@ -526,10 +533,10 @@ function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost
 let savedLook=null;
 const LOOK=["tGrid","tGhost","tLine","tDiff"];
 $("tAllOff").onclick=()=>{
- if(!savedLook){savedLook=LOOK.filter(id=>$(id).classList.contains("on"));savedLook.forEach(id=>$(id).click());savedLook=savedLook.length?savedLook:[];$("tAllOff").textContent="元に戻す";$("tAllOff").classList.add("on");}
- else{const back=savedLook;savedLook=null;back.forEach(id=>{if(!$(id).classList.contains("on"))$(id).click();});$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");}
+ if(!savedLook){savedLook=LOOK.filter(id=>$(id).classList.contains("on"));savedLook.forEach(id=>$(id).click());savedLook=savedLook.length?savedLook:[];$("tAllOff").textContent="元に戻す";$("tAllOff").classList.add("on");$("cam").classList.add("clean");}
+ else{const back=savedLook;savedLook=null;back.forEach(id=>{if(!$(id).classList.contains("on"))$(id).click();});$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");}
 };
-LOOK.forEach(id=>$(id).addEventListener("click",e=>{if(savedLook&&e.isTrusted){savedLook=null;$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");}}));
+LOOK.forEach(id=>$(id).addEventListener("click",e=>{if(savedLook&&e.isTrusted){savedLook=null;$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");}}));
 $("tLine").onclick=async()=>{const on=$("tLine").classList.toggle("on");$("ghost").src=on?await outlineSrc():photoSrc;ghostLook();};
 let photoSrc="", outlineFor=null, outlineUrl="";
 // The before photo as bright outlines only, so a new unit doesn't hide behind the old one.
