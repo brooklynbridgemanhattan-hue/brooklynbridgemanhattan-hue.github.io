@@ -75,21 +75,33 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
  linear-gradient(to bottom,transparent calc(33.333% - 1px),rgba(255,255,255,.7) calc(33.333% - 1px),rgba(255,255,255,.7) 33.333%,transparent 33.333%,transparent calc(66.666% - 1px),rgba(255,255,255,.7) calc(66.666% - 1px),rgba(255,255,255,.7) 66.666%,transparent 66.666%)}
 .grid::after{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,255,255,.8);border-radius:50%}
 .grid.on{display:block}
-.panel{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:8px;right:8px;background:rgba(0,0,0,.55);padding:8px 10px 10px;z-index:3;display:none;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-.panel .big{font-size:21px;font-weight:800;line-height:1.3;margin-bottom:6px}
-.panel .big.ok{color:#6CE59E}.panel .big.ng{color:#FFD24A}.panel .big.na{color:#ddd}
-/* 2x2 grid of checks: small label + value on top, big instruction below */
-.chk{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
-.chk .it{min-width:0;line-height:1.25}
-.chk .lb{display:block;font-size:12.5px;color:#cfd6dc;font-variant-numeric:tabular-nums}
-.chk .ac{display:block;font-size:20px;font-weight:800}
-.chk .it.good .ac{color:#6CE59E;font-size:17px}
-.chk .it.bad .ac{color:#FFD24A}
+/* match frame: green = lined up, yellow = close, red = off, grey = can't compare */
+.frame{position:absolute;inset:0;border:10px solid rgba(255,255,255,.35);pointer-events:none;z-index:3;transition:border-color .15s;display:none}
+.frame .fl{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;padding:4px 16px;border-radius:999px;background:rgba(255,255,255,.85);color:#111;white-space:nowrap}
+.frame.ok{border-color:#22C55E}.frame.ok .fl{background:#22C55E;color:#04210f}
+.frame.near{border-color:#FACC15}.frame.near .fl{background:#FACC15;color:#2b2200}
+.frame.far{border-color:#EF4444}.frame.far .fl{background:#EF4444;color:#fff}
+.cmask{position:absolute;border:2px dashed rgba(255,255,255,.9);background:rgba(0,0,0,.28);z-index:2;pointer-events:none}
+.cmask span,.tmask span{position:absolute;left:4px;top:2px;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
+.tmask{position:absolute;border:2px dashed #FACC15;background:rgba(250,204,21,.12);z-index:1;pointer-events:none}
+.diffbox .big.near{color:#FACC15}.diffbox .big.far{color:#FF8A7A}
+/* box editor */
+.med{position:fixed;inset:0;z-index:60;background:#111;color:#fff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 0 calc(10px + env(safe-area-inset-bottom,0px))}
+.med .mt{margin:0 16px 8px;font-size:16px;font-weight:800;line-height:1.4}
+.med .mt small{display:block;font-size:12.5px;font-weight:400;color:#c9d2da}
+.mstage{position:relative;flex:1;min-height:0}
+#mImg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.mwrap{position:absolute;overflow:hidden;touch-action:none}
+.mrect{position:absolute;border:3px solid #FACC15;background:rgba(250,204,21,.16);box-shadow:0 0 0 9999px rgba(0,0,0,.4)}
+.mrect i{position:absolute;width:24px;height:24px;border-radius:50%;background:#FACC15;border:2px solid #111}
+.mrect .tl{left:-13px;top:-13px}.mrect .tr{right:-13px;top:-13px}.mrect .bl{left:-13px;bottom:-13px}.mrect .br{right:-13px;bottom:-13px}
+.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 16px 0}
+.mbtns .o2{background:transparent;color:#eee;border:2px solid #666;font-size:14px}
 .cam .bar{background:#111;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
 .cam .bar .r{display:flex;align-items:center;gap:10px;font-size:13px}
 .cam input[type=range]{flex:1;accent-color:#E5AE00}
 .cam .tools{display:flex;gap:8px}
-.cam .tools button{flex:1;font-size:13.5px;padding:9px 6px;background:#222;color:#eee;border:1px solid #444}
+.cam .tools button{flex:1;font-size:12.5px;line-height:1.3;padding:9px 6px;background:#222;color:#eee;border:1px solid #444}
 .cam .tools button.on{background:#E5AE00;color:#1C2B3A;border-color:#E5AE00}
 .cam .shoot{display:flex;gap:10px}
 .cam .shoot button{flex:1}
@@ -131,6 +143,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <label class="btn" id="nBefore" for="fBefore">スマホのカメラで施工前</label>
   <label class="btn y off" id="nAfter" for="fAfter">スマホのカメラで施工後</label>
  </div>
+ <button class="o full" id="bMask" disabled style="margin-bottom:8px">交換する機器を枠で囲む(任意)</button>
  <p class="msg" id="camNote" hidden></p>
  <div class="diffbox" id="diffBox" hidden></div>
  <div id="ovBox" hidden>
@@ -155,25 +168,35 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
  <input type="file" class="vh" id="fAfter" accept="image/*" capture="environment" tabindex="-1" disabled>
 </div>
 
+<div class="med" id="med" hidden>
+ <p class="mt">交換する機器を枠で囲んでください<small>枠の中は施工前後で比べません。新しい機器が大きくなる場合は、少し大きめに囲んでください。枠の中を引っぱると移動、角の丸で大きさを変えられます。</small></p>
+ <div class="mstage" id="mStage"><img id="mImg" alt="施工前の写真"><div class="mwrap" id="mWrap"><div class="mrect" id="mRect"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div></div></div>
+ <div class="mbtns"><button class="o2" id="mNone">枠なし(全体で比べる)</button><button class="y" id="mOk">決定</button></div>
+</div>
+
 <div class="cam" id="cam">
  <div class="view">
   <video id="vid" playsinline muted autoplay></video>
   <img class="ghost" id="ghost" alt="">
   <div class="grid" id="grid"></div>
-  <div class="panel" id="panel"></div>
+  <div class="cmask" id="camMask" hidden><span>比べない</span></div>
+  <div class="frame" id="frame"><span class="fl" id="fLabel"></span></div>
  </div>
  <div class="bar">
   <div class="r" id="opRow"><span>重ね具合</span><input type="range" id="op" min="0" max="80" value="35"></div>
   <div class="tools">
    <button id="tGrid">グリッド</button>
    <button id="tGhost" class="on">施工前を重ねる</button>
-   <button id="tDiff" class="on">ずれ表示</button>
+   <button id="tLine">線で重ねる</button>
+   <button id="tDiff" class="on">色で判定</button>
   </div>
   <div class="shoot"><button class="cancel" id="cCancel">やめる</button><button class="y shot" id="cShot">撮影</button></div>
  </div>
 </div>
 <script type="text/plain" id="alignSrc">
 // Alignment search: before photo -> live frame. Inputs are grayscale Float32Arrays (W x H).
+// M (optional) is a box {x0,y0,x1,y1} in pixels that is left out of the comparison: the
+// equipment being replaced, which looks different before and after.
 // Returns {p:{tx,ty,s,r}, score, idScore}: best transform, its match score, and the score
 // with no movement at all (how well the overlay lines up right now).
 function edges(g,W,H){
@@ -197,7 +220,7 @@ function half(A,W,H){
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=2*y*W+2*x;O[y*w+x]=(A[i]+A[i+1]+A[i+W]+A[i+W+1])/4;}
  return O;
 }
-function ncc(B,C,W,H,p){
+function ncc(B,C,W,H,p,M){
  const cx=W/2, cy=H/2, cs=Math.cos(p.r), sn=Math.sin(p.r), is=1/p.s;
  let n=0,sb=0,sc=0,sbb=0,scc=0,sbc=0;
  for(let y=1;y<H-1;y++){
@@ -207,25 +230,26 @@ function ncc(B,C,W,H,p){
    const bx=(cs*xx+sn*yy)*is+cx, by=(-sn*xx+cs*yy)*is+cy;
    const ix=bx|0, iy=by|0;
    if(ix<1||iy<1||ix>=W-2||iy>=H-2)continue;
+   if(M&&((x>=M.x0&&x<M.x1&&y>=M.y0&&y<M.y1)||(bx>=M.x0&&bx<M.x1&&by>=M.y0&&by<M.y1)))continue;
    const fx=bx-ix, fy=by-iy, i=iy*W+ix;
    const b=(B[i]*(1-fx)+B[i+1]*fx)*(1-fy)+(B[i+W]*(1-fx)+B[i+W+1]*fx)*fy;
    const c=C[y*W+x];
    n++;sb+=b;sc+=c;sbb+=b*b;scc+=c*c;sbc+=b*c;
   }
  }
- if(n<W*H*0.3)return -1;
+ if(n<W*H*0.3*(M?M.keep:1))return -1;
  const vb=sbb-sb*sb/n, vc=scc-sc*sc/n;
  if(vb<=1e-6||vc<=1e-6)return -1;
  return (sbc-sb*sc/n)/Math.sqrt(vb*vc);
 }
-function refine(B,C,W,H,p0){
- let p={...p0}, best=ncc(B,C,W,H,p);
+function refine(B,C,W,H,p0,M){
+ let p={...p0}, best=ncc(B,C,W,H,p,M);
  for(const [dt,ds,dr] of [[2,0.03,0.02],[1,0.015,0.01],[0.5,0.007,0.005]]){
   for(let k=0;k<6;k++){
    let moved=false;
    for(const c of [{tx:dt},{tx:-dt},{ty:dt},{ty:-dt},{s:ds},{s:-ds},{r:dr},{r:-dr}]){
     const q={tx:p.tx+(c.tx||0),ty:p.ty+(c.ty||0),s:Math.min(1.5,Math.max(0.67,p.s+(c.s||0))),r:Math.min(0.3,Math.max(-0.3,p.r+(c.r||0)))};
-    const v=ncc(B,C,W,H,q);
+    const v=ncc(B,C,W,H,q,M);
     if(v>best+1e-4){best=v;p=q;moved=true;}
    }
    if(!moved)break;
@@ -233,28 +257,35 @@ function refine(B,C,W,H,p0){
  }
  return {p,score:best};
 }
-function search(Bg,Cg,W,H){
+function maskAt(M,W,H,k){
+ if(!M)return null;
+ const x0=M.x0*k,y0=M.y0*k,x1=M.x1*k,y1=M.y1*k;
+ return {x0,y0,x1,y1,keep:Math.max(0.15,1-((x1-x0)*(y1-y0))/(W*H))};
+}
+function search(Bg,Cg,W,H,Mpx){
  const B0=edges(Bg,W,H), C0=edges(Cg,W,H);
  const w=W>>1,h=H>>1, B1=half(B0,W,H), C1=half(C0,W,H);
+ const M0=maskAt(Mpx,W,H,1), M1=maskAt(Mpx,w,h,0.5);
  // Full search at half size every time, so a wrong match can never stick.
  const R=Math.round(w*0.3), cand=[];
  const combos=[[0.84,0],[1,0],[1.19,0],[1,-0.06],[1,0.06]];
  for(const [s,r] of combos)
   for(let ty=-R;ty<=R;ty+=2)for(let tx=-R;tx<=R;tx+=2){
-   const v=ncc(B1,C1,w,h,{tx,ty,s,r});
+   const v=ncc(B1,C1,w,h,{tx,ty,s,r},M1);
    if(v>-1)cand.push({v,p:{tx,ty,s,r}});
   }
  cand.sort((a,b)=>b.v-a.v);
- let best={p:{tx:0,ty:0,s:1,r:0},score:-1};
+ // Always also try "no movement" as a starting point, then the strongest coarse matches.
+ let best=refine(B0,C0,W,H,{tx:0,ty:0,s:1,r:0},M0);
  const seen=[];
  for(const c of cand){
-  if(seen.length>=3)break;
+  if(seen.length>=4)break;
   if(seen.some(q=>Math.abs(q.tx-c.p.tx)<4&&Math.abs(q.ty-c.p.ty)<4&&q.s===c.p.s))continue;
   seen.push(c.p);
-  const res=refine(B0,C0,W,H,{tx:c.p.tx*2,ty:c.p.ty*2,s:c.p.s,r:c.p.r});
+  const res=refine(B0,C0,W,H,{tx:c.p.tx*2,ty:c.p.ty*2,s:c.p.s,r:c.p.r},M0);
   if(res.score>best.score)best=res;
  }
- const idScore=ncc(B0,C0,W,H,{tx:0,ty:0,s:1,r:0});
+ const idScore=ncc(B0,C0,W,H,{tx:0,ty:0,s:1,r:0},M0);
  return {p:best.p,score:best.score,idScore};
 }
 </script>
@@ -264,12 +295,12 @@ function search(Bg,Cg,W,H){
 const ALIGN_SRC=document.getElementById("alignSrc").textContent;
 let worker=null, wSeq=0, searchFn=null;const wWait=new Map();
 try{
- worker=new Worker(URL.createObjectURL(new Blob([ALIGN_SRC+"\nonmessage=e=>{const d=e.data;postMessage({id:d.id,res:search(d.B,d.C,d.W,d.H)});};"],{type:"text/javascript"})));
+ worker=new Worker(URL.createObjectURL(new Blob([ALIGN_SRC+"\nonmessage=e=>{const d=e.data;postMessage({id:d.id,res:search(d.B,d.C,d.W,d.H,d.M)});};"],{type:"text/javascript"})));
  worker.onmessage=e=>{const f=wWait.get(e.data.id);if(f){wWait.delete(e.data.id);f(e.data.res);}};
  worker.onerror=()=>{worker=null;wWait.forEach(f=>f(null));wWait.clear();};
 }catch(e){worker=null;}
 function align(m){
- const local=()=>{searchFn=searchFn||new Function(ALIGN_SRC+";return search;")();return searchFn(m.B,m.C,m.W,m.H);};
+ const local=()=>{searchFn=searchFn||new Function(ALIGN_SRC+";return search;")();return searchFn(m.B,m.C,m.W,m.H,m.M);};
  if(worker)return new Promise(res=>{const id=++wSeq;wWait.set(id,r=>res(r||local()));worker.postMessage({...m,id});});
  return Promise.resolve(local());
 }
@@ -310,7 +341,9 @@ $("hNew").onclick=()=>openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo
 let layout="h", lastBlob=null, delArm=false;
 function setSlot(slot,blob,at){
  const s=$(slot);s.querySelectorAll("img,.ph,.dt").forEach(x=>x.remove());
+ s.querySelectorAll(".tmask").forEach(x=>x.remove());
  if(blob){s.classList.add("has");const i=document.createElement("img");i.alt="";i.src=blobUrl(blob);s.appendChild(i);
+  if(slot==="sB"&&job.mask)i.onload=()=>{const m=document.createElement("div");m.className="tmask";m.innerHTML="<span>比べない</span>";s.appendChild(m);placeBox(m,job.mask,i.naturalWidth,i.naturalHeight,s.clientWidth,s.clientHeight);};
   const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);}
  else{s.classList.remove("has");const p=document.createElement("span");p.className="ph";p.innerHTML=slot==="sB"?"まだ撮っていません":(job.before?"施工後を<br>撮ってください":"施工前を撮ると<br>重ねて確認できます");s.appendChild(p);}
 }
@@ -326,8 +359,9 @@ function refreshDetail(){
  $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);$("bAfter").textContent=job.after?"施工後を撮り直す":"施工後を撮る";
  $("bMake").disabled=!(job.before&&job.after);
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
+ $("bMask").disabled=!job.before;$("bMask").textContent=job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)";
  const n=$("camNote");
- if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中のずれ表示は出ません)。";n.hidden=false;}
+ if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中の色の判定は出ません)。";n.hidden=false;}
  else n.hidden=true;
  const both=!!(job.before&&job.after);
  $("ovBox").hidden=!both;
@@ -362,10 +396,11 @@ async function startCam(mode){
  const v=$("vid");v.srcObject=stream;
  const after=mode==="after";
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
- $("opRow").style.display=after?"flex":"none";$("tGhost").style.display=after?"":"none";$("tDiff").style.display=after?"":"none";
- $("panel").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
- $("panel").innerHTML='<div class="big na">施工前と比べています…</div>';
- if(after){$("ghost").src=blobUrl(job.before);$("ghost").style.opacity=$("op").value/100;}
+ $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff"].forEach(id=>$(id).style.display=after?"":"none");
+ $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
+ setFrame("na","比べています…");lvlShown=null;
+ $("camMask").hidden=true;
+ if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();}
  $("cam").style.display="flex";
  if(after){await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});startAlign();}
 }
@@ -378,8 +413,30 @@ function stopCam(){
 $("cCancel").onclick=stopCam;
 $("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
 $("tGrid").onclick=()=>{$("tGrid").classList.toggle("on");$("grid").classList.toggle("on");};
-$("tGhost").onclick=()=>{const on=$("tGhost").classList.toggle("on");$("ghost").style.display=on?"block":"none";$("opRow").style.display=on?"flex":"none";};
-$("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("panel").style.display=on?"block":"none";};
+$("tGhost").onclick=()=>{const on=$("tGhost").classList.toggle("on");$("ghost").style.display=on?"block":"none";ghostLook();};
+$("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").style.display=on?"block":"none";};
+// Outlines don't hide the live view, so they show at full strength without the slider.
+function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost").classList.contains("on");
+ $("ghost").style.opacity=line?1:$("op").value/100;$("opRow").style.display=g&&!line&&camMode==="after"?"flex":"none";}
+$("tLine").onclick=async()=>{const on=$("tLine").classList.toggle("on");$("ghost").src=on?await outlineSrc():photoSrc;ghostLook();};
+let photoSrc="", outlineFor=null, outlineUrl="";
+// The before photo as bright outlines only, so a new unit doesn't hide behind the old one.
+async function outlineSrc(){
+ if(outlineFor===job.before&&outlineUrl)return outlineUrl;
+ const im=await loadImg(job.before), W=480, H=Math.round(W*im.naturalHeight/im.naturalWidth);
+ const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d",{willReadFrequently:true});
+ x.drawImage(im,0,0,W,H);
+ const d=x.getImageData(0,0,W,H), g=new Float32Array(W*H), m=new Float32Array(W*H);
+ for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.299*d.data[j]+0.587*d.data[j+1]+0.114*d.data[j+2];
+ for(let y=1;y<H-1;y++)for(let xx=1;xx<W-1;xx++){const i=y*W+xx;
+  const gx=g[i+1]-g[i-1]+0.5*(g[i-W+1]-g[i-W-1]+g[i+W+1]-g[i+W-1]), gy=g[i+W]-g[i-W]+0.5*(g[i+W-1]-g[i-W-1]+g[i+W+1]-g[i-W+1]);
+  m[i]=Math.sqrt(gx*gx+gy*gy);}
+ const thr=Float32Array.from(m).sort()[Math.floor(m.length*0.88)]||1;
+ for(let i=0,j=0;i<m.length;i++,j+=4){const a=m[i]>thr?Math.min(255,140+115*(m[i]-thr)/thr):0;d.data[j]=80;d.data[j+1]=240;d.data[j+2]=255;d.data[j+3]=a;}
+ x.putImageData(d,0,0);
+ const b=await new Promise(r=>c.toBlob(r,"image/png"));
+ outlineFor=job.before;outlineUrl=blobUrl(b);return outlineUrl;
+}
 
 $("cShot").onclick=()=>{
  const v=$("vid");if(!v.videoWidth)return;
@@ -397,10 +454,79 @@ async function gotPhoto(mode,blob,o){
  await saveJob();refreshDetail();
  $("result").style.display="none";lastBlob=null;
  photoDiff();
+ if(mode==="before")openMaskEditor();
 }
 
+/* ---------- "don't compare" box editor ---------- */
+let mEdit=null, mDrag=null;
+function openMaskEditor(){
+ if(!job.before)return;
+ mEdit=job.mask?{...job.mask}:{x:0.3,y:0.25,w:0.4,h:0.4};
+ const im=$("mImg");im.onload=layoutMask;im.src=blobUrl(job.before);
+ $("med").hidden=false;if(im.complete&&im.naturalWidth)layoutMask();
+}
+function layoutMask(){
+ const st=$("mStage"), im=$("mImg"), wr=$("mWrap");
+ if(!im.naturalWidth)return;
+ const k=Math.min(st.clientWidth/im.naturalWidth,st.clientHeight/im.naturalHeight), w=im.naturalWidth*k, h=im.naturalHeight*k;
+ wr.style.left=(st.clientWidth-w)/2+"px";wr.style.top=(st.clientHeight-h)/2+"px";wr.style.width=w+"px";wr.style.height=h+"px";
+ drawMask();
+}
+function drawMask(){const r=$("mRect").style;r.left=mEdit.x*100+"%";r.top=mEdit.y*100+"%";r.width=mEdit.w*100+"%";r.height=mEdit.h*100+"%";}
+window.addEventListener("resize",()=>{if(!$("med").hidden)layoutMask();});
+$("mWrap").addEventListener("pointerdown",e=>{
+ const b=$("mWrap").getBoundingClientRect(), px=(e.clientX-b.left)/b.width, py=(e.clientY-b.top)/b.height;
+ const tx=34/b.width, ty=34/b.height, m=mEdit;
+ const near=(cx,cy)=>Math.abs(px-cx)<tx&&Math.abs(py-cy)<ty;
+ let mode="new";
+ if(near(m.x,m.y))mode="tl";else if(near(m.x+m.w,m.y))mode="tr";else if(near(m.x,m.y+m.h))mode="bl";else if(near(m.x+m.w,m.y+m.h))mode="br";
+ else if(px>m.x&&px<m.x+m.w&&py>m.y&&py<m.y+m.h)mode="move";
+ mDrag={mode,px,py,start:{...m}};
+ if(mode==="new"){mEdit={x:px,y:py,w:0.01,h:0.01};mDrag.mode="br";mDrag.start={...mEdit};}
+ $("mWrap").setPointerCapture(e.pointerId);e.preventDefault();
+});
+$("mWrap").addEventListener("pointermove",e=>{
+ if(!mDrag)return;
+ const b=$("mWrap").getBoundingClientRect(), px=Math.min(1,Math.max(0,(e.clientX-b.left)/b.width)), py=Math.min(1,Math.max(0,(e.clientY-b.top)/b.height));
+ const s=mDrag.start, dx=px-mDrag.px, dy=py-mDrag.py;
+ let x0=s.x,y0=s.y,x1=s.x+s.w,y1=s.y+s.h;
+ if(mDrag.mode==="move"){const w=s.w,h=s.h;x0=Math.min(1-w,Math.max(0,s.x+dx));y0=Math.min(1-h,Math.max(0,s.y+dy));x1=x0+w;y1=y0+h;}
+ else{if(mDrag.mode[1]==="l")x0=px;else x1=px;if(mDrag.mode[0]==="t")y0=py;else y1=py;}
+ mEdit={x:Math.min(x0,x1),y:Math.min(y0,y1),w:Math.max(0.05,Math.abs(x1-x0)),h:Math.max(0.05,Math.abs(y1-y0))};
+ mEdit.w=Math.min(mEdit.w,1-mEdit.x);mEdit.h=Math.min(mEdit.h,1-mEdit.y);
+ drawMask();
+});
+const endDrag=()=>{mDrag=null;};
+$("mWrap").addEventListener("pointerup",endDrag);$("mWrap").addEventListener("pointercancel",endDrag);
+async function closeMask(m){job.mask=m;$("med").hidden=true;await saveJob();refreshDetail();photoDiff();}
+$("mOk").onclick=()=>closeMask({...mEdit});
+$("mNone").onclick=()=>closeMask(null);
+$("bMask").onclick=openMaskEditor;
+
 /* ---------- alignment ---------- */
-const AW=128;let AH=96, camGen=0, Bgray=null, est={tx:0,ty:0,s:1,r:0}, estScore=-1, estId=-1;
+const AW=128;let AH=96, camGen=0, Bgray=null, Bmask=null, est={tx:0,ty:0,s:1,r:0}, estScore=-1, estId=-1;
+// Box (0-1 of the before photo) -> pixels after a "cover" crop to w x h. Padded so a larger new unit stays inside.
+function maskPx(m,sw,sh,w,h){
+ if(!m)return null;
+ const r=Math.max(w/sw,h/sh), ox=(sw-w/r)/2, oy=(sh-h/r)/2, px=0.03;
+ const x0=Math.max(0,((m.x-px)*sw-ox)*r), y0=Math.max(0,((m.y-px)*sh-oy)*r), x1=Math.min(w,((m.x+m.w+px)*sw-ox)*r), y1=Math.min(h,((m.y+m.h+px)*sh-oy)*r);
+ return x1>x0&&y1>y0?{x0,y0,x1,y1}:null;
+}
+function placeBox(el,m,sw,sh,w,h){
+ const r=Math.max(w/sw,h/sh), ox=(sw-w/r)/2, oy=(sh-h/r)/2;
+ el.style.left=((m.x*sw-ox)*r)+"px";el.style.top=((m.y*sh-oy)*r)+"px";el.style.width=(m.w*sw*r)+"px";el.style.height=(m.h*sh*r)+"px";
+}
+// Colour level from the estimated offset: within tolerance = ok, up to 3x = near, beyond = far.
+function levelOf(p,W,H,score,idScore,dBeta){
+ if(score<0.3)return "na";
+ const m=Math.max(Math.abs(p.tx/W*100)/3,Math.abs(p.ty/H*100)/3,Math.abs((p.s-1)*100)/4,Math.abs(p.r*180/Math.PI)/1.5,dBeta!=null?Math.abs(dBeta)/2:0);
+ if(m<=1&&idScore>=0.5)return "ok";
+ return m<=3?"near":"far";
+}
+const LIVE_LABEL={ok:"ぴったり 撮影どうぞ",near:"おしい",far:"ずれています",na:"比べられません"};
+let lvlShown=null, lvlPend=null, lvlCount=0;
+function setFrame(l,text){const f=$("frame");f.className="frame "+(l==="na"?"":l);$("fLabel").textContent=text;}
+function vib(ms){try{if(window.AndroidApp&&window.AndroidApp.vibrate)window.AndroidApp.vibrate(ms);else if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
 const sc=document.createElement("canvas"), sctx=sc.getContext("2d",{willReadFrequently:true});
 function grayOf(drawFn){
  sc.width=AW;sc.height=AH;sctx.imageSmoothingEnabled=true;sctx.imageSmoothingQuality="medium";
@@ -417,9 +543,9 @@ async function startAlign(){
  const v=$("vid");AH=Math.round(AW*v.videoHeight/v.videoWidth);
  const im=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=$("ghost").src;});
  Bgray=grayOf(ctx=>drawCoverTo(ctx,im,im.naturalWidth,im.naturalHeight,AW,AH));
+ Bmask=maskPx(job.mask,im.naturalWidth,im.naturalHeight,AW,AH);
  est={tx:0,ty:0,s:1,r:0};estScore=-1;estId=-1;
- if($("tDiff").classList.contains("on"))$("panel").style.display="block";
- $("panel").innerHTML='<div class="big na">施工前と比べています…</div>';
+ if(job.mask){const vw=$("cam").querySelector(".view");placeBox($("camMask"),job.mask,im.naturalWidth,im.naturalHeight,vw.clientWidth,vw.clientHeight);$("camMask").hidden=false;}
  tick(++camGen);
 }
 async function tick(gen){
@@ -429,7 +555,7 @@ async function tick(gen){
  if(v.videoWidth&&$("tDiff").classList.contains("on")){
   // Full search on every frame: compares the live view with the before photo from scratch.
   const C=grayOf(ctx=>ctx.drawImage(v,0,0,AW,AH));
-  const res=await align({B:Bgray,C,W:AW,H:AH});
+  const res=await align({B:Bgray,C,W:AW,H:AH,M:Bmask});
   if(!live())return;
   est=res.p;estScore=res.score;estId=res.idScore;
   showDiff();
@@ -437,30 +563,17 @@ async function tick(gen){
  loop=setTimeout(()=>tick(gen),60);
 }
 function showDiff(){
- $("panel").innerHTML=diffHtml(est,estScore,estId,(job.beforeOri&&oriOK)?ori.beta-job.beforeOri.beta:null,true);
+ const l=levelOf(est,AW,AH,estScore,estId,(job.beforeOri&&oriOK)?ori.beta-job.beforeOri.beta:null);
+ // Change colour only after two readings agree, so the frame doesn't flicker.
+ if(l===lvlPend)lvlCount++;else{lvlPend=l;lvlCount=1;}
+ if(l!==lvlShown&&(lvlShown===null||lvlCount>=2)){
+  if(l==="ok"&&lvlShown!==null)vib(60);
+  lvlShown=l;setFrame(l,LIVE_LABEL[l]);
+ }
 }
-function diffHtml(est,estScore,idScore,dBeta,live){
- const lines=[];let allOk=true;
- const ok=estScore>=0.3;
- const row=(name,val,good,txt)=>{if(!good)allOk=false;lines.push('<div class="it '+(good?"good":"bad")+'"><span class="lb">'+name+' '+val+'</span><span class="ac">'+txt+'</span></div>');};
- // OK also needs the overlay to match as it stands (no movement).
- if(ok&&idScore<0.5)allOk=false;
- if(ok){
-  const W0=est.W||AW, H0=est.H||AH;
-  const px=est.tx/W0*100, py=est.ty/H0*100, sz=(est.s-1)*100, deg=est.r*180/Math.PI;
-  const hx=-px, hy=py, sg=v=>(v>0?"+":"")+v.toFixed(0);
-  row("左右",sg(hx)+"%",Math.abs(hx)<3,Math.abs(hx)<3?"OK":(hx<0?"右へ →":"← 左へ"));
-  row("高さ",sg(hy)+"%",Math.abs(hy)<3,Math.abs(hy)<3?"OK":(hy>0?"下げる ↓":"上げる ↑"));
-  row("距離",(sz>0?"+":"")+sz.toFixed(0)+"%",Math.abs(sz)<4,Math.abs(sz)<4?"OK":(sz>0?"離れる":"近づく"));
-  row("傾き",(deg>0?"+":"")+deg.toFixed(1)+"°",Math.abs(deg)<1.5,Math.abs(deg)<1.5?"OK":(deg>0?"右に回す ↻":"左に回す ↺"));
- }
- if(dBeta!=null){
-  const db=dBeta;
-  row("上下の向き",(db>0?"+":"")+db.toFixed(1)+"°",Math.abs(db)<2,Math.abs(db)<2?"OK":(db>0?"上に向ける":"下に向ける"));
- }
- const head=ok?(allOk?'<div class="big ok">'+(live?"ぴったりです。撮影どうぞ":"施工前とほぼ同じ位置です")+'</div>':'<div class="big ng">施工前とずれています'+(live?"":"(撮り直す時の目安)")+'</div>')
-  :'<div class="big na">'+(live?"比べられません(同じ場所を写すと表示されます)":"比べられませんでした(写っている範囲が違いすぎる可能性があります)")+'</div>';
- return head+(lines.length?'<div class="chk">'+lines.join("")+'</div>':"");
+function diffHtml(l){
+ const t={ok:"● 施工前とほぼ同じ位置です",near:"● おしい(少しずれています)",far:"● 施工前とずれています",na:"比べられませんでした(写っている範囲が違いすぎる可能性があります)"}[l];
+ return '<div class="big '+l+'">'+t+'</div>';
 }
 async function photoDiff(){
  const box=$("diffBox");
@@ -472,11 +585,11 @@ async function photoDiff(){
  const B=grayOf(ctx=>drawCoverTo(ctx,iB,iB.naturalWidth,iB.naturalHeight,W,H));
  const C=grayOf(ctx=>drawCoverTo(ctx,iA,iA.naturalWidth,iA.naturalHeight,W,H));
  AH=saveH;
- const forJob=job, res=await align({B,C,W,H});
+ const forJob=job, res=await align({B,C,W,H,M:maskPx(job.mask,iB.naturalWidth,iB.naturalHeight,W,H)});
  if(job!==forJob)return;
  const p={...res.p,W,H};
  const dBeta=(job.beforeOri&&job.afterOri)?job.afterOri.beta-job.beforeOri.beta:null;
- box.innerHTML=diffHtml(p,res.score,res.idScore,dBeta,false);
+ box.innerHTML=diffHtml(levelOf(p,W,H,res.score,res.idScore,dBeta));
 }
 
 /* ---------- compose & save ---------- */
