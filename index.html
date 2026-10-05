@@ -124,10 +124,22 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .grid.on{display:block}
 /* match frame: green = lined up, yellow = close, red = off, grey = can't compare */
 .frame{position:absolute;inset:0;border:10px solid rgba(255,255,255,.35);pointer-events:none;z-index:3;transition:border-color .15s;display:none}
-.frame .fl{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;padding:4px 16px;border-radius:999px;background:rgba(255,255,255,.85);color:#111;white-space:nowrap}
-.frame.ok{border-color:#22C55E}.frame.ok .fl{background:#22C55E;color:#04210f}
-.frame.near{border-color:#FACC15}.frame.near .fl{background:#FACC15;color:#2b2200}
-.frame.far{border-color:#EF4444}.frame.far .fl{background:#EF4444;color:#fff}
+.flab{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;padding:4px 16px;border-radius:999px;background:rgba(255,255,255,.85);color:#111;white-space:nowrap}
+.frame.ok{border-color:#22C55E}.flab.ok{background:#22C55E;color:#04210f}
+.frame.near{border-color:#FACC15}.flab.near{background:#FACC15;color:#2b2200}
+.frame.far{border-color:#EF4444}.flab.far{background:#EF4444;color:#fff}
+.cam:not(.judging) .flab{display:none}
+/* phone held sideways: labels and controls turn to face the user, laid over the picture */
+.camhud{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none}
+.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(0,0,0,.5);display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:6px 12px;padding:6px 12px}
+.cam .camhud .tools button{padding:6px 4px;font-size:12px}
+.cam .camhud .bar .r{font-size:12px}
+.cam .camhud .shoot button{padding:8px 6px;font-size:15px}
+.camhud .flab{top:10px}
+.camhud .shotn{top:10px;bottom:auto;right:10px}
+.camhud .sidew{top:10px;bottom:auto;left:10px}
+.cam .ghost.rot{max-width:none;max-height:none}
+.mwrap *{pointer-events:none}
 .cmask{position:absolute;border:2px dashed rgba(255,255,255,.9);background:rgba(0,0,0,.28);z-index:2;pointer-events:none}
 .cmask span,.tmask span{position:absolute;left:4px;top:2px;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
 .tmask{position:absolute;border:2px dashed #FACC15;background:rgba(250,204,21,.12);z-index:1;pointer-events:none}
@@ -248,8 +260,9 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <div class="flash" id="flash"></div>
   <div class="shotn" id="shotN" hidden></div>
   <div class="sidew" id="sideW" hidden>横向きで保存</div>
-  <div class="frame" id="frame"><span class="fl" id="fLabel"></span></div>
+  <div class="frame" id="frame"><span class="flab" id="fLabel"></span></div>
  </div></div>
+ <div class="camhud" id="camHud" hidden></div>
  <div class="bar">
   <div class="r zr" id="zoomRow"><span>ズーム</span><input type="range" id="zm" min="1.6" max="6.4" step="0.1" value="1.6" aria-label="ズーム"><b id="zmV">標準</b><button class="fl" id="tFlash" aria-label="フラッシュ">⚡ オフ</button></div>
   <div class="r" id="opRow"><span>重ね具合</span><input type="range" id="op" min="0" max="80" value="35"></div>
@@ -468,6 +481,7 @@ async function startCam(mode){
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
  $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff"].forEach(id=>$(id).style.display=after?"":"none");
  $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
+ $("cam").classList.toggle("judging",after&&$("tDiff").classList.contains("on"));
  setFrame("na","比べています…");lvlShown=null;
  $("camMask").hidden=true;
  shotCount=0;$("shotN").hidden=true;$("cCancel").textContent=mode==="extra"?"戻る":"やめる";
@@ -487,6 +501,7 @@ function fitStage(){
 }
 window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
 function stopCam(){
+ setSideUI(0);
  camGen++;track=null;imgCap=null;photoCaps=null;
  if(loop){clearTimeout(loop);loop=null;}
  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
@@ -496,7 +511,7 @@ $("cCancel").onclick=stopCam;
 $("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
 $("tGrid").onclick=()=>{$("tGrid").classList.toggle("on");$("grid").classList.toggle("on");};
 $("tGhost").onclick=()=>{const on=$("tGhost").classList.toggle("on");$("ghost").style.display=on?"block":"none";ghostLook();};
-$("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").style.display=on?"block":"none";};
+$("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").style.display=on?"block":"none";$("cam").classList.toggle("judging",on);};
 // Outlines don't hide the live view, so they show at full strength without the slider.
 function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost").classList.contains("on");
  $("ghost").style.opacity=line?1:$("op").value/100;$("opRow").style.display=g&&!line&&camMode==="after"?"flex":"none";}
@@ -552,7 +567,30 @@ function camRot(){
  else rotNow=grav.x>0?-90:90;
  return rotNow;
 }
-setInterval(()=>{if(stream)$("sideW").hidden=camRot()===0;},300);
+// UI turned to face the user: the camera screen and the box editor follow the phone.
+let sideDeg=0;const homes=new Map();
+function setSideUI(deg){
+ if(deg===sideDeg)return;sideDeg=deg;
+ const cam=$("cam"), hud=$("camHud"), els=[$("fLabel"),$("shotN"),$("sideW"),cam.querySelector(".bar")];
+ if(deg){
+  els.forEach(e=>{if(!homes.has(e))homes.set(e,{p:e.parentNode,n:e.nextSibling});hud.appendChild(e);});
+  hud.hidden=false;hud.style.width=cam.clientHeight+"px";hud.style.height=cam.clientWidth+"px";hud.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";
+ }else{
+  els.slice().reverse().forEach(e=>{const h=homes.get(e);if(h)h.p.insertBefore(e,h.n);});
+  hud.hidden=true;
+ }
+ fitStage();alignRot=null;prepAlign();
+}
+function turnFixed(el,deg){
+ if(deg){el.style.inset="auto";el.style.left="50%";el.style.top="50%";el.style.width=window.innerHeight+"px";el.style.height=window.innerWidth+"px";el.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";}
+ else el.style.inset=el.style.left=el.style.top=el.style.width=el.style.height=el.style.transform="";
+}
+let medDeg=0;
+setInterval(()=>{
+ const rot=camRot();
+ if(stream){$("sideW").hidden=rot===0;setSideUI(-rot);}
+ if(!$("med").hidden&&-rot!==medDeg){medDeg=-rot;turnFixed($("med"),medDeg);layoutMask();}
+},300);
 
 /* ---------- lens choice, zoom, flash ---------- */
 let track=null, trackCaps={}, imgCap=null, photoCaps=null, digitalZoom=1, zoomPend=null;
@@ -740,6 +778,7 @@ $("bReport").onclick=()=>toast("報告書への添付は準備中です");
 let mEdit=null, mDrag=null;
 function openMaskEditor(){
  if(!job.before)return;
+ medDeg=-camRot();turnFixed($("med"),medDeg);
  mEdit=job.mask?{...job.mask}:{x:0.3,y:0.25,w:0.4,h:0.4};
  const im=$("mImg");im.onload=layoutMask;im.src=blobUrl(job.before);
  $("med").hidden=false;if(im.complete&&im.naturalWidth)layoutMask();
@@ -754,7 +793,7 @@ function layoutMask(){
 function drawMask(){const r=$("mRect").style;r.left=mEdit.x*100+"%";r.top=mEdit.y*100+"%";r.width=mEdit.w*100+"%";r.height=mEdit.h*100+"%";}
 window.addEventListener("resize",()=>{if(!$("med").hidden)layoutMask();});
 $("mWrap").addEventListener("pointerdown",e=>{
- const b=$("mWrap").getBoundingClientRect(), px=(e.clientX-b.left)/b.width, py=(e.clientY-b.top)/b.height;
+ const b={width:$("mWrap").clientWidth,height:$("mWrap").clientHeight}, px=e.offsetX/b.width, py=e.offsetY/b.height;
  const tx=34/b.width, ty=34/b.height, m=mEdit;
  const near=(cx,cy)=>Math.abs(px-cx)<tx&&Math.abs(py-cy)<ty;
  let mode="new";
@@ -766,7 +805,7 @@ $("mWrap").addEventListener("pointerdown",e=>{
 });
 $("mWrap").addEventListener("pointermove",e=>{
  if(!mDrag)return;
- const b=$("mWrap").getBoundingClientRect(), px=Math.min(1,Math.max(0,(e.clientX-b.left)/b.width)), py=Math.min(1,Math.max(0,(e.clientY-b.top)/b.height));
+ const b={width:$("mWrap").clientWidth,height:$("mWrap").clientHeight}, px=Math.min(1,Math.max(0,e.offsetX/b.width)), py=Math.min(1,Math.max(0,e.offsetY/b.height));
  const s=mDrag.start, dx=px-mDrag.px, dy=py-mDrag.py;
  let x0=s.x,y0=s.y,x1=s.x+s.w,y1=s.y+s.h;
  if(mDrag.mode==="move"){const w=s.w,h=s.h;x0=Math.min(1-w,Math.max(0,s.x+dx));y0=Math.min(1-h,Math.max(0,s.y+dy));x1=x0+w;y1=y0+h;}
@@ -798,7 +837,7 @@ function levelOf(p,W,H,score,idScore,dBeta){
 }
 const LIVE_LABEL={ok:"ぴったり 撮影どうぞ",near:"おしい",far:"ずれています",na:"比べられません"};
 let lvlShown=null, lvlPend=null, lvlCount=0;
-function setFrame(l,text){const f=$("frame");f.className="frame "+(l==="na"?"":l);$("fLabel").textContent=text;}
+function setFrame(l,text){const c=l==="na"?"":l;$("frame").className="frame "+c;$("fLabel").className="flab "+c;$("fLabel").textContent=text;}
 function vib(ms){try{if(window.AndroidApp&&window.AndroidApp.vibrate)window.AndroidApp.vibrate(ms);else if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
 const sc=document.createElement("canvas"), sctx=sc.getContext("2d",{willReadFrequently:true});
 function grayOf(drawFn){
