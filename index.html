@@ -76,6 +76,7 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .row button.on{background:var(--ink);color:var(--paper)}
 .row button:not(.on){background:transparent;color:var(--ink);border:2px solid var(--line)}
 #result{display:none;margin-top:6px}
+#result{margin-bottom:16px}
 #out{width:100%;height:auto;border:1px solid var(--line);display:block;margin-bottom:10px;cursor:zoom-in}
 /* full-screen photo viewer: tap to open, pinch / double-tap to zoom (like Google Photos) */
 .viewer{position:fixed;inset:0;background:#000;z-index:70;touch-action:none;overflow:hidden;user-select:none;-webkit-user-select:none}
@@ -87,6 +88,7 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .vop input{flex:1;accent-color:#E5AE00}
 .vclose{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.35);z-index:2}
 .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;background:#2F7A55;color:#fff;font-size:20px;font-weight:800;padding:16px 32px;border:3px solid #fff;border-radius:16px;box-shadow:0 0 0 3px #2F7A55,0 10px 30px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
+.toast{transition:opacity .3s}.toast.out{opacity:0}
 .toast.ng{background:#B8432C;box-shadow:0 0 0 3px #B8432C,0 10px 30px rgba(0,0,0,.4)}
 .opts{margin:12px 0 4px;display:flex;flex-direction:column;gap:10px}
 .opts .ttl{font-size:14px;font-weight:800;color:var(--soft)}
@@ -192,6 +194,19 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <label class="btn y off" id="nAfter" for="fAfter">スマホのカメラで施工後</label>
  </div>
  <button class="o full" id="bMask" disabled style="margin-bottom:8px">交換する機器を枠で囲む(任意)</button>
+ <div id="result">
+  <label class="f" style="margin-top:6px">比較写真(タップで拡大)</label>
+  <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
+  <div class="opts">
+   <span class="ttl">並べ方</span>
+   <div class="lay" role="radiogroup" aria-label="並べ方">
+    <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><span class="ic h"><i></i><i></i></span>横に並べる</label>
+    <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><span class="ic v"><i></i><i></i></span>縦に並べる</label>
+   </div>
+   <label class="chkrow" for="cLabel"><input type="checkbox" id="cLabel" checked>「施工前」「施工後」の文字を入れる</label>
+  </div>
+  <button class="y full" id="bSave">比較写真を保存する<small class="bsub" id="bSaveSub">横並びで保存されます</small></button>
+ </div>
  <section class="extra">
   <h3>他の写真も撮影する</h3>
   <button class="camBtn" id="bExtra"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9Zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>カメラを起動</button>
@@ -209,19 +224,6 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
  <div class="links">
   <button id="svB" disabled><b>施工前</b>写真を保存</button>
   <button id="svA" disabled><b>施工後</b>写真を保存</button>
- </div>
- <div id="result">
-  <label class="f" style="margin-top:12px">比較写真(タップで拡大)</label>
-  <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
-  <div class="opts">
-   <span class="ttl">並べ方</span>
-   <div class="lay" role="radiogroup" aria-label="並べ方">
-    <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><span class="ic h"><i></i><i></i></span>横に並べる</label>
-    <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><span class="ic v"><i></i><i></i></span>縦に並べる</label>
-   </div>
-   <label class="chkrow" for="cLabel"><input type="checkbox" id="cLabel" checked>「施工前」「施工後」の文字を入れる</label>
-  </div>
-  <button class="y full" id="bSave">比較写真を保存する<small class="bsub" id="bSaveSub">横並びで保存されます</small></button>
  </div>
  <p class="msg" id="saveMsg"></p>
  <button class="rep" id="bReport"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 1.5V9h5.5L13 3.5ZM8 13h8v1.6H8V13Zm0 3.4h8V18H8v-1.6Z"/></svg>施工完了報告書に添付する</button>
@@ -555,7 +557,8 @@ function setPlace(a,err){
 window.onAppPlace=json=>{let a=null,err="";try{const o=JSON.parse(json);if(o.error)err=o.error;else a=o;}catch(e){}setPlace(a,err);};
 function getPlace(){
  if(!job||placeFor)return;
- placeFor=job;$("bPlace").disabled=true;$("bPlace").textContent="取得中…";
+ const j=job;placeFor=j;$("bPlace").disabled=true;$("bPlace").textContent="取得中…";
+ setTimeout(()=>{if(placeFor===j)setPlace(null);},20000); // never leave the button stuck
  if(window.AndroidApp&&window.AndroidApp.requestPlace){window.AndroidApp.requestPlace();return;}
  if(!navigator.geolocation){setPlace(null);return;}
  navigator.geolocation.getCurrentPosition(async pos=>{
@@ -792,7 +795,9 @@ function showLayout(){$("lyV").checked=layout==="v";$("lyH").checked=layout==="h
 showLayout();
 document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-lay",layout);}catch(err){}showLayout();make();});
 let toastT=null;
-function toast(t,ng){const e=$("toast");e.textContent=t;e.classList.toggle("ng",!!ng);e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{e.hidden=true;},2200);}
+// Shown for 2 seconds, then fades out.
+function toast(t,ng){const e=$("toast");e.textContent=t;e.classList.toggle("ng",!!ng);e.classList.remove("out");e.hidden=false;clearTimeout(toastT);
+ toastT=setTimeout(()=>{e.classList.add("out");toastT=setTimeout(()=>{e.hidden=true;e.classList.remove("out");},300);},2000);}
 function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
 
 /* ---------- photo viewer ---------- */
