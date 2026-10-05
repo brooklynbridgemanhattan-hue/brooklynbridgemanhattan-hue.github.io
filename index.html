@@ -909,7 +909,7 @@ function natShot(rot){return new Promise(res=>{
  const t=setTimeout(()=>{window.onAppShot=null;res(null);},20000);
  window.onAppShot=async s=>{clearTimeout(t);window.onAppShot=null;
   if(!String(s).startsWith("ok:")){res(null);return;}
-  try{const r=await fetch("/cam/shot/"+s.slice(3),{cache:"no-store"});res(r.ok?await r.blob():null);}catch(e){res(null);}};
+  try{const r=await fetch("/cam/shot/"+s.slice(3),{cache:"no-store"});if(!r.ok){res(null);return;}const b=await r.blob();b.nid=s.slice(3);res(b);}catch(e){res(null);}};
  window.AndroidCam.capture(flashMode,rot|0);});}
 
 /* ---------- lens choice, zoom, flash ---------- */
@@ -1110,9 +1110,9 @@ $("fExtra").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)
 $("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
 async function gotPhoto(mode,blob,o,shot){
  const now=Date.now();
- if(mode==="extra"){(job.extras=job.extras||[]).push({blob,at:now});await saveJob();renderThumbs();
+ if(mode==="extra"){(job.extras=job.extras||[]).push(blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now});await saveJob();renderThumbs();
   // App: other photos also go straight into the phone's photos (Google Photos), like a camera.
-  const ok=shot&&window.AndroidApp?await toPhone(blob,"写真",now):null;
+  const ok=!shot||!window.AndroidApp?null:blob.nid&&canNative()?(await nativeSave(blob.nid,"","",photoName("写真",now)))==="ok":await toPhone(blob,"写真",now);
   if(stream){if(ok!=null)$("shotN").textContent=shotCount+"枚 "+(ok?"保存しました":"保存できませんでした");}
   else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
   return;}
@@ -1215,14 +1215,19 @@ function openGallery(i,kind){
  noteEnd(true);$("vNote").hidden=kind!=="extra";cur=-1;clearTimeout(noteMsgT);$("vNoteL").parentNode.classList.remove("msg");
  $("vBar").hidden=false;$("vCnt").hidden=false;$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
  openViewer(blobUrl(xs[i].blob));
- tagShow();noteUI();
+ tagShow();noteUI();if(kind==="extra")ensureNid(job.extras[i]);
 }
 function galNav(d){if(gal&&galItems(gal.kind)[gal.i+d])openGallery(gal.i+d,gal.kind);}
 let vSaving=false;
 $("vSave").onclick=async()=>{if(!gal||vSaving)return;const x=galItems(gal.kind)[gal.i];if(!x)return;
  const e=gal.kind==="extra"&&job.extras[gal.i];
  vSaving=true;$("vSave").disabled=true;setTx("vSave","保存中…");
- try{await saveBlob(e&&notesOf(e).length?await burned(e):x.blob,x.name,x.at);}
+ try{
+  if(e&&e.nid&&canNative()){
+   // App: the phone writes the comments in and saves (no big data through the page)
+   const sp=notesOf(e).length?tagSpec(e):null, r=await nativeSave(e.nid,sp?sp.json:"",sp?sp.key:"",photoName(x.name,x.at));
+   saved(r==="ok",r==="ok"?"保存しました":"保存できませんでした。もう一度お試しください。");
+  }else await saveBlob(e&&notesOf(e).length?await burned(e):x.blob,x.name,x.at);}
  finally{vSaving=false;$("vSave").disabled=false;setTx("vSave","保存");}};
 // Tapping the 施工前 / 施工後 photo opens it full screen.
 $("sB").addEventListener("click",()=>{if(job&&job.before)openGallery(0,"pair");});
@@ -1365,6 +1370,30 @@ const tagUp=e=>{if(!tp.has(e.pointerId))return;e.stopPropagation();tp.delete(e.p
   else lastTagTap={n:was.n,t:now};}
 };
 $("vTags").addEventListener("pointerup",tagUp);$("vTags").addEventListener("pointercancel",tagUp);
+/* App: photos are also kept by the phone (id x.nid), so saving a photo with comments only
+   sends the comment layout; the phone draws the text and saves. */
+const canNative=()=>!!(window.AndroidApp&&window.AndroidApp.savePhotoFile);
+let saveReq=0;const saveWait=new Map();
+window.onAppSaved=(req,r)=>{const f=saveWait.get(req);if(f){saveWait.delete(req);f(r);}};
+function nativeSave(id,spec,key,name){return new Promise(res=>{const req="r"+(++saveReq);saveWait.set(req,res);
+ setTimeout(()=>{if(saveWait.has(req)){saveWait.delete(req);res("error:timeout");}},30000);
+ window.AndroidApp.savePhotoFile(req,key,id,spec,name);});}
+// The comments laid out in photo pixels (same layout as on screen).
+function tagSpec(x){
+ const W=vw.nw, H=vw.nh;if(!W||W<2)return null;
+ const c=document.createElement("canvas").getContext("2d");
+ const a=notesOf(x).map(n=>{const L=tagLayout(c,n.t,W,n.tag.s);
+  const tx=Math.min(Math.max(0,n.tag.x),Math.max(0,1-L.w/W)), ty=Math.min(Math.max(0,n.tag.y),Math.max(0,1-L.h/H));
+  return {lines:L.lines,x:tx*W,y:ty*H,w:L.w,h:L.h,fs:L.fs,pad:L.pad,lh:L.lh};});
+ const json=JSON.stringify(a);let h=5381;for(let i=0;i<json.length;i++)h=(h*33+json.charCodeAt(i))|0;
+ return {json,key:x.nid+"_"+(h>>>0).toString(36)};
+}
+// Photos from before this version (or picked from the phone): hand the phone a copy once.
+const nidBusy=new WeakSet();
+function ensureNid(x){
+ if(!x||x.nid||!canNative()||!window.AndroidApp.putPhoto||nidBusy.has(x))return;nidBusy.add(x);
+ setTimeout(async()=>{try{const id=window.AndroidApp.putPhoto(await b64Of(x.blob));if(id){x.nid=id;await saveJob();if(galX()===x)preburn();}}catch(e){}nidBusy.delete(x);},300);
+}
 // The photo with comments written in is made in the background as soon as the comments
 // change, so 保存 only has to hand it over.
 let burnCache={key:"",p:null}, burnT=0;
@@ -1373,7 +1402,10 @@ function burned(x){
  if(burnCache.key!==k)burnCache={key:k,p:withTags(x)};
  return burnCache.p;
 }
-function preburn(){clearTimeout(burnT);burnT=setTimeout(()=>{const x=galX();if(x&&notesOf(x).length&&!tg)burned(x).then(b=>{if(window.AndroidApp)b64Of(b);});},350);}
+function preburn(){
+ const nx=galX();
+ if(nx&&nx.nid&&canNative()){if(notesOf(nx).length&&!tg){const sp=tagSpec(nx);if(sp)window.AndroidApp.burn(sp.key,nx.nid,sp.json);}return;}
+ clearTimeout(burnT);burnT=setTimeout(()=>{const x=galX();if(x&&notesOf(x).length&&!tg)burned(x).then(b=>{if(window.AndroidApp)b64Of(b);});},350);}
 // The photo with its comments written in, full size, for saving.
 async function withTags(x){
  const im=await createImageBitmap(x.blob), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
