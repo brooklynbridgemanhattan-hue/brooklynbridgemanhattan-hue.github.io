@@ -22,6 +22,8 @@ button{font:inherit;font-size:16px;font-weight:800;padding:14px 10px;border:0;cu
 button.y{background:var(--gas);color:#1C2B3A}
 button.o{background:transparent;color:var(--ink);border:2px solid var(--ink)}
 button.w{background:transparent;color:var(--warn);border:2px solid var(--warn);font-size:14px;padding:10px}
+button,label.btn,.job{touch-action:manipulation;transition:transform .08s,filter .08s}
+button:active:not(:disabled),label.btn:active:not(.off),.job:active{transform:scale(.97);filter:brightness(.85)}
 button:disabled,label.btn.off{opacity:.35;cursor:default}
 label.btn{display:flex;align-items:center;justify-content:center;text-align:center;font-size:16px;font-weight:800;padding:14px 10px;cursor:pointer;background:var(--ink);color:var(--paper);user-select:none}
 label.btn.y{background:var(--gas);color:#1C2B3A}
@@ -233,6 +235,21 @@ function edgeMap(gray,W,H){
  return E;
 }
 
+// Run the alignment search in a worker so taps stay responsive.
+let worker=null, wSeq=0;const wWait=new Map();
+try{
+ const src=[nccScore,refine,coarse].map(f=>f.toString()).join("\n")+
+  "\nonmessage=e=>{const d=e.data;const res=d.mode==='coarse'?coarse(d.B,d.C,d.W,d.H):refine(d.B,d.C,d.W,d.H,d.p,d.rounds);postMessage({id:d.id,res});};";
+ worker=new Worker(URL.createObjectURL(new Blob([src],{type:"text/javascript"})));
+ worker.onmessage=e=>{const f=wWait.get(e.data.id);if(f){wWait.delete(e.data.id);f(e.data.res);}};
+ worker.onerror=()=>{worker=null;wWait.forEach(f=>f(null));wWait.clear();};
+}catch(e){worker=null;}
+function align(m){
+ if(worker)return new Promise(res=>{const id=++wSeq;wWait.set(id,r=>res(r||run(m)));worker.postMessage({...m,id});});
+ return Promise.resolve(run(m));
+ function run(m){return m.mode==="coarse"?coarse(m.B,m.C,m.W,m.H):refine(m.B,m.C,m.W,m.H,m.p,m.rounds);}
+}
+
 const $=id=>document.getElementById(id);
 const pad2=n=>String(n).padStart(2,"0");
 const fmtD=t=>{const d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate();};
@@ -329,6 +346,7 @@ async function startCam(mode){
  if(after){await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});startAlign();}
 }
 function stopCam(){
+ camGen++;
  if(loop){clearTimeout(loop);loop=null;}
  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
  $("cam").style.display="none";
@@ -358,7 +376,7 @@ async function gotPhoto(mode,blob,o){
 }
 
 /* ---------- alignment ---------- */
-const AW=96;let AH=72, Bedge=null, est={tx:0,ty:0,s:1,r:0}, estScore=-1, lastCoarse=0;
+const AW=96;let AH=72, camGen=0, Bedge=null, est={tx:0,ty:0,s:1,r:0}, estScore=-1, lastCoarse=0;
 const sc=document.createElement("canvas"), sctx=sc.getContext("2d",{willReadFrequently:true});
 function grayOf(drawFn){
  sc.width=AW;sc.height=AH;sctx.imageSmoothingEnabled=true;sctx.imageSmoothingQuality="medium";
@@ -378,22 +396,23 @@ async function startAlign(){
  est={tx:0,ty:0,s:1,r:0};estScore=-1;lastCoarse=0;
  if($("tDiff").classList.contains("on"))$("panel").style.display="block";
  $("panel").innerHTML='<div class="big na">施工前と比べています…</div>';
- tick();
+ tick(++camGen);
 }
-function tick(){
- if(!stream||camMode!=="after")return;
+async function tick(gen){
+ const live=()=>stream&&camMode==="after"&&gen===camGen;
+ if(!live())return;
  const v=$("vid");
  if(v.videoWidth&&$("tDiff").classList.contains("on")){
   const C=edgeMap(grayOf(ctx=>ctx.drawImage(v,0,0,AW,AH)),AW,AH);
-  const now=performance.now();
-  let res;
-  if(estScore<0.3&&now-lastCoarse>1500){res=coarse(Bedge,C,AW,AH);lastCoarse=now;}
-  else res=refine(Bedge,C,AW,AH,est,2);
+  const now=performance.now(), big=estScore<0.3&&now-lastCoarse>1500;
+  if(big)lastCoarse=now;
+  const res=await align(big?{mode:"coarse",B:Bedge,C,W:AW,H:AH}:{mode:"refine",B:Bedge,C,W:AW,H:AH,p:est,rounds:2});
+  if(!live())return;
   if(res.score>=estScore-0.15||res.score>0.3){est=res.p;}
   estScore=res.score;
   showDiff();
  }
- loop=setTimeout(tick,220);
+ loop=setTimeout(()=>tick(gen),150);
 }
 function showDiff(){
  $("panel").innerHTML=diffHtml(est,estScore,(job.beforeOri&&oriOK)?ori.beta-job.beforeOri.beta:null,true);
@@ -429,7 +448,8 @@ async function photoDiff(){
  const B=edgeMap(grayOf(ctx=>drawCoverTo(ctx,iB,iB.naturalWidth,iB.naturalHeight,W,H)),W,H);
  const C=edgeMap(grayOf(ctx=>drawCoverTo(ctx,iA,iA.naturalWidth,iA.naturalHeight,W,H)),W,H);
  AH=saveH;
- const res=coarse(B,C,W,H);
+ const forJob=job, res=await align({mode:"coarse",B,C,W,H});
+ if(job!==forJob)return;
  const p={...res.p,W,H};
  const dBeta=(job.beforeOri&&job.afterOri)?job.afterOri.beta-job.beforeOri.beta:null;
  box.innerHTML=diffHtml(p,res.score,dBeta,false);
