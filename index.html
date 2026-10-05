@@ -65,8 +65,8 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .toast.ng{background:#B8432C;box-shadow:0 0 0 3px #B8432C,0 10px 30px rgba(0,0,0,.4)}
 .opts{margin:12px 0 4px;display:flex;flex-direction:column;gap:10px}
 .opts .ttl{font-size:14px;font-weight:800;color:var(--soft)}
-#bSave{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 10px}
-#bSave .bsub{font-size:14px;font-weight:700;opacity:.85}
+#bSave{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 10px;font-size:21px}
+#bSave .bsub{font-size:18px;font-weight:800}
 .opts+#bSave{margin-top:8px}
 .lay{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .opt{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 8px;border:2px solid var(--line);background:var(--sheet);font-size:17px;white-space:nowrap;font-weight:800;cursor:pointer;touch-action:manipulation}
@@ -182,8 +182,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <div class="opts">
    <span class="ttl">並べ方</span>
    <div class="lay" role="radiogroup" aria-label="並べ方">
-    <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><span class="ic v"><i></i><i></i></span>縦に並べる</label>
     <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><span class="ic h"><i></i><i></i></span>横に並べる</label>
+    <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><span class="ic v"><i></i><i></i></span>縦に並べる</label>
    </div>
    <label class="chkrow" for="cLabel"><input type="checkbox" id="cLabel" checked>「施工前」「施工後」の文字を入れる</label>
   </div>
