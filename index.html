@@ -506,6 +506,8 @@ async function startCam(mode){
  const v=$("vid");v.srcObject=stream;
  setupTrack();
  const after=mode==="after";
+ // After camera starts with every overlay off; switch on what is needed.
+ if(after){["tGrid","tGhost","tLine","tDiff"].forEach(id=>$(id).classList.remove("on"));$("grid").classList.remove("on");}
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
  $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff","tAllOff"].forEach(id=>$(id).style.display=after?"":"none");
  $("tMask").style.display=mode==="before"?"":"none";$("tMask").classList.toggle("on",maskAfterShot);
@@ -973,9 +975,9 @@ async function tick(gen){
  const live=()=>stream&&camMode==="after"&&gen===camGen;
  if(!live())return;
  const v=$("vid");
+ prepAlign(); // keeps the overlay turned with the phone even when the colour check is off
  if(v.videoWidth&&$("tDiff").classList.contains("on")){
   // Full search on every frame: compares the live view with the before photo from scratch.
-  prepAlign();
   const C=grayOf(ctx=>drawVideo(ctx,AW,AH));
   const res=await align({B:Bgray,C,W:AW,H:AH,M:Bmask});
   if(!live())return;
