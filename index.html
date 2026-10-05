@@ -49,7 +49,7 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .slot .dt{position:absolute;bottom:0;right:0;z-index:2;font-size:11.5px;background:rgba(0,0,0,.6);color:#fff;padding:1px 6px}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
 .links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
-.links button{font-size:13px;padding:8px;background:transparent;color:var(--ink);border:1px solid var(--line)}
+.links button{font-size:16px;font-weight:800;padding:13px 8px;background:transparent;color:var(--ink);border:1px solid var(--line)}
 .row{display:flex;gap:8px;margin:6px 0 12px}
 .row button{flex:1;font-size:14px;padding:10px}
 .row button.on{background:var(--ink);color:var(--paper)}
@@ -61,8 +61,10 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .viewer img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;-webkit-user-drag:none;pointer-events:none}
 .viewer img.anim{transition:transform .22s ease-out}
 .vclose{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.35);z-index:2}
-.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;background:#2F7A55;color:#fff;font-size:17px;font-weight:800;padding:12px 26px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.3);pointer-events:none}
-.toast.ng{background:#B8432C}
+.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;background:#2F7A55;color:#fff;font-size:20px;font-weight:800;padding:16px 32px;border:3px solid #fff;border-radius:16px;box-shadow:0 0 0 3px #2F7A55,0 10px 30px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
+.toast.ng{background:#B8432C;box-shadow:0 0 0 3px #B8432C,0 10px 30px rgba(0,0,0,.4)}
+.chkrow{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;margin:10px 0 4px;cursor:pointer}
+.chkrow input{width:24px;height:24px;accent-color:var(--gas);margin:0}
 .msg{font-size:13px;color:var(--soft);margin:6px 0}
 .back{background:transparent;color:var(--ink);padding:6px 0;font-size:14px;margin-bottom:8px}
 .note{font-size:12px;color:var(--soft);margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
@@ -162,12 +164,11 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <button id="svB" disabled>施工前の写真を保存</button>
   <button id="svA" disabled>施工後の写真を保存</button>
  </div>
- <label class="f" style="margin-top:12px">並べ方</label>
- <div class="row"><button id="lyH" class="on">左右に並べる</button><button id="lyV">上下に並べる</button></div>
- <button class="o full" id="bMake" disabled>比較写真を作る</button>
  <div id="result">
+  <label class="f" style="margin-top:12px">比較写真(タップで拡大)</label>
   <img id="out" alt="施工前と施工後の比較写真">
   <button class="y full" id="bSave">比較写真を保存する</button>
+  <label class="chkrow" for="cLabel"><input type="checkbox" id="cLabel" checked>「施工前」「施工後」の文字を入れる</label>
  </div>
  <p class="msg" id="saveMsg"></p>
  <button class="w full" id="bDel" style="margin-top:24px">この現場を削除</button>
@@ -348,7 +349,9 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(
 $("hNew").onclick=()=>openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:""});
 
 /* ---------- detail ---------- */
-let layout="h", lastBlob=null, delArm=false;
+let lastBlob=null, delArm=false;
+// Remembered per phone: whether the comparison photo carries the 施工前/施工後 bands.
+let withLabels=true;try{withLabels=localStorage.getItem("ba-labels")!=="0";}catch(e){}
 function setSlot(slot,blob,at){
  const s=$(slot);s.querySelectorAll("img,.ph,.dt").forEach(x=>x.remove());
  s.querySelectorAll(".tmask").forEach(x=>x.remove());
@@ -361,13 +364,12 @@ function openJob(j){
  job=j;$("home").hidden=true;$("detail").hidden=false;
  $("site").value=j.site||"";$("memo").value=j.memo||"";
  $("result").style.display="none";$("saveMsg").textContent="";lastBlob=null;delArm=false;$("bDel").textContent="この現場を削除";
- refreshDetail();photoDiff();window.scrollTo(0,0);
+ refreshDetail();photoDiff();make();window.scrollTo(0,0);
 }
 function refreshDetail(){
  setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);
  $("bBefore").textContent=job.before?"施工前を撮り直す":"施工前を撮る";
  $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);$("bAfter").textContent=job.after?"施工後を撮り直す":"施工後を撮る";
- $("bMake").disabled=!(job.before&&job.after);
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
  $("bMask").disabled=!job.before;$("bMask").textContent=job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)";
  const n=$("camNote");
@@ -379,7 +381,7 @@ function refreshDetail(){
 }
 $("ovOp").oninput=e=>{$("ovB").style.opacity=e.target.value/100;};
 async function saveJob(){job.site=$("site").value.trim();job.memo=$("memo").value.trim();await putJob(job);}
-$("site").onchange=saveJob;$("memo").onchange=saveJob;
+$("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
 $("dBack").onclick=async()=>{if(job&&(job.before||job.site))await saveJob();showHome();};
 $("bDel").onclick=async()=>{
  if(!delArm){delArm=true;$("bDel").textContent="もう一度押すと削除します(元に戻せません)";return;}
@@ -463,7 +465,7 @@ async function gotPhoto(mode,blob,o){
  else{job.after=blob;job.afterAt=now;job.afterOri=o;}
  await saveJob();refreshDetail();
  $("result").style.display="none";lastBlob=null;
- photoDiff();
+ photoDiff();make();
  if(mode==="before")openMaskEditor();
 }
 
@@ -603,31 +605,35 @@ async function photoDiff(){
 }
 
 /* ---------- compose & save ---------- */
-$("lyH").onclick=()=>{layout="h";$("lyH").classList.add("on");$("lyV").classList.remove("on");if(lastBlob)make();};
-$("lyV").onclick=()=>{layout="v";$("lyV").classList.add("on");$("lyH").classList.remove("on");if(lastBlob)make();};
 function loadImg(b){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=blobUrl(b);});}
 function drawCover(ctx,im,x,y,w,h){const r=Math.max(w/im.naturalWidth,h/im.naturalHeight),sw=w/r,sh=h/r;ctx.drawImage(im,(im.naturalWidth-sw)/2,(im.naturalHeight-sh)/2,sw,sh,x,y,w,h);}
+// Built automatically whenever both photos exist: before on top, after below.
+let makeSeq=0;
 async function make(){
- await saveJob();
+ if(!(job&&job.before&&job.after)){$("result").style.display="none";lastBlob=null;return;}
+ const seq=++makeSeq, forJob=job;
  const iB=await loadImg(job.before), iA=await loadImg(job.after);
+ if(seq!==makeSeq||job!==forJob)return;
  const portrait=iB.naturalHeight>=iB.naturalWidth, pw=portrait?900:1200, ph=portrait?1200:900;
- const gap=12,pad=24,label=64,foot=110;
- const W=layout==="h"?pad*2+pw*2+gap:pad*2+pw, H=layout==="h"?pad+label+ph+foot:pad+(label+ph)*2+gap+foot;
+ const gap=12,pad=24,label=withLabels?64:0,foot=110;
+ const W=pad*2+pw, H=pad+(label+ph)*2+gap+foot;
  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
  const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif';
  const cells=[{im:iB,t:"施工前",d:job.beforeAt,x:pad,y:pad,bg:"#1C2B3A",fg:"#FFFFFF"},
-  {im:iA,t:"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+label+ph+gap,bg:"#E5AE00",fg:"#1C2B3A"}];
- cells.forEach(k=>{x.fillStyle=k.bg;x.fillRect(k.x,k.y,pw,label);x.fillStyle=k.fg;x.textBaseline="middle";
-  x.font="800 38px "+font;x.textAlign="left";x.fillText(k.t,k.x+22,k.y+label/2+1);
-  x.font="600 28px "+font;x.textAlign="right";x.fillText(fmtFull(k.d),k.x+pw-22,k.y+label/2+1);x.textAlign="left";
+  {im:iA,t:"施工後",d:job.afterAt,x:pad,y:pad+label+ph+gap,bg:"#E5AE00",fg:"#1C2B3A"}];
+ cells.forEach(k=>{
+  if(label){x.fillStyle=k.bg;x.fillRect(k.x,k.y,pw,label);x.fillStyle=k.fg;x.textBaseline="middle";
+   x.font="800 38px "+font;x.textAlign="left";x.fillText(k.t,k.x+22,k.y+label/2+1);
+   x.font="600 28px "+font;x.textAlign="right";x.fillText(fmtFull(k.d),k.x+pw-22,k.y+label/2+1);x.textAlign="left";}
   drawCover(x,k.im,k.x,k.y+label,pw,ph);});
  const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12,foot);
  x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 36px "+font;x.fillText(job.site||"現場名未入力",pad+14,fy+48,W-pad*2-20);
  x.font="500 28px "+font;x.fillStyle="#C9D2DA";x.fillText(job.memo||"",pad+14,fy+88,W-pad*2-20);
- c.toBlob(b=>{lastBlob=b;$("out").src=blobUrl(b);$("result").style.display="block";$("saveMsg").textContent="";$("result").scrollIntoView({behavior:"smooth",block:"start"});},"image/jpeg",0.9);
+ c.toBlob(b=>{if(seq!==makeSeq||job!==forJob)return;lastBlob=b;$("out").src=blobUrl(b);$("result").style.display="block";},"image/jpeg",0.9);
 }
-$("bMake").onclick=make;
+$("cLabel").checked=withLabels;
+$("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}make();};
 let toastT=null;
 function toast(t,ng){const e=$("toast");e.textContent=t;e.classList.toggle("ng",!!ng);e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{e.hidden=true;},2200);}
 function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
