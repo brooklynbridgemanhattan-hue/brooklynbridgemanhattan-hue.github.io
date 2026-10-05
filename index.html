@@ -131,7 +131,13 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .cam:not(.judging) .flab{display:none}
 /* phone held sideways: labels and controls turn to face the user, laid over the picture */
 .camhud{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none}
-.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(0,0,0,.5);display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:6px 12px;padding:6px 12px}
+.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(0,0,0,.5);display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:row dense;align-items:center;gap:6px 12px;padding:6px 12px}
+/* sideways rows: [zoom | tools] (equal halves), [overlay strength], [cancel + wide shutter] */
+.cam .camhud #zoomRow{grid-column:1}
+.cam .camhud .tools{grid-column:2}
+.cam .camhud #opRow{grid-column:1 / -1}
+.cam .camhud .shoot{grid-column:1 / -1}
+.cam .camhud .shoot .shot{flex:4}
 .cam .camhud .tools button{padding:6px 4px;font-size:12px}
 .cam .camhud .bar .r{font-size:12px}
 .cam .camhud .shoot button{padding:8px 6px;font-size:15px}
