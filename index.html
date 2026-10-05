@@ -65,7 +65,8 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .toast.ng{background:#B8432C;box-shadow:0 0 0 3px #B8432C,0 10px 30px rgba(0,0,0,.4)}
 .opts{margin:12px 0 4px;display:flex;flex-direction:column;gap:10px}
 .opts .ttl{font-size:14px;font-weight:800;color:var(--soft)}
-.savenote{margin:0;text-align:center;font-size:15px;font-weight:800;color:var(--ink)}
+#bSave{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 10px}
+#bSave .bsub{font-size:14px;font-weight:700;opacity:.85}
 .opts+#bSave{margin-top:8px}
 .lay{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .opt{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 8px;border:2px solid var(--line);background:var(--sheet);font-size:17px;white-space:nowrap;font-weight:800;cursor:pointer;touch-action:manipulation}
@@ -185,9 +186,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
     <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><span class="ic h"><i></i><i></i></span>横に並べる</label>
    </div>
    <label class="chkrow" for="cLabel"><input type="checkbox" id="cLabel" checked>「施工前」「施工後」の文字を入れる</label>
-   <p class="savenote">この状態で保存されます</p>
   </div>
-  <button class="y full" id="bSave">比較写真を保存する</button>
+  <button class="y full" id="bSave">比較写真を保存する<small class="bsub" id="bSaveSub">横並びで保存されます</small></button>
  </div>
  <p class="msg" id="saveMsg"></p>
  <button class="w full" id="bDel" style="margin-top:24px">この現場を削除</button>
@@ -682,8 +682,10 @@ function compose(c,k,iB,iA){
 }
 $("cLabel").checked=withLabels;
 $("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}make();};
-$("lyV").checked=layout==="v";$("lyH").checked=layout==="h";
-document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-lay",layout);}catch(err){}make();});
+// The save button says which layout will be saved.
+function showLayout(){$("lyV").checked=layout==="v";$("lyH").checked=layout==="h";$("bSaveSub").textContent=layout==="v"?"縦並びで保存されます":"横並びで保存されます";}
+showLayout();
+document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-lay",layout);}catch(err){}showLayout();make();});
 let toastT=null;
 function toast(t,ng){const e=$("toast");e.textContent=t;e.classList.toggle("ng",!!ng);e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{e.hidden=true;},2200);}
 function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
