@@ -63,8 +63,18 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .vclose{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.35);z-index:2}
 .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;background:#2F7A55;color:#fff;font-size:20px;font-weight:800;padding:16px 32px;border:3px solid #fff;border-radius:16px;box-shadow:0 0 0 3px #2F7A55,0 10px 30px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
 .toast.ng{background:#B8432C;box-shadow:0 0 0 3px #B8432C,0 10px 30px rgba(0,0,0,.4)}
-.chkrow{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;margin:10px 0 4px;cursor:pointer}
-.chkrow input{width:24px;height:24px;accent-color:var(--gas);margin:0}
+.opts{margin:12px 0 4px;display:flex;flex-direction:column;gap:10px}
+.opts .ttl{font-size:14px;font-weight:800;color:var(--soft)}
+.lay{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 8px;border:2px solid var(--line);background:var(--sheet);font-size:17px;white-space:nowrap;font-weight:800;cursor:pointer;touch-action:manipulation}
+.opt:has(input:checked){border-color:var(--gas);background:color-mix(in srgb,var(--gas) 16%,var(--sheet))}
+.opt input{width:26px;height:26px;margin:0;flex:none;accent-color:var(--gas)}
+.opt .ic{display:inline-grid;gap:2px;flex:none}
+.opt .ic i{display:block;width:14px;height:10px;background:var(--ink);opacity:.75}
+.opt .ic.v{grid-template-rows:10px 10px}.opt .ic.h{grid-template-columns:14px 14px}
+.chkrow{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:800;padding:14px 12px;border:2px solid var(--line);background:var(--sheet);cursor:pointer}
+.chkrow input{width:26px;height:26px;accent-color:var(--gas);margin:0;flex:none}
+#out.busy{opacity:.35}
 .msg{font-size:13px;color:var(--soft);margin:6px 0}
 .back{background:transparent;color:var(--ink);padding:6px 0;font-size:14px;margin-bottom:8px}
 .note{font-size:12px;color:var(--soft);margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
@@ -168,7 +178,14 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <label class="f" style="margin-top:12px">比較写真(タップで拡大)</label>
   <img id="out" alt="施工前と施工後の比較写真">
   <button class="y full" id="bSave">比較写真を保存する</button>
-  <label class="chkrow" for="cLabel"><input type="checkbox" id="cLabel" checked>「施工前」「施工後」の文字を入れる</label>
+  <div class="opts">
+   <span class="ttl">並べ方</span>
+   <div class="lay" role="radiogroup" aria-label="並べ方">
+    <label class="opt"><input type="radio" name="lay" id="lyV" value="v" checked><span class="ic v"><i></i><i></i></span>縦に並べる</label>
+    <label class="opt"><input type="radio" name="lay" id="lyH" value="h"><span class="ic h"><i></i><i></i></span>横に並べる</label>
+   </div>
+   <label class="chkrow" for="cLabel"><input type="checkbox" id="cLabel" checked>「施工前」「施工後」の文字を入れる</label>
+  </div>
  </div>
  <p class="msg" id="saveMsg"></p>
  <button class="w full" id="bDel" style="margin-top:24px">この現場を削除</button>
@@ -351,7 +368,8 @@ $("hNew").onclick=()=>openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo
 /* ---------- detail ---------- */
 let lastBlob=null, delArm=false;
 // Remembered per phone: whether the comparison photo carries the 施工前/施工後 bands.
-let withLabels=true;try{withLabels=localStorage.getItem("ba-labels")!=="0";}catch(e){}
+let withLabels=true, layout="v";
+try{withLabels=localStorage.getItem("ba-labels")!=="0";layout=localStorage.getItem("ba-layout")==="h"?"h":"v";}catch(e){}
 function setSlot(slot,blob,at){
  const s=$(slot);s.querySelectorAll("img,.ph,.dt").forEach(x=>x.remove());
  s.querySelectorAll(".tmask").forEach(x=>x.remove());
@@ -607,21 +625,24 @@ async function photoDiff(){
 /* ---------- compose & save ---------- */
 function loadImg(b){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=blobUrl(b);});}
 function drawCover(ctx,im,x,y,w,h){const r=Math.max(w/im.naturalWidth,h/im.naturalHeight),sw=w/r,sh=h/r;ctx.drawImage(im,(im.naturalWidth-sw)/2,(im.naturalHeight-sh)/2,sw,sh,x,y,w,h);}
-// Built automatically whenever both photos exist: before on top, after below.
-let makeSeq=0;
-async function make(){
+// Built automatically whenever both photos exist. makeDone resolves when the
+// newest build is finished, so saving never picks up an outdated photo.
+let makeSeq=0, makeDone=Promise.resolve();
+function make(){makeDone=build();return makeDone;}
+async function build(){
  if(!(job&&job.before&&job.after)){$("result").style.display="none";lastBlob=null;return;}
  const seq=++makeSeq, forJob=job;
+ lastBlob=null;$("out").classList.add("busy");
  const iB=await loadImg(job.before), iA=await loadImg(job.after);
  if(seq!==makeSeq||job!==forJob)return;
  const portrait=iB.naturalHeight>=iB.naturalWidth, pw=portrait?900:1200, ph=portrait?1200:900;
  const gap=12,pad=24,label=withLabels?64:0,foot=110;
- const W=pad*2+pw, H=pad+(label+ph)*2+gap+foot;
+ const W=layout==="h"?pad*2+pw*2+gap:pad*2+pw, H=layout==="h"?pad+label+ph+foot:pad+(label+ph)*2+gap+foot;
  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
  const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif';
  const cells=[{im:iB,t:"施工前",d:job.beforeAt,x:pad,y:pad,bg:"#1C2B3A",fg:"#FFFFFF"},
-  {im:iA,t:"施工後",d:job.afterAt,x:pad,y:pad+label+ph+gap,bg:"#E5AE00",fg:"#1C2B3A"}];
+  {im:iA,t:"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+label+ph+gap,bg:"#E5AE00",fg:"#1C2B3A"}];
  cells.forEach(k=>{
   if(label){x.fillStyle=k.bg;x.fillRect(k.x,k.y,pw,label);x.fillStyle=k.fg;x.textBaseline="middle";
    x.font="800 38px "+font;x.textAlign="left";x.fillText(k.t,k.x+22,k.y+label/2+1);
@@ -630,10 +651,14 @@ async function make(){
  const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12,foot);
  x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 36px "+font;x.fillText(job.site||"現場名未入力",pad+14,fy+48,W-pad*2-20);
  x.font="500 28px "+font;x.fillStyle="#C9D2DA";x.fillText(job.memo||"",pad+14,fy+88,W-pad*2-20);
- c.toBlob(b=>{if(seq!==makeSeq||job!==forJob)return;lastBlob=b;$("out").src=blobUrl(b);$("result").style.display="block";},"image/jpeg",0.9);
+ const b=await new Promise(res=>c.toBlob(res,"image/jpeg",0.9));
+ if(seq!==makeSeq||job!==forJob)return;
+ lastBlob=b;$("out").src=blobUrl(b);$("out").classList.remove("busy");$("result").style.display="block";
 }
 $("cLabel").checked=withLabels;
 $("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}make();};
+$("lyV").checked=layout==="v";$("lyH").checked=layout==="h";
+document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-layout",layout);}catch(err){}make();});
 let toastT=null;
 function toast(t,ng){const e=$("toast");e.textContent=t;e.classList.toggle("ng",!!ng);e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{e.hidden=true;},2200);}
 function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
@@ -717,7 +742,7 @@ async function saveBlob(blob,kind,t){
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
  saved(true,"保存しました");
 }
-$("bSave").onclick=()=>{if(lastBlob)saveBlob(lastBlob,"施工前後",Date.now());};
+$("bSave").onclick=async()=>{await makeDone;if(lastBlob)saveBlob(lastBlob,"施工前後",Date.now());};
 $("svB").onclick=()=>{if(job.before)saveBlob(job.before,"施工前",job.beforeAt);};
 $("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);};
 
