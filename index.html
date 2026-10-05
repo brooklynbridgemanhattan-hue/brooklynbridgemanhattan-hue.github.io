@@ -131,18 +131,17 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .cam:not(.judging) .flab{display:none}
 /* phone held sideways: labels and controls turn to face the user, laid over the picture */
 .camhud{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none}
-.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(0,0,0,.5);display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:row dense;align-items:center;gap:6px 12px;padding:6px 12px}
-/* sideways rows: [zoom | tools] (equal halves), [overlay strength], [cancel + wide shutter] */
-.cam .camhud #zoomRow{grid-column:1}
-.cam .camhud .tools{grid-column:2}
-.cam .camhud #opRow{grid-column:1 / -1}
-.cam .camhud .shoot{grid-column:1 / -1}
-.cam .camhud .shoot .shot{flex:4}
+.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(0,0,0,.5);display:flex;flex-direction:column;gap:6px;padding:6px 12px}
+.cam .camhud .shoot .shot{flex:4;font-size:26px}
+/* sideways: the tool buttons stand in a column in the free space on the right */
+.cam .camhud .tools{position:absolute;right:8px;top:8px;flex-direction:column;justify-content:center;gap:8px;pointer-events:auto}
+.cam .camhud .tools button{flex:none;padding:10px 6px;font-size:13px;line-height:1.3}
+.cam .camhud .tools .fl{border-radius:8px}
 .cam .camhud .tools button{padding:6px 4px;font-size:12px}
 .cam .camhud .bar .r{font-size:12px}
 .cam .camhud .shoot button{padding:8px 6px;font-size:15px}
 .camhud .flab{top:10px}
-.camhud .shotn{top:10px;bottom:auto;right:10px}
+.camhud .shotn{top:48px;bottom:auto;right:auto;left:10px}
 .camhud .sidew{top:10px;bottom:auto;left:10px}
 .cam .ghost.rot{max-width:none;max-height:none}
 .mwrap *{pointer-events:none}
@@ -175,7 +174,7 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .cam .shoot{display:flex;gap:10px}
 .cam .shoot button{flex:1}
 .cam .shoot .cancel{background:transparent;color:#eee;border:2px solid #666}
-.cam .shoot .shot{flex:2}
+.cam .shoot .shot{flex:2;font-size:22px}
 .cam .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;transition:opacity .25s}
 .cam .flash.on{opacity:.7;transition:none}
 .cam .shotn{position:absolute;right:10px;bottom:10px;z-index:4;background:rgba(0,0,0,.6);color:#fff;font-size:15px;font-weight:800;padding:6px 12px;border-radius:999px}
@@ -277,6 +276,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
    <button id="tGhost" class="on">施工前を重ねる</button>
    <button id="tLine">線で重ねる</button>
    <button id="tDiff" class="on">色で判定</button>
+   <button id="tAllOff">表示オフ</button>
   </div>
   <div class="shoot"><button class="cancel" id="cCancel">やめる</button><button class="y shot" id="cShot">撮影</button></div>
  </div>
@@ -485,7 +485,8 @@ async function startCam(mode){
  setupTrack();
  const after=mode==="after";
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
- $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff"].forEach(id=>$(id).style.display=after?"":"none");
+ $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff","tAllOff"].forEach(id=>$(id).style.display=after?"":"none");
+ savedLook=null;$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");
  $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
  $("cam").classList.toggle("judging",after&&$("tDiff").classList.contains("on"));
  setFrame("na","比べています…");lvlShown=null;
@@ -521,6 +522,14 @@ $("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").st
 // Outlines don't hide the live view, so they show at full strength without the slider.
 function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost").classList.contains("on");
  $("ghost").style.opacity=line?1:$("op").value/100;$("opRow").style.display=g&&!line&&camMode==="after"?"flex":"none";}
+// 表示オフ: turn every overlay off for a clean view; 元に戻す brings back what was on.
+let savedLook=null;
+const LOOK=["tGrid","tGhost","tLine","tDiff"];
+$("tAllOff").onclick=()=>{
+ if(!savedLook){savedLook=LOOK.filter(id=>$(id).classList.contains("on"));savedLook.forEach(id=>$(id).click());savedLook=savedLook.length?savedLook:[];$("tAllOff").textContent="元に戻す";$("tAllOff").classList.add("on");}
+ else{const back=savedLook;savedLook=null;back.forEach(id=>{if(!$(id).classList.contains("on"))$(id).click();});$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");}
+};
+LOOK.forEach(id=>$(id).addEventListener("click",e=>{if(savedLook&&e.isTrusted){savedLook=null;$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");}}));
 $("tLine").onclick=async()=>{const on=$("tLine").classList.toggle("on");$("ghost").src=on?await outlineSrc():photoSrc;ghostLook();};
 let photoSrc="", outlineFor=null, outlineUrl="";
 // The before photo as bright outlines only, so a new unit doesn't hide behind the old one.
@@ -577,15 +586,22 @@ function camRot(){
 let sideDeg=0;const homes=new Map();
 function setSideUI(deg){
  if(deg===sideDeg)return;sideDeg=deg;
- const cam=$("cam"), hud=$("camHud"), els=[$("fLabel"),$("shotN"),$("sideW"),cam.querySelector(".bar")];
+ const cam=$("cam"), hud=$("camHud"), tools=cam.querySelector(".tools");
+ // [element, where it goes when sideways, put first?]
+ const moves=[[$("fLabel"),hud],[$("shotN"),hud],[$("sideW"),hud],[cam.querySelector(".bar"),hud],[tools,hud],[$("tFlash"),tools,true]];
  if(deg){
-  els.forEach(e=>{if(!homes.has(e))homes.set(e,{p:e.parentNode,n:e.nextSibling});hud.appendChild(e);});
+  moves.forEach(([e,to,first])=>{homes.set(e,{p:e.parentNode,n:e.nextSibling});first?to.insertBefore(e,to.firstChild):to.appendChild(e);});
   hud.hidden=false;hud.style.width=cam.clientHeight+"px";hud.style.height=cam.clientWidth+"px";hud.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";
  }else{
-  els.slice().reverse().forEach(e=>{const h=homes.get(e);if(h)h.p.insertBefore(e,h.n);});
-  hud.hidden=true;
+  moves.slice().reverse().forEach(([e])=>{const h=homes.get(e);if(h)h.p.insertBefore(e,h.n);});
+  hud.hidden=true;tools.style.width=tools.style.bottom="";
  }
  fitStage();alignRot=null;prepAlign();
+ if(deg){
+  // column width = the black space beside the picture (at least wide enough for the labels)
+  const free=(cam.clientHeight-$("stage").clientHeight)/2;
+  tools.style.width=Math.max(104,free-16)+"px";tools.style.bottom=(cam.querySelector(".bar").offsetHeight+8)+"px";
+ }
 }
 function turnFixed(el,deg){
  if(deg){el.style.inset="auto";el.style.left="50%";el.style.top="50%";el.style.width=window.innerHeight+"px";el.style.height=window.innerWidth+"px";el.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";}
