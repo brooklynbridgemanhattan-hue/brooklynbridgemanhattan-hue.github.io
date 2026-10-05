@@ -189,6 +189,10 @@ label.btn{cursor:pointer}
 .cam .stage{position:relative;overflow:hidden;width:100%;height:100%}
 .cam video,.cam .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #vid{transform-origin:50% 50%}
+/* app camera: the phone's own preview shows through under the stage */
+html.natcam,html.natcam body,html.natcam .cam{background:transparent!important}
+html.natcam body>*:not(#cam):not(#toast){visibility:hidden}
+html.natcam #vid{display:none}
 .cam .ghost{pointer-events:none}
 .cam .ghost.rot{inset:auto;left:50%;top:50%;max-width:none;max-height:none}
 .grid{position:absolute;inset:0;pointer-events:none;display:none;
@@ -575,12 +579,22 @@ async function askOri(){try{if(typeof DeviceOrientationEvent!=="undefined"&&Devi
 
 async function startCam(mode){
  camMode=mode;await askOri();
- if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){noCam();return;}
- try{
-  stream=await openStream();
- }catch(err){noCam();return;}
- const v=$("vid");v.srcObject=stream;
- setupTrack();
+ const v=$("vid");
+ if(NATIVE){
+  // App: the phone's camera runs natively (full resolution); its preview shows under the page.
+  const info=await natOpen();
+  if(!info||info.error){noCam();return;}
+  stream={getTracks:()=>[]};natInfo=info;natFrame=null;
+  document.documentElement.classList.add("natcam");
+  natPull(++natGen);natSetup(info);
+ }else{
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){noCam();return;}
+  try{
+   stream=await openStream();
+  }catch(err){noCam();return;}
+  v.srcObject=stream;
+  setupTrack();
+ }
  const after=mode==="after";
  $("cam").dataset.mode=mode;$("camMode").querySelector("span").textContent={before:"施工前を撮影",after:"施工後を撮影",extra:"その他の写真"}[mode];
  // After camera starts with every overlay off; switch on what is needed.
@@ -596,17 +610,20 @@ async function startCam(mode){
  shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");
  if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();}
  $("cam").style.display="flex";
- await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});
+ if(NATIVE){const t0=Date.now();while(!natFrame&&stream&&Date.now()-t0<4000)await sleep(50);}
+ else await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});
+ if(!stream)return;
  fitStage();
  if(after)startAlign();
 }
 // Size the stage to the camera picture's aspect (no cropping), centred in the view.
 function fitStage(){
- const v=$("vid"), st=$("stage"), box=st.parentElement;
- if(!v.videoWidth)return;
- const ar=v.videoWidth/v.videoHeight;let w=box.clientWidth, h=w/ar;
+ const st=$("stage"), box=st.parentElement;
+ if(!srcW())return;
+ const ar=srcW()/srcH();let w=box.clientWidth, h=w/ar;
  if(h>box.clientHeight){h=box.clientHeight;w=h*ar;}
  st.style.width=w+"px";st.style.height=h+"px";
+ natLayout();
 }
 window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
 function stopCam(){
@@ -614,6 +631,7 @@ function stopCam(){
  camGen++;track=null;imgCap=null;photoCaps=null;
  if(loop){clearTimeout(loop);loop=null;}
  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+ if(NATIVE){natGen++;natFrame=null;natPlace="";window.AndroidCam.close();document.documentElement.classList.remove("natcam");}
  $("cam").style.display="none";
 }
 $("cCancel").onclick=stopCam;
@@ -659,13 +677,13 @@ async function outlineSrc(){
 let shotCount=0;
 let shooting=false;
 $("cShot").onclick=async()=>{
- const v=$("vid");if(!v.videoWidth||shooting)return;
+ if(!camReady()||shooting)return;
  shooting=true;
  const mode=camMode, o=oriOK?{...ori}:null;
  const fl=$("flash");fl.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));
  $("cShot").classList.add("busy");setTx2("cShot","撮影中…");
  let b=null;try{b=await grab();}finally{shooting=false;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
- if(!b)return;
+ if(!b){if(stream)toast("撮影できませんでした。もう一度押してください");return;}
  if(mode==="extra"){
   // Other photos: stay in the camera so several can be taken in a row.
   shotCount++;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
@@ -717,11 +735,51 @@ function turnFixed(el,deg){
 let medDeg=0;
 setInterval(()=>{
  const rot=camRot();
- if(stream){$("sideW").hidden=rot===0;setSideUI(-rot);
+ if(stream){$("sideW").hidden=rot===0;setSideUI(-rot);natLayout();
   // keep the tool column clear of the bottom panel (it grows when 重ね具合 appears)
   if(sideDeg){const tl=$("cam").querySelector(".tools"), bar=$("cam").querySelector(".bar");tl.style.bottom=(bar.offsetHeight+8)+"px";}}
  if(!$("med").hidden&&-rot!==medDeg){medDeg=-rot;turnFixed($("med"),medDeg);layoutMask();}
 },300);
+
+/* ---------- app camera (native, full resolution) ---------- */
+// In the Android app the photo is taken by the phone's camera itself (CameraX) at full
+// resolution. Its preview is placed exactly under #stage; small frames for the alignment
+// check are fetched from /cam/frame, and finished photos from /cam/shot/<id>.
+const NATIVE=!!window.AndroidCam;
+let natInfo=null, natFrame=null, natGen=0, natPlace="";
+function srcW(){return NATIVE?(natFrame?natFrame.width:0):$("vid").videoWidth;}
+function srcH(){return NATIVE?(natFrame?natFrame.height:0):$("vid").videoHeight;}
+function camReady(){return srcW()>0;}
+function natOpen(){return new Promise(res=>{
+ const t=setTimeout(()=>{window.onAppCam=null;res(null);},60000);
+ window.onAppCam=j=>{clearTimeout(t);window.onAppCam=null;try{res(JSON.parse(j));}catch(e){res(null);}};
+ window.AndroidCam.open();});}
+async function natPull(gen){
+ while(gen===natGen){
+  try{const r=await fetch("/cam/frame?"+Date.now(),{cache:"no-store"});
+   if(r.ok){const bm=await createImageBitmap(await r.blob());if(gen!==natGen){bm.close();break;}const old=natFrame;natFrame=bm;if(old)old.close();}}catch(e){}
+  await sleep(90);
+ }
+}
+// Keeps the phone's preview lined up with the stage (screen pixels).
+function natLayout(){
+ if(!NATIVE||!stream)return;const r=$("stage").getBoundingClientRect(), d=window.devicePixelRatio||1;
+ const k=[r.left,r.top,r.width,r.height].map(n=>Math.round(n*d)), key=k.join();
+ if(key===natPlace||!r.width)return;natPlace=key;window.AndroidCam.layout(k[0],k[1],k[2],k[3]);
+}
+function natSetup(info){
+ const zm=$("zm");digitalZoom=1;$("vid").style.transform="";
+ const lo=Math.max(info.zoomMin||1,Math.min(1,info.zoomMax||1)), hi=Math.max(lo,Math.min(info.zoomMax||1,lo*4));
+ zm.min=lo;zm.max=hi;zm.step=0.05;zm.value=lo;applyZoom(lo);
+ $("zmV").textContent=zoomLabel(lo);
+ showFlash();
+}
+function natShot(rot){return new Promise(res=>{
+ const t=setTimeout(()=>{window.onAppShot=null;res(null);},20000);
+ window.onAppShot=async s=>{clearTimeout(t);window.onAppShot=null;
+  if(!String(s).startsWith("ok:")){res(null);return;}
+  try{const r=await fetch("/cam/shot/"+s.slice(3),{cache:"no-store"});res(r.ok?await r.blob():null);}catch(e){res(null);}};
+ window.AndroidCam.capture(flashMode,rot|0);});}
 
 /* ---------- lens choice, zoom, flash ---------- */
 let track=null, trackCaps={}, imgCap=null, photoCaps=null, digitalZoom=1, zoomPend=null;
@@ -751,7 +809,8 @@ async function openStream(){
 // 1.6x of the raw camera matches the phone's own camera; it is shown as 標準 and the
 // slider zooms in from there (labels are relative to it).
 const ZOOM_BASE=1.6;
-function zoomLabel(z){const k=z/ZOOM_BASE;return k<1.05?"標準":k.toFixed(1)+"x";}
+// In the app the camera's own 1x is the phone camera's standard view.
+function zoomLabel(z){const k=z/(NATIVE?1:ZOOM_BASE);return k<1.05?"標準":k.toFixed(1)+"x";}
 function setupTrack(){
  track=stream.getVideoTracks()[0];
  trackCaps={};try{trackCaps={...(track.getCapabilities?track.getCapabilities():{})};}catch(e){}
@@ -768,6 +827,7 @@ function setupTrack(){
  showFlash();
 }
 function applyZoom(z){
+ if(NATIVE){window.AndroidCam.zoom(z);return;}
  if(trackCaps.zoom){zoomPend=z;track.applyConstraints({advanced:[{zoom:z}]}).catch(()=>{});return;}
  digitalZoom=z;$("vid").style.transform=z>1?"scale("+z+")":"";
 }
@@ -804,7 +864,7 @@ camView.addEventListener("pointermove",e=>{if(!pinchPts.has(e.pointerId))return;
  if(pinch0&&pinchPts.size>=2){const [a,b]=[...pinchPts.values()];setZoom(pinch0.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch0.d);}});
 const pinchEnd=e=>{pinchPts.delete(e.pointerId);if(pinchPts.size<2)pinch0=null;};
 camView.addEventListener("pointerup",pinchEnd);camView.addEventListener("pointercancel",pinchEnd);
-const hasFlash=()=>!!(trackCaps.torch||(photoCaps&&photoCaps.fillLightMode&&photoCaps.fillLightMode.indexOf("flash")>=0));
+const hasFlash=()=>NATIVE?!!(natInfo&&natInfo.flash):!!(trackCaps.torch||(photoCaps&&photoCaps.fillLightMode&&photoCaps.fillLightMode.indexOf("flash")>=0));
 function showFlash(){
  const b=$("tFlash");b.hidden=!hasFlash();
  setTx("tFlash",{off:"オフ",on:"オン",auto:"自動"}[flashMode]);
@@ -813,6 +873,7 @@ function showFlash(){
 $("tFlash").onclick=()=>{flashMode={off:"on",on:"auto",auto:"off"}[flashMode];try{localStorage.setItem("ba-flash",flashMode);}catch(e){}showFlash();};
 // The visible part of the video (digital zoom crops the centre) drawn into w x h.
 function drawVideo(ctx,w,h){
+ if(NATIVE){if(natFrame)ctx.drawImage(natFrame,0,0,w,h);return;}
  const v=$("vid"), z=digitalZoom, sw=v.videoWidth/z, sh=v.videoHeight/z;
  ctx.drawImage(v,(v.videoWidth-sw)/2,(v.videoHeight-sh)/2,sw,sh,0,0,w,h);
 }
@@ -826,6 +887,7 @@ async function cropBlob(blob,z){
 // Takes the picture, firing the flash when asked (real flash where the phone allows it,
 // otherwise the light is switched on for the shot).
 async function grab(){
+ if(NATIVE){await steady();return await natShot(camRot());}
  const rot=camRot(), b=await grabRaw();
  return rot&&b?await rotateBlob(b,rot):b;
 }
@@ -1085,7 +1147,7 @@ function drawCoverTo(ctx,src,sw,sh,w,h){
 }
 let beforeImg=null, alignRot=null;
 async function startAlign(){
- const v=$("vid");AH=Math.round(AW*v.videoHeight/v.videoWidth);
+ AH=Math.round(AW*srcH()/srcW());
  beforeImg=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=photoSrc;});
  alignRot=null;prepAlign();
  tick(++camGen);
@@ -1123,9 +1185,8 @@ function prepAlign(){
 async function tick(gen){
  const live=()=>stream&&camMode==="after"&&gen===camGen;
  if(!live())return;
- const v=$("vid");
  prepAlign(); // keeps the overlay turned with the phone even when the colour check is off
- if(v.videoWidth&&$("tDiff").classList.contains("on")){
+ if(camReady()&&$("tDiff").classList.contains("on")){
   // Full search on every frame: compares the live view with the before photo from scratch.
   const C=grayOf(ctx=>drawVideo(ctx,AW,AH));
   const res=await align({B:Bgray,C,W:AW,H:AH,M:Bmask});
