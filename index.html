@@ -163,6 +163,16 @@ label.btn{cursor:pointer}
 #vImg2{object-fit:cover}
 .vbar{position:absolute;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2;display:flex;gap:10px;align-items:center;justify-content:flex-end}
 .vbar .cnt{margin-right:auto}
+.vbar{flex-wrap:wrap}
+/* comment on an other-photo, under the picture */
+.vnote{flex-basis:100%;display:flex;flex-direction:column;gap:6px;background:rgba(20,22,28,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.22);border-radius:16px;padding:10px 12px}
+.vnote label{display:flex;align-items:center;gap:6px;color:#CBD5E1;font-size:14px;font-weight:700}
+.vnote label svg.i{width:18px;height:18px}
+.vnote label .st{margin-left:auto;color:#4ADE80;font-weight:700;background:none!important;padding:0!important;border:0!important}
+.vnote textarea{width:100%;box-sizing:border-box;resize:none;border:0;outline:0;background:transparent;color:#fff;font:inherit;font-size:18px;line-height:1.45;min-height:1.45em;max-height:5.8em;padding:0}
+.vnote textarea::placeholder{color:rgba(255,255,255,.5)}
+.thumbs .cm{position:absolute;right:5px;bottom:5px;width:24px;height:24px;border-radius:50%;background:rgba(15,23,42,.75);display:flex;align-items:center;justify-content:center}
+.thumbs .cm svg{width:14px;height:14px;stroke:#fff;stroke-width:2.4;fill:none}
 .vbar button{height:52px!important;padding:0 20px!important;font-size:18px!important}
 #vDel{background:rgba(220,38,38,.85)!important;border-color:rgba(255,255,255,.35)!important}
 .vbar button,.vclose{display:inline-flex;align-items:center;gap:6px;height:46px;padding:0 16px;border-radius:999px;background:rgba(20,22,28,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.22);font-size:16px;font-weight:700}
@@ -357,7 +367,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </main>
 </div>
 
-<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden></div><div class="vbar" id="vBar" hidden><span class="cnt" id="vCnt"></span><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>保存</button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
+<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><label for="vNoteT"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>コメント<span class="st" id="vNoteS"></span></label><textarea id="vNoteT" rows="1" maxlength="300" placeholder="ここをタップしてコメントを入力(例:分電盤の状態)"></textarea></div><span class="cnt" id="vCnt"></span><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>保存</button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
@@ -1058,7 +1068,7 @@ $("bPlace").onclick=getPlace;
 /* ---------- other photos ---------- */
 function renderThumbs(){
  const xs=(job&&job.extras)||[];
- $("thumbs").innerHTML=xs.map((x,i)=>'<button data-x="'+i+'" aria-label="写真 '+(i+1)+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="ck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span></button>').join("");
+ $("thumbs").innerHTML=xs.map((x,i)=>'<button data-x="'+i+'" aria-label="写真 '+(i+1)+(x.note?' '+esc(x.note):'')+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="ck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span>'+(x.note?'<span class="cm"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>':'')+'</button>').join("");
  $("thumbsNone").hidden=xs.length>0;
  selClear();
 }
@@ -1098,6 +1108,8 @@ function openGallery(i,kind){
  kind=kind||"extra";const xs=galItems(kind);if(!xs.length){closeViewer();return;}
  i=Math.max(0,Math.min(xs.length-1,i));gal={i,kind};galDelArm=false;setTx("vDel","削除");
  $("vDel").hidden=kind!=="extra";
+ noteFlush();$("vNote").hidden=kind!=="extra";
+ if(kind==="extra"){const t=$("vNoteT");t.value=(job.extras[i]&&job.extras[i].note)||"";$("vNoteS").textContent="";noteFit();}
  $("vBar").hidden=false;$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
  openViewer(blobUrl(xs[i].blob));
 }
@@ -1106,6 +1118,18 @@ $("vSave").onclick=()=>{if(gal){const x=galItems(gal.kind)[gal.i];if(x)saveBlob(
 // Tapping the 施工前 / 施工後 photo opens it full screen.
 $("sB").addEventListener("click",()=>{if(job&&job.before)openGallery(0,"pair");});
 $("sA").addEventListener("click",()=>{if(job&&job.after)openGallery(job.before?1:0,"pair");});
+// Comment: saved as you type (and when the photo changes or the viewer closes).
+let noteT=0, noteFor=null;
+function noteFit(){const t=$("vNoteT");t.style.height="auto";t.style.height=t.scrollHeight+"px";}
+async function noteFlush(){
+ clearTimeout(noteT);if(!noteFor)return;const {x,v}=noteFor;noteFor=null;
+ if((x.note||"")===v)return;x.note=v;await saveJob();renderThumbs();$("vNoteS").textContent="保存しました";
+}
+$("vNoteT").addEventListener("input",()=>{
+ noteFit();if(!gal||gal.kind!=="extra")return;const x=job.extras[gal.i];if(!x)return;
+ noteFor={x,v:$("vNoteT").value.trim()};$("vNoteS").textContent="";clearTimeout(noteT);noteT=setTimeout(noteFlush,500);
+});
+$("vNoteT").addEventListener("blur",noteFlush);
 $("vDel").onclick=async()=>{
  if(!gal||gal.kind!=="extra")return;
  if(!galDelArm){galDelArm=true;setTx("vDel","もう一度押すと削除");return;}
@@ -1334,7 +1358,7 @@ function openViewer(src,topSrc){
  im.src=src;if(im.complete&&im.naturalWidth)im.onload();
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
-function closeViewer(){gal=null;$("vBar").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function closeViewer(){noteFlush();if(document.activeElement===$("vNoteT"))$("vNoteT").blur();gal=null;$("vBar").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
 function vApply(anim){
@@ -1349,6 +1373,7 @@ function vZoomAt(s,px,py,anim){const cx=(px-vw.x)/vw.s, cy=(py-vw.y)/vw.s;vw.s=s
 const vMax=()=>Math.max(vw.fit*6,1.5);
 $("viewer").addEventListener("pointerdown",e=>{
  if(e.target.closest("#vClose,#vOp,#vBar"))return;
+ if(document.activeElement===$("vNoteT")){$("vNoteT").blur();return;}
  $("viewer").setPointerCapture(e.pointerId);
  vw.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(vw.pts.size===2){
