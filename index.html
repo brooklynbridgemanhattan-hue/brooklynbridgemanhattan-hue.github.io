@@ -2,23 +2,24 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>施工前・施工後カメラ</title>
 <style>
-/* Design: light app shell with white cards; each job has its own colour (施工前 indigo, 施工後 amber,
-   比較写真 violet, その他 teal, 報告書 green); dark glass camera. Type scale 14 / 16-17 / 18-22. */
+/* Design v2: calm light shell, one clear "next step" button at the bottom, colour = which photo
+   (施工前 indigo, 施工後 amber, 比較写真 violet, その他 teal, 完了 green). Camera like a phone
+   camera: round shutter in the middle. Type scale 14 / 16-17 / 19-22. (v1.39 is in backup/v1.39) */
 :root{
- --bg:#F2F4F8;--card:#FFFFFF;--ink:#0F172A;--sub:#5B6475;--line:#E3E8EF;--fill:#F6F8FB;
+ --bg:#F3F4F7;--card:#FFFFFF;--ink:#101828;--sub:#667085;--line:#E4E7EC;--fill:#F2F4F7;
  --brand:#2563EB;
- --before:#3554B5;--before-soft:#E8EEFC;
- --after:#E39A00;--after-ink:#3D2A00;--after-soft:#FFF4D9;--after-text:#8A5A00;
- --cmp:#7C3AED;--cmp-soft:#F1EAFE;
- --extra:#0891B2;--extra-soft:#E0F5FA;
- --ok:#16A34A;--ok-soft:#E3F8EA;
- --danger:#DC2626;
- --r:18px;--r-s:12px;
- --sh:0 1px 2px rgba(15,23,42,.06),0 6px 20px rgba(15,23,42,.06);
+ --before:#3B5BDB;--before-soft:#EDF2FF;
+ --after:#F59F00;--after-ink:#3B2700;--after-soft:#FFF4DB;--after-text:#9A5B00;
+ --cmp:#7048E8;--cmp-soft:#F3F0FF;
+ --extra:#0C8599;--extra-soft:#E3FAFC;
+ --ok:#2F9E44;--ok-soft:#EBFBEE;
+ --danger:#E03131;
+ --r:20px;--r-s:14px;
+ --sh:0 1px 2px rgba(16,24,40,.05),0 4px 16px rgba(16,24,40,.06);
  color-scheme:light;
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -35,108 +36,151 @@ svg.i{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-widt
 /* ---------- buttons ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:12px 16px;border-radius:var(--r-s);font-size:17px;font-weight:700;line-height:1.25;text-align:center;user-select:none}
 button,label.btn,.job{touch-action:manipulation;transition:transform .1s,filter .1s,background-color .15s}
-button:active:not(:disabled),label.btn:active:not(.off),.job:active{transform:scale(.97);filter:brightness(.92)}
+button:active:not(:disabled),label.btn:active:not(.off),.job:active{transform:scale(.97);filter:brightness(.94)}
 button:disabled,label.btn.off{opacity:.38;cursor:default}
-.b-primary{background:linear-gradient(135deg,#0EA5E9,#2563EB 50%,#7C3AED);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,.28)}
 .b-before{background:var(--before);color:#fff}
 .b-after{background:var(--after);color:var(--after-ink)}
-.s-before{background:var(--before-soft);color:var(--before)}
-.s-after{background:var(--after-soft);color:var(--after-text)}
-.o-before{background:#fff;color:var(--before);border:2px solid var(--before)}
-.b-cmp{background:var(--cmp);color:#fff;box-shadow:0 6px 16px rgba(124,58,237,.25)}
 .b-extra{background:var(--extra);color:#fff}
-.b-rep{background:var(--ok);color:#fff;box-shadow:0 6px 16px rgba(22,163,74,.25)}
 .t-danger{background:transparent;color:var(--danger);font-size:16px;min-height:50px}
-.big{min-height:62px;font-size:19px;border-radius:16px}
 
 /* ---------- home ---------- */
-.hero{display:flex;align-items:center;gap:14px;padding:22px 20px 24px;background:linear-gradient(135deg,#0EA5E9,#2563EB 50%,#7C3AED);color:#fff;border-radius:0 0 26px 26px}
-.logo{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}
-.logo svg{width:34px;height:34px}
-.hero h1{margin:0;font-size:22px;line-height:1.3}
-.hero .sub{margin:2px 0 0;font-size:14px;opacity:.92}
-#hNew{margin:4px 0 6px}
-.lh{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:800;margin:20px 4px 10px}
-.dot{width:10px;height:10px;border-radius:50%}.dot.wait{background:var(--after)}.dot.done{background:var(--ok)}
+.hbar{display:flex;align-items:center;gap:14px;padding:18px 20px 6px;max-width:640px;margin:0 auto}
+.logo{width:50px;height:50px;border-radius:15px;background:linear-gradient(135deg,#0EA5E9,#2563EB 55%,#7C3AED);display:grid;place-items:center;flex:none;box-shadow:0 6px 16px rgba(37,99,235,.3)}
+.logo svg{width:32px;height:32px}
+.hbar h1{margin:0;font-size:22px;line-height:1.3;font-weight:800}
+.hbar p{margin:0;font-size:14px;color:var(--sub)}
+.newjob{display:flex;align-items:center;gap:14px;width:100%;margin:12px 0 22px;padding:18px 18px;border-radius:var(--r);background:linear-gradient(135deg,#0EA5E9,#2563EB 55%,#7C3AED);color:#fff;text-align:left;box-shadow:0 10px 24px rgba(37,99,235,.28)}
+.newjob .ni{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.2);display:grid;place-items:center;flex:none}
+.newjob .ni svg.i{width:28px;height:28px;stroke-width:2.4}
+.newjob .nt{flex:1;display:flex;flex-direction:column;line-height:1.35}
+.newjob b{font-size:20px}
+.newjob small{font-size:14px;opacity:.9}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:#E7E9EE;border-radius:16px;margin-bottom:12px}
+.tabs button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:12px;font-size:16px;font-weight:700;color:var(--sub)}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(16,24,40,.12)}
+.tabs b{min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:rgba(16,24,40,.08);font-size:14px;display:grid;place-items:center}
+.tabs button.on b{background:var(--ink);color:#fff}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}.dot.wait{background:var(--after)}.dot.done{background:var(--ok)}
 .list{display:flex;flex-direction:column;gap:10px}
-.job{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px 10px 10px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);text-align:left;color:var(--ink)}
-.job img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex:none;background:var(--fill)}
-.job img:not([src]){background:var(--before-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233554B5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/%3E%3Ccircle cx='12' cy='13' r='3.2'/%3E%3C/svg%3E") center/30px no-repeat}
+.job{display:flex;align-items:center;gap:14px;width:100%;padding:12px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);text-align:left;color:var(--ink)}
+.jimg{display:flex;flex:none}
+.jimg img{width:56px;height:70px;object-fit:cover;background:var(--fill);border:2px solid var(--card)}
+.jimg img:first-child{border-radius:12px 0 0 12px}
+.jimg img:last-child{border-radius:0 12px 12px 0}
+.jimg img:only-child{border-radius:12px}
+.jimg img+img{margin-left:-2px}
+.jimg .noimg{width:56px;height:70px;border-radius:12px;background:var(--before-soft);display:grid;place-items:center;color:var(--before)}
 .jbody{flex:1;min-width:0}
-.jt{font-size:17px;font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jt{font-size:18px;font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jd{font-size:14px;color:var(--sub);display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jd svg.i{width:15px;height:15px}
-.st{flex:none;font-size:14px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--after-soft);color:var(--after-text)}
-.job.done .st{background:var(--ok-soft);color:#11803A}
-.empty{margin:0;font-size:15px;color:var(--sub);padding:16px;text-align:center;background:var(--card);border-radius:var(--r);border:1.5px dashed var(--line)}
-.note{font-size:14px;color:var(--sub);margin:24px 4px 0;line-height:1.65}
+.job .chev{color:#98A2B3}
+.empty{margin:0;font-size:15px;color:var(--sub);padding:28px 16px;text-align:center;background:var(--card);border-radius:var(--r);border:1.5px dashed var(--line)}
+.note{display:flex;gap:8px;font-size:14px;color:var(--sub);margin:22px 4px 0;line-height:1.6}
+.note svg.i{width:18px;height:18px;margin-top:2px}
 
 /* ---------- detail ---------- */
-.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(242,244,248,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(243,244,247,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .iconbtn{width:46px;height:46px;border-radius:14px;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center;flex:none}
 .tb-title{display:flex;flex-direction:column;min-width:0;line-height:1.3}
-.tb-title small{font-size:14px;color:var(--sub);font-weight:600}
-.tb-title span{font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card{position:relative;overflow:hidden;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:18px 16px 16px;margin-bottom:14px}
-.card::before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:var(--accent)}
-.c-info{--accent:var(--brand);--num:var(--brand)}
-.c-shot{--accent:linear-gradient(90deg,var(--before) 50%,var(--after) 50%);--num:#334155}
-.c-cmp{--accent:var(--cmp);--num:var(--cmp)}
-.c-extra{--accent:var(--extra);--num:var(--extra)}
-.c-rep{--accent:var(--ok);--num:var(--ok)}
-.sec{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:19px;font-weight:800;line-height:1.3}
-.num{width:30px;height:30px;border-radius:50%;background:var(--num);color:#fff;font-size:16px;font-weight:800;display:grid;place-items:center;flex:none}
-.sec small{margin-left:auto;font-size:14px;font-weight:600;color:var(--sub)}
-.field{display:block;margin-bottom:14px}
+.tb-title small{font-size:13px;color:var(--sub);font-weight:600}
+.tb-title span{font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dwrap{padding-top:4px;padding-bottom:130px}
+/* where you are: 施工前 -> 施工後 -> 比較写真 */
+.steps{display:flex;align-items:center;gap:6px;list-style:none;margin:0 0 14px;padding:0}
+.steps li{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border-radius:999px;background:var(--card);color:#98A2B3;font-size:15px;font-weight:700;box-shadow:inset 0 0 0 1.5px var(--line)}
+.steps li i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--fill)}
+.steps li.done{color:var(--ok);box-shadow:inset 0 0 0 1.5px #B7E4C0;background:var(--ok-soft)}
+.steps li.done i{background:var(--ok);color:#fff}
+.steps li.cur{color:#fff;box-shadow:none;background:var(--sc)}
+.steps li.cur i{background:rgba(255,255,255,.28);color:inherit}
+.steps li[data-s=b]{--sc:var(--before)}
+.steps li[data-s=a]{--sc:var(--after)}.steps li[data-s=a].cur{color:var(--after-ink)}
+.steps li[data-s=c]{--sc:var(--cmp)}
+.card{position:relative;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:14px}
+.sh2{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.sh2 h2{margin:0;font-size:19px;font-weight:800;line-height:1.3}
+.sh2 .cdot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex:none}
+.sh2 small{margin-left:auto;font-size:14px;font-weight:600;color:var(--sub)}
+.c-info{--accent:var(--brand)}
+.c-cmp{--accent:var(--cmp)}
+.c-extra{--accent:var(--extra)}
+.field{display:block;margin-bottom:12px}
 .field:last-child{margin-bottom:0}
-.fl-l{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:var(--sub);margin-bottom:6px}
-.fl-l svg.i{width:18px;height:18px}
+.fl-l{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.fl-l svg.i{width:17px;height:17px}
 input.t{width:100%;font:inherit;font-size:17px;padding:13px 14px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--fill);color:var(--ink);outline:none}
 input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .place{display:flex;gap:8px}
-.pv{flex:1;min-width:0;display:flex;align-items:center;padding:13px 14px;border-radius:var(--r-s);background:var(--fill);border:1.5px solid var(--line);font-size:17px;font-weight:700}
+.pv{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:13px 14px;border-radius:var(--r-s);background:var(--fill);border:1.5px solid var(--line);font-size:17px;font-weight:700}
 .pv span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pv.none{color:var(--sub);font-weight:500}
 .chipbtn{display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:var(--r-s);background:#EAF1FF;color:var(--brand);font-size:15px;font-weight:700;white-space:nowrap}
 .chipbtn svg.i{width:19px;height:19px}
+/* photos: the empty tile itself is the camera button */
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .col{display:flex;flex-direction:column;gap:8px;min-width:0}
-.col .btn{min-height:52px;padding:10px 8px;font-size:16px;gap:7px}
-.col .btn svg.i{width:20px;height:20px}
-.slot{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:14px;overflow:hidden;background:var(--fill);border:2px dashed #CBD3DF;display:flex;align-items:center;justify-content:center}
-.col.before .slot.has{border:2px solid var(--before)}
-.col.after .slot.has{border:2px solid var(--after)}
+.slot{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:16px;overflow:hidden;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.col.before .slot:not(.has){background:var(--before-soft);box-shadow:inset 0 0 0 2px #C5D0FA}
+.col.after .slot:not(.has){background:var(--after-soft);box-shadow:inset 0 0 0 2px #FFE08A}
+.col.after.off .slot:not(.has){background:var(--fill);box-shadow:inset 0 0 0 2px var(--line);cursor:default}
 .slot.has{cursor:zoom-in}
-.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0F172A}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#101828}
 .tag{position:absolute;top:8px;left:8px;z-index:2;font-size:14px;font-weight:800;padding:3px 11px;border-radius:999px;background:var(--before);color:#fff}
 .col.after .tag{background:var(--after);color:var(--after-ink)}
-.slot .ph{font-size:14px;color:var(--sub);text-align:center;padding:0 10px;line-height:1.55}
-.slot .dt{position:absolute;right:8px;bottom:8px;z-index:2;font-size:13px;font-weight:700;background:rgba(15,23,42,.72);color:#fff;padding:2px 9px;border-radius:999px}
+.slot .ph{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--before);text-align:center;padding:0 10px;line-height:1.45}
+.col.after .slot .ph{color:var(--after-text)}
+.col.after.off .slot .ph{color:var(--sub);font-weight:600}
+.slot .ph .pi{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--before);color:#fff}
+.col.after .slot .ph .pi{background:var(--after);color:var(--after-ink)}
+.col.after.off .slot .ph .pi{background:#D0D5DD;color:#fff}
+.slot .ph .pi svg.i{width:26px;height:26px}
+.slot .dt{position:absolute;right:8px;bottom:8px;z-index:2;font-size:13px;font-weight:700;background:rgba(16,24,40,.72);color:#fff;padding:2px 9px;border-radius:999px}
 .tmask{position:absolute;border:2px dashed #FACC15;background:rgba(250,204,21,.14);z-index:1;pointer-events:none}
 .tmask span,.cmask span{position:absolute;left:5px;top:3px;font-size:12px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
-#bMask{margin-top:12px}
+.mini{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border-radius:12px;font-size:15px;font-weight:700;background:var(--fill);color:var(--ink)}
+.mini svg.i{width:18px;height:18px}
+.col.before .mini{color:var(--before)}
+.col.after .mini{color:var(--after-text)}
+.rowbtn{display:flex;align-items:center;gap:10px;width:100%;margin-top:12px;padding:12px 14px;border-radius:var(--r-s);background:var(--fill);font-size:16px;font-weight:700;color:var(--ink);text-align:left}
+.rowbtn svg.i{color:var(--before)}
+.rowbtn .tx{flex:1}
+.rowbtn .chev{color:#98A2B3;width:20px;height:20px}
 #nativeBtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
 label.btn{cursor:pointer}
 .msg{font-size:14px;color:var(--sub);margin:10px 2px 0}
 #result{display:none}
-#out{width:100%;height:auto;display:block;border-radius:var(--r-s);box-shadow:0 0 0 1px var(--line);cursor:zoom-in;background:#fff}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;margin:14px 0 10px;background:var(--fill);border:1px solid var(--line);border-radius:14px}
-.opt{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:10px;font-size:16px;font-weight:700;color:var(--sub);cursor:pointer;white-space:nowrap}
+#out{width:100%;height:auto;display:block;border-radius:12px;box-shadow:0 0 0 1px var(--line);cursor:zoom-in;background:#fff}
+.cmpopts{display:flex;gap:10px;margin-top:12px;align-items:stretch}
+.seg{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--fill);border-radius:14px}
+.opt{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border-radius:10px;font-size:15px;font-weight:700;color:var(--sub);cursor:pointer;white-space:nowrap}
+.opt svg.i{width:20px;height:20px}
 .opt input{position:absolute;opacity:0;pointer-events:none}
-.opt:has(input:checked){background:var(--card);color:var(--cmp);box-shadow:0 1px 4px rgba(15,23,42,.14)}
-.switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;margin-bottom:12px;background:var(--fill);border:1px solid var(--line);border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
-.switch>span{display:flex;align-items:center;gap:8px;min-width:0}
-.switch>span svg.i{color:var(--cmp)}
+.opt:has(input:checked){background:var(--card);color:var(--cmp);box-shadow:0 1px 4px rgba(16,24,40,.14)}
+.switch{position:relative;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--fill);border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap}
 .switch input{position:absolute;opacity:0;pointer-events:none}
-.switch i{flex:none;width:52px;height:30px;border-radius:999px;background:#CBD3DF;position:relative;transition:background .2s}
-.switch i::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
+.switch i{flex:none;width:44px;height:26px;border-radius:999px;background:#D0D5DD;position:relative;transition:background .2s}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
 .switch input:checked+i{background:var(--cmp)}
-.switch input:checked+i::after{left:25px}
-#bSave{min-height:64px;justify-content:center}
-#bSave .tx2{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3}
-#bSave b{font-size:19px}
-#bSave .bsub{font-size:15px;font-weight:600;opacity:.92}
-.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:12px;border-radius:12px;overflow:hidden}
+.switch input:checked+i::after{left:21px}
+.addbtn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 16px;border-radius:999px;background:var(--extra);color:#fff;font-size:15px;font-weight:800}
+.addbtn svg.i{width:19px;height:19px}
+.linkrow{display:flex;align-items:center;gap:12px;width:100%;padding:16px;margin-bottom:14px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh);font-size:17px;font-weight:700;text-align:left;color:var(--ink)}
+.linkrow .li{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--ok-soft);color:var(--ok)}
+.linkrow .tx{flex:1}
+.linkrow .chev{color:#98A2B3}
+/* the one big "next step" button, always at the bottom of the site page */
+.nextbar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--bg) 70%,rgba(243,244,247,0))}
+.next{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;max-width:608px;margin:0 auto;min-height:66px;padding:10px 18px;border-radius:20px;color:#fff;font-weight:800;box-shadow:0 10px 24px rgba(16,24,40,.22)}
+.next svg.i{width:26px;height:26px}
+.next .tx2{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3}
+.next b{font-size:20px}
+.next small{font-size:14px;font-weight:600;opacity:.92}
+.next.m-before{background:var(--before)}
+.next.m-after{background:var(--after);color:var(--after-ink)}
+.next.m-cmp{background:linear-gradient(135deg,#7048E8,#9C36B5)}
+body:has(#selBar:not([hidden])) .nextbar{display:none}
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;border-radius:12px;overflow:hidden}
 .thumbs button{position:relative;aspect-ratio:1;overflow:hidden;border-radius:0;background:#DCE6F5;padding:0;border:0;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .thumbs img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .15s,border-radius .15s;-webkit-user-drag:none;pointer-events:none}
 /* selecting (long press): picked photos shrink with a blue tick, like Google Photos */
@@ -146,14 +190,16 @@ label.btn{cursor:pointer}
 .thumbs button.on img{transform:scale(.84);border-radius:10px}
 .thumbs button.on .ck{background:#2563EB;border-color:#fff}
 .thumbs button.on .ck svg{display:block}
-.selbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 8px;background:#0F172A;color:#fff;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.thumbs .cm{position:absolute;right:5px;bottom:5px;min-width:24px;height:24px;padding:0 5px;border-radius:12px;background:rgba(16,24,40,.75);display:flex;align-items:center;justify-content:center;gap:2px;color:#fff;font-size:12px;font-weight:800}
+.thumbs .cm svg{width:13px;height:13px;stroke:#fff;stroke-width:2.4;fill:none}
+.selbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 8px;background:#101828;color:#fff;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
 .selbar .cnt{flex:1;font-size:18px;font-weight:800}
 .selbar button{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:50px;border-radius:14px;border:0;font-size:18px;font-weight:800}
 .selbar .x{width:50px;background:transparent;color:#fff}
 .selbar .del{padding:0 20px;background:var(--danger);color:#fff}
 .selbar svg.i{width:22px;height:22px}
-.c-extra .none{margin:10px 2px 0;font-size:14px;color:var(--sub)}
-#bDel{margin-top:6px}
+.c-extra .none{margin:4px 2px 0;font-size:14px;color:var(--sub)}
+#bDel{margin-top:2px}
 
 /* ---------- full-screen viewer ---------- */
 .viewer{position:fixed;inset:0;background:#000;z-index:70;touch-action:none;overflow:hidden;user-select:none;-webkit-user-select:none}
@@ -161,7 +207,6 @@ label.btn{cursor:pointer}
 #vStage.anim{transition:transform .22s ease-out}
 #vStage img{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block;-webkit-user-drag:none}
 #vImg2{object-fit:cover}
-/* viewer: 戻る + count at the top, comment box and 保存 / 削除 at the bottom */
 .vtop{position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:3;display:flex;align-items:center;gap:12px}
 .vtop .cnt{color:#fff;font-size:17px;font-weight:800;text-shadow:0 1px 3px #000}
 .vback,.vclose{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:48px;padding:0 18px 0 12px;border-radius:999px;background:rgba(20,22,28,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.22);font-size:17px;font-weight:800}
@@ -202,8 +247,6 @@ label.btn{cursor:pointer}
 .vtag .rs{right:calc(-16px * var(--k,1));bottom:calc(-16px * var(--k,1))}
 .vtag .rm{right:calc(-16px * var(--k,1));top:calc(-16px * var(--k,1));background:#EF4444}
 .vtag .rm svg{stroke:#fff}
-.thumbs .cm{position:absolute;right:5px;bottom:5px;min-width:24px;height:24px;padding:0 5px;box-sizing:border-box;border-radius:12px;background:rgba(15,23,42,.75);display:flex;align-items:center;justify-content:center;gap:2px;color:#fff;font-size:12px;font-weight:800}
-.thumbs .cm svg{width:13px;height:13px;stroke:#fff;stroke-width:2.4;fill:none}
 .vop{position:absolute;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(20,22,28,.65);color:#fff;font-size:15px;font-weight:700;border-radius:14px}
 .vop input{flex:1;accent-color:#F5A300}
 .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;display:flex;align-items:center;gap:10px;background:var(--ok);color:#fff;font-size:20px;font-weight:800;padding:16px 28px;border:3px solid #fff;border-radius:18px;box-shadow:0 0 0 3px var(--ok),0 14px 34px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap;transition:opacity .3s}
@@ -211,9 +254,9 @@ label.btn{cursor:pointer}
 .toast.ng{background:var(--danger);box-shadow:0 0 0 3px var(--danger),0 14px 34px rgba(0,0,0,.35)}
 
 /* ---------- box editor ---------- */
-.med{position:fixed;inset:0;z-index:60;background:#0B1020;color:#fff;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 0 calc(12px + env(safe-area-inset-bottom,0px))}
-.med .mt{margin:0 16px 10px;font-size:22px;font-weight:800;line-height:1.4}
-.med .mt ul{margin:6px 0 0;padding:0;list-style:none;font-size:17px;font-weight:700;line-height:1.5;color:#E2E8F0;display:flex;flex-wrap:wrap;column-gap:1.4em}
+.med{position:fixed;inset:0;z-index:60;background:#0B1020;color:#fff;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 0 calc(14px + env(safe-area-inset-bottom,0px))}
+.med .mt{margin:0 16px 10px;font-size:21px;font-weight:800;line-height:1.4}
+.med .mt ul{margin:6px 0 0;padding:0;list-style:none;font-size:16px;font-weight:700;line-height:1.5;color:#E2E8F0;display:flex;flex-wrap:wrap;column-gap:1.4em}
 .med .mt li{padding-left:1.1em;text-indent:-1.1em;white-space:nowrap;max-width:100%}
 @media (max-width:480px){.med .mt li{white-space:normal}}
 .med .mt li::before{content:"・"}
@@ -225,15 +268,15 @@ label.btn{cursor:pointer}
 .mrect{position:absolute;border:3px solid #FACC15;background:rgba(250,204,21,.16);box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
 .mrect i{position:absolute;width:26px;height:26px;border-radius:50%;background:#FACC15;border:3px solid #0B1020}
 .mrect .tl{left:-14px;top:-14px}.mrect .tr{right:-14px;top:-14px}.mrect .bl{left:-14px;bottom:-14px}.mrect .br{right:-14px;bottom:-14px}
-.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 16px 0}
-.mbtns .o2{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.3);font-size:16px}
-.mbtns .ok{background:#FACC15;color:#1A1400;font-size:18px}
+.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 16px 0}
+.mbtns .o2{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.3);font-size:16px;border-radius:999px}
+.mbtns .ok{background:#FACC15;color:#1A1400;font-size:19px;border-radius:999px}
 
 /* ---------- camera ---------- */
 .cam{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column;color:#fff}
-.cam[data-mode=before]{--mode:#4F74E3;--mode-ink:#fff}
-.cam[data-mode=after]{--mode:#F5A300;--mode-ink:#2B1D00}
-.cam[data-mode=extra]{--mode:#06B6D4;--mode-ink:#00262E}
+.cam[data-mode=before]{--mode:#4C6EF5;--mode-ink:#fff}
+.cam[data-mode=after]{--mode:#F59F00;--mode-ink:#2B1D00}
+.cam[data-mode=extra]{--mode:#15AABF;--mode-ink:#00262E}
 .cam .view{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;touch-action:none}
 /* the stage has the camera picture's own shape, so the preview shows exactly what is saved */
 .cam .stage{position:relative;overflow:hidden;width:100%;height:100%}
@@ -254,64 +297,74 @@ html.natcam #vid{display:none}
 .cam.clean .cmask{display:none!important}
 .cam .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;transition:opacity .25s}
 .cam .flash.on{opacity:.7;transition:none}
-.pill{position:absolute;z-index:5;display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;font-size:15px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.pill{position:absolute;z-index:5;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;font-size:16px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.35)}
 .pill svg.i{width:18px;height:18px}
-.cmode{top:10px;left:10px;background:var(--mode);color:var(--mode-ink)}
-.sidew{top:52px;left:10px;background:rgba(20,22,28,.7);color:#fff}
-.shotn{top:10px;right:10px;background:rgba(20,22,28,.7);color:#fff}
+.cmode{top:12px;left:50%;transform:translateX(-50%);background:var(--mode);color:var(--mode-ink)}
+.sidew{top:58px;left:50%;transform:translateX(-50%);background:rgba(20,22,28,.7);color:#fff}
+.shotn{top:58px;right:12px;background:rgba(20,22,28,.7);color:#fff}
 /* match frame: green = lined up, yellow = close, red = off, grey = can't compare */
 .frame{position:absolute;inset:0;border:8px solid rgba(255,255,255,.35);pointer-events:none;z-index:3;transition:border-color .15s;display:none}
-.flab{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:5;font-size:17px;font-weight:800;padding:6px 18px;border-radius:999px;background:rgba(255,255,255,.88);color:#111;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.flab{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:5;font-size:18px;font-weight:800;padding:8px 20px;border-radius:999px;background:rgba(255,255,255,.9);color:#111;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.35)}
 .frame.ok{border-color:#22C55E}.flab.ok{background:#22C55E;color:#052E14}
 .frame.near{border-color:#FACC15}.flab.near{background:#FACC15;color:#2B2200}
 .frame.far{border-color:#EF4444}.flab.far{background:#EF4444;color:#fff}
 .cam:not(.judging) .flab{display:none}
-.cam .bar{background:rgba(12,14,20,.94);padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;border-top:1px solid rgba(255,255,255,.08)}
-.cam .bar .r{display:flex;align-items:center;gap:10px}
-.rl{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#D6DBE4;white-space:nowrap}
+.cam .bar{background:#0B0D12;padding:10px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.cam .bar .r{display:flex;align-items:center;gap:12px;padding:0 4px}
+.rl{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#D0D5DD;white-space:nowrap}
 .rl svg.i{width:19px;height:19px}
-#zmV{min-width:3.4em;text-align:right;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
-.cam .fl{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;height:42px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font-size:15px;font-weight:700;border:1px solid rgba(255,255,255,.16)}
-.cam .fl svg.i{width:19px;height:19px}
-.cam .fl.on{background:#FACC15;color:#1A1400;border-color:#FACC15}
-.cam .fl.auto{background:rgba(250,204,21,.16);color:#FACC15;border-color:#FACC15}
+#zmV{min-width:3.2em;text-align:center;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12)}
 /* sliders are driven by our own touch handling (see fingerSlider) */
 .sl{flex:1;min-width:0;display:flex;align-items:center;touch-action:none;padding:6px 0;cursor:pointer}
 .sl input{pointer-events:none;width:100%;margin:0}
 .cam input[type=range]{-webkit-appearance:none;appearance:none;height:36px;background:transparent;padding:0 4px}
-.cam input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:rgba(255,255,255,.28)}
+.cam input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:rgba(255,255,255,.24)}
 .cam input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:30px;height:30px;margin-top:-12px;border-radius:50%;background:#fff;border:4px solid var(--mode,#F5A300);box-shadow:0 1px 5px rgba(0,0,0,.5)}
-.cam input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.28)}
+.cam input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.24)}
 .cam input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:4px solid var(--mode,#F5A300)}
-.cam .tools{display:flex;gap:8px}
-.cam .tools button{--tc:#E2E8F0;--tc-ink:#0F172A;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:8px 4px;border-radius:14px;background:rgba(255,255,255,.08);color:#C9D1DC;font-size:14px;font-weight:700;line-height:1.2;border:1px solid rgba(255,255,255,.1);white-space:nowrap}
-.cam .tools button svg.i{width:24px;height:24px}
-.cam .tools button.on{background:var(--tc);color:var(--tc-ink);border-color:var(--tc)}
-.cam .tools .t-mask{--tc:#4F74E3;--tc-ink:#fff}
-.cam .tools .t-ovl{--tc:#F5A300;--tc-ink:#2B1D00}
+/* display tools: round icons with the name under them */
+.cam .tools{display:flex;justify-content:space-around;gap:4px}
+.cam .tools button{--tc:#E4E7EC;--tc-ink:#101828;flex:1;max-width:84px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:2px 0;color:#D0D5DD;font-size:14px;font-weight:700;line-height:1.2;white-space:nowrap}
+.cam .tools button svg.i{width:50px;height:50px;padding:13px;border-radius:50%;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.cam .tools button.on{color:#fff}
+.cam .tools button.on svg.i{background:var(--tc);color:var(--tc-ink);box-shadow:none}
+.cam .tools .t-mask{--tc:#4C6EF5;--tc-ink:#fff}
+.cam .tools .t-ovl{--tc:#F59F00;--tc-ink:#2B1D00}
 .cam .tools .t-judge{--tc:#22C55E;--tc-ink:#052E14}
 .cam .tools .t-off{--tc:#F87171;--tc-ink:#fff}
 .cam .tools .lg{display:none}
-.cam .shoot{display:flex;gap:10px}
-.cam .cancel{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:62px;border-radius:16px;background:rgba(255,255,255,.1);color:#fff;font-size:18px;font-weight:700;border:1px solid rgba(255,255,255,.16)}
-.cam .shot{flex:2.2;display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;border-radius:16px;background:var(--mode);color:var(--mode-ink);font-size:23px;font-weight:800;box-shadow:0 0 0 3px #0C0E14,0 0 0 5px rgba(255,255,255,.85)}
+/* やめる - round shutter - flash */
+.cam .shoot{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding-top:2px}
+.cam .cancel{justify-self:start;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:52px;padding:0 18px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:17px;font-weight:700}
+.cam .shot{grid-column:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:84px;height:84px;border-radius:50%;background:var(--mode);color:var(--mode-ink);font-size:18px;font-weight:800;line-height:1.15;box-shadow:0 0 0 4px #0B0D12,0 0 0 7px #fff}
 .cam .shot svg.i{width:26px;height:26px}
 .cam .shot.busy{filter:brightness(.75)}
+.cam .shot.busy svg.i{display:none}
+.cam .fl{grid-column:3;justify-self:end;display:inline-flex;align-items:center;justify-content:center;gap:5px;height:52px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:16px;font-weight:700}
+.cam .fl svg.i{width:20px;height:20px}
+.cam .fl.on{background:#FACC15;color:#1A1400}
+.cam .fl.auto{background:rgba(250,204,21,.18);color:#FACC15;box-shadow:inset 0 0 0 1.5px #FACC15}
 /* phone held sideways: labels and controls turn to face the user, laid over the picture */
 .camhud{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none}
-.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(12,14,20,.62);gap:8px;padding:8px 12px;border:0}
-.cam .camhud .tools{position:absolute;right:8px;top:8px;display:grid;grid-template-columns:1fr 1fr;align-content:center;gap:8px;pointer-events:auto}
-.cam .camhud .tools button{min-height:58px;font-size:16px;background:rgba(20,22,28,.72)}
-.cam .camhud .tools button.on{background:var(--tc)}
-.cam .camhud .tools .fl{height:auto;min-height:58px;border-radius:14px;font-size:16px}
+.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(11,13,18,.62);flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:8px 16px 10px}
+/* sideways: one low row [zoom ......] [やめる] [shutter], the 濃さ slider above it */
+.cam .camhud #opRow{flex-basis:100%;order:-1}
+.cam .camhud #zoomRow{flex:1;min-width:0}
+.cam .camhud .shoot{display:flex;gap:14px;align-items:center;padding:0}
+.cam .camhud .shot{width:76px;height:76px}
+.cam .camhud .tools{position:absolute;right:8px;top:8px;display:grid;grid-template-columns:1fr 1fr;align-content:center;gap:4px 6px;pointer-events:auto;padding:6px;border-radius:18px;background:rgba(11,13,18,.55)}
+.cam .camhud .tools button svg.i,.cam .camhud .tools .fl svg.i{width:42px;height:42px;padding:10px}
+.cam .camhud .tools button{max-width:none;font-size:15px}
+.cam .camhud .tools .fl{grid-column:auto;justify-self:center;flex-direction:column;height:auto;padding:0;background:none;gap:5px;font-size:15px;color:#D0D5DD}
+.cam .camhud .tools .fl svg.i{width:50px;height:50px;padding:14px;border-radius:50%;background:rgba(255,255,255,.1)}
+.cam .camhud .tools .fl.on svg.i{background:#FACC15;color:#1A1400}
+.cam .camhud .tools .fl.auto svg.i{background:rgba(250,204,21,.18);color:#FACC15}
 .cam .camhud .rl{font-size:16px}
-.cam .camhud #zmV{font-size:19px}
-.cam .camhud .shot{font-size:25px}
-.cam .camhud .cancel{font-size:20px}
+.cam .camhud #zmV{font-size:18px}
 .camhud .flab{top:12px;bottom:auto}
-.camhud .cmode{top:10px;left:10px}
-.camhud .sidew{top:54px;left:10px}
-.camhud .shotn{top:98px;left:10px;right:auto}
+.camhud .cmode{top:10px;left:10px;transform:none}
+.camhud .sidew{top:56px;left:10px;transform:none}
+.camhud .shotn{top:102px;left:10px;right:auto}
 
 input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 </style>
@@ -319,77 +372,77 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <body>
 
 <div id="home">
- <header class="hero"><div class="logo"><svg viewBox="0 0 108 108" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M28 42V34a6 6 0 0 1 6-6h8M66 28h8a6 6 0 0 1 6 6v8M80 66v8a6 6 0 0 1-6 6h-8M42 80h-8a6 6 0 0 1-6-6v-8"/><circle cx="48" cy="50" r="13" stroke-opacity=".55"/></g><circle cx="58" cy="58" r="13" fill="#fff"/><circle cx="58" cy="58" r="5" fill="#2563EB"/><circle cx="72" cy="38" r="4" fill="#BEF264"/></svg></div><div><h1>施工前後カメラ</h1><p class="sub">同じ角度で、施工前と施工後を撮影</p></div></header>
+ <header class="hbar"><div class="logo"><svg viewBox="0 0 108 108" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M28 42V34a6 6 0 0 1 6-6h8M66 28h8a6 6 0 0 1 6 6v8M80 66v8a6 6 0 0 1-6 6h-8M42 80h-8a6 6 0 0 1-6-6v-8"/><circle cx="48" cy="50" r="13" stroke-opacity=".55"/></g><circle cx="58" cy="58" r="13" fill="#fff"/><circle cx="58" cy="58" r="5" fill="#2563EB"/><circle cx="72" cy="38" r="4" fill="#BEF264"/></svg></div><div><h1>施工前後カメラ</h1><p>同じ角度で、施工前と施工後を撮影</p></div></header>
  <main class="wrap">
-  <button class="btn b-primary big full" id="hNew"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>新しい現場を始める</span></button>
-  <h2 class="lh"><span class="dot wait"></span>施工後待ちの現場</h2><div class="list" id="lWait"></div>
-  <h2 class="lh"><span class="dot done"></span>完了した現場</h2><div class="list" id="lDone"></div>
-  <p class="note">写真はこのスマホのブラウザの中に保存されます(ネットには上がりません)。ブラウザのデータを消すと写真も消えるので、大事な比較写真は「保存する」でスマホにも保存してください。</p>
+  <button class="newjob" id="hNew"><span class="ni"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="nt"><b>新しい現場を始める</b><small>まず施工前の写真を撮ります</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+  <div class="tabs" role="tablist"><button id="tabW" class="on" role="tab"><span class="dot wait"></span>施工後待ち<b id="nW">0</b></button><button id="tabD" role="tab"><span class="dot done"></span>完了<b id="nD">0</b></button></div>
+  <div class="list" id="lWait"></div><div class="list" id="lDone" hidden></div>
+  <p class="note"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>写真はこのスマホのブラウザの中に保存されます(ネットには上がりません)。ブラウザのデータを消すと写真も消えるので、大事な写真は「保存」でスマホにも残してください。</span></p>
  </main>
 </div>
 
 <div id="detail" hidden>
  <header class="topbar"><button class="iconbtn" id="dBack" aria-label="現場の一覧へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><div class="tb-title"><small>現場</small><span id="dTitle">現場の詳細</span></div></header>
- <main class="wrap">
- <section class="card c-info">
-  <h2 class="sec"><span class="num">1</span>現場の情報</h2>
-  <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
-   <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
-  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><input class="t" id="site" type="text" placeholder="例:山田様"></label>
-  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" placeholder="例:旧機種 → 新機種"></label>
- </section>
+ <main class="wrap dwrap">
+ <ol class="steps" id="steps"><li data-s="b"><i>1</i>施工前</li><li data-s="a"><i>2</i>施工後</li><li data-s="c"><i>3</i>比較写真</li></ol>
 
  <section class="card c-shot">
-  <h2 class="sec"><span class="num">2</span>施工前・施工後を撮る</h2>
   <div class="pair">
    <div class="col before">
-    <div class="slot" id="sB"><span class="tag">施工前</span><span class="ph">まだ撮っていません</span></div>
-    <button class="btn b-before" id="bBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">施工前を撮る</span></button>
-    <button class="btn s-before" id="svB" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span>写真を保存</span></button>
+    <div class="slot" id="sB"><span class="tag">施工前</span><span class="ph"><span class="pi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span>タップして撮影</span></div>
+    <button class="mini" id="bBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">撮り直す</span></button>
+    <button id="svB" hidden disabled></button>
    </div>
    <div class="col after">
-    <div class="slot after" id="sA"><span class="tag">施工後</span><span class="ph">施工前を撮ると<br>重ねて撮れます</span></div>
-    <button class="btn b-after" id="bAfter" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">施工後を撮る</span></button>
-    <button class="btn s-after" id="svA" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span>写真を保存</span></button>
+    <div class="slot after" id="sA"><span class="tag">施工後</span><span class="ph"><span class="pi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span id="sAph">施工前の<br>あとに撮れます</span></span></div>
+    <button class="mini" id="bAfter" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">撮り直す</span></button>
+    <button id="svA" hidden disabled></button>
    </div>
   </div>
   <div id="nativeBtns" hidden>
    <label class="btn b-before" id="nBefore" for="fBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで施工前</label>
    <label class="btn b-after off" id="nAfter" for="fAfter"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで施工後</label>
   </div>
-  <button class="btn o-before full" id="bMask" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="8" height="8" rx="1.5"/></svg><span class="tx">交換する機器を枠で囲む(任意)</span></button>
+  <button class="rowbtn" id="bMask" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="8" height="8" rx="1.5"/></svg><span class="tx">交換する機器を枠で囲む(任意)</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
   <p class="msg" id="camNote" hidden></p>
  </section>
 
  <section class="card c-cmp" id="result">
-  <h2 class="sec"><span class="num">3</span>比較写真<small>タップで拡大</small></h2>
+  <div class="sh2"><span class="cdot"></span><h2>比較写真</h2><small>タップで拡大</small></div>
   <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
+  <div class="cmpopts">
   <div class="seg" role="radiogroup" aria-label="並べ方">
-   <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>横に並べる</label>
-   <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="8" rx="1.5"/><rect x="5" y="13" width="14" height="8" rx="1.5"/></svg>縦に並べる</label>
+   <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>横</label>
+   <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="8" rx="1.5"/><rect x="5" y="13" width="14" height="8" rx="1.5"/></svg>縦</label>
   </div>
-  <label class="switch" for="cLabel"><span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg>「施工前」「施工後」の文字を入れる</span><input type="checkbox" id="cLabel" checked><i></i></label>
-  <button class="btn b-cmp full" id="bSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
+  <label class="switch" for="cLabel"><span>文字</span><input type="checkbox" id="cLabel" checked><i></i></label>
+  </div>
+  <button id="bSave" hidden><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
  </section>
 
  <section class="card c-extra">
-  <h2 class="sec"><span class="num">4</span>その他の写真</h2>
-  <button class="btn b-extra full" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>カメラを起動して撮る</span></button>
-  <label class="btn b-extra full" id="nExtra" for="fExtra" hidden style="margin-top:8px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで撮る</label>
+  <div class="sh2"><span class="cdot"></span><h2>その他の写真</h2><button class="addbtn" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>撮る</span></button></div>
+  <label class="btn b-extra full" id="nExtra" for="fExtra" hidden style="margin-bottom:10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで撮る</label>
   <div class="thumbs" id="thumbs"></div>
-  <p class="none" id="thumbsNone">まだありません。撮った写真はここに並びます(タップで拡大・長押しで選択)。</p>
+  <p class="none" id="thumbsNone">まだありません。タップで拡大、長押しで選択できます。</p>
  </section>
 
- <section class="card c-rep">
-  <h2 class="sec"><span class="num">5</span>報告書</h2>
-  <button class="btn b-rep full" id="bReport"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span>施工完了報告書に添付する</span></button>
+ <section class="card c-info">
+  <div class="sh2"><span class="cdot"></span><h2>現場の情報</h2></div>
+  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><input class="t" id="site" type="text" placeholder="例:山田様"></label>
+  <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
+   <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
+  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" placeholder="例:旧機種 → 新機種"></label>
  </section>
+
+ <button class="linkrow" id="bReport"><span class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span><span class="tx">施工完了報告書に添付する</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
  <p class="msg" id="saveMsg"></p>
  <button class="btn t-danger full" id="bDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この現場を削除</span></button>
  <input type="file" class="vh" id="fBefore" accept="image/*" capture="environment" tabindex="-1">
  <input type="file" class="vh" id="fAfter" accept="image/*" capture="environment" tabindex="-1" disabled>
  <input type="file" class="vh" id="fExtra" accept="image/*" capture="environment" tabindex="-1">
  </main>
+ <div class="nextbar" id="nextBar"><button class="next m-before" id="nextBtn"><span id="nextI"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="tx2"><b id="nextT">施工前を撮る</b><small id="nextS"></small></span></button></div>
 </div>
 
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>保存</button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
@@ -416,8 +469,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </div></div>
  <div class="camhud" id="camHud" hidden></div>
  <div class="bar">
-  <div class="r zr" id="zoomRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>ズーム</span><input type="range" id="zm" min="1.6" max="6.4" step="0.1" value="1.6" aria-label="ズーム"><b id="zmV">標準</b><button class="fl" id="tFlash" aria-label="フラッシュ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span class="tx">オフ</span></button></div>
-  <div class="r" id="opRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg>重ね具合</span><input type="range" id="op" min="0" max="80" value="35" aria-label="重ね具合"></div>
+  <div class="r zr" id="zoomRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span><input type="range" id="zm" min="1.6" max="6.4" step="0.1" value="1.6" aria-label="ズーム"><b id="zmV">標準</b></div>
+  <div class="r" id="opRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg>濃さ</span><input type="range" id="op" min="0" max="80" value="35" aria-label="重ね具合"></div>
   <div class="tools">
    <button id="tGrid"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg><span>グリッド</span></button>
    <button id="tMask" class="t-mask on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="8" height="8" rx="1.5"/></svg><span class="lg">交換する機器を枠で囲む</span><span class="sh">枠で囲む</span></button>
@@ -426,7 +479,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <button id="tDiff" class="t-judge on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span class="lg">色で判定</span><span class="sh">色判定</span></button>
    <button id="tAllOff" class="t-off"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.1A10 10 0 0 1 12 5c5 0 9 4.5 10 7a13 13 0 0 1-3 4.1M6.6 6.6C4.4 8 2.9 10 2 12c1 2.5 5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/></svg><span class="tx">表示オフ</span></button>
   </div>
-  <div class="shoot"><button class="cancel" id="cCancel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg><span class="tx">やめる</span></button><button class="shot" id="cShot"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>撮影</span></button></div>
+  <div class="shoot"><button class="cancel" id="cCancel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg><span class="tx">やめる</span></button><button class="shot" id="cShot"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>撮影</span></button><button class="fl" id="tFlash" aria-label="フラッシュ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span class="tx">オフ</span></button></div>
  </div>
 </div>
 <script type="text/plain" id="alignSrc">
@@ -562,17 +615,24 @@ let MEM=[];
 /* ---------- home ---------- */
 let job=null, urls=[];
 function blobUrl(b){const u=URL.createObjectURL(b);urls.push(u);return u;}
+// Home: 施工後待ち / 完了 tabs.
+const CAM_SVG='<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
+const CHEV_SVG='<svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+let homeTab="w";
+function showTab(){$("tabW").classList.toggle("on",homeTab==="w");$("tabD").classList.toggle("on",homeTab==="d");$("lWait").hidden=homeTab!=="w";$("lDone").hidden=homeTab!=="d";}
+$("tabW").onclick=()=>{homeTab="w";showTab();};$("tabD").onclick=()=>{homeTab="d";showTab();};
 async function showHome(){
  try{selClear();}catch(e){}
  urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
  $("detail").hidden=true;$("home").hidden=false;job=null;
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
- const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<img alt="">')+
+ const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jimg">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img src="'+blobUrl(j.after)+'" alt="">':'')+'</span>'+
   '<div class="jbody"><div class="jt">'+esc(j.site||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
-  '<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div></div><span class="st">'+(j.after?"完了":"施工後待ち")+'</span></button>';
+  '<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div></div>'+CHEV_SVG+'</button>';
  const w=js.filter(j=>!j.after), d=js.filter(j=>j.after);
- $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">ありません</p>';
- $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">ありません</p>';
+ $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">施工後待ちの現場はありません</p>';
+ $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">完了した現場はまだありません</p>';
+ $("nW").textContent=w.length;$("nD").textContent=d.length;showTab();
  window.scrollTo(0,0);
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(!b)return;allJobs().then(js=>{const j=js.find(x=>x.id===b.dataset.job);if(j)openJob(j);});});
@@ -589,7 +649,7 @@ function setSlot(slot,blob,at){
  if(blob){s.classList.add("has");const i=document.createElement("img");i.alt="";i.src=blobUrl(blob);s.appendChild(i);
   if(slot==="sB"&&job.mask)i.onload=()=>{const m=document.createElement("div");m.className="tmask";m.innerHTML="<span>比べない</span>";s.appendChild(m);placeBox(m,job.mask,i.naturalWidth,i.naturalHeight,s.clientWidth,s.clientHeight);};
   const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);}
- else{s.classList.remove("has");const p=document.createElement("span");p.className="ph";p.innerHTML=slot==="sB"?"まだ撮っていません":(job.before?"施工後を<br>撮ってください":"施工前を撮ると<br>重ねて確認できます");s.appendChild(p);}
+ else{s.classList.remove("has");const p=document.createElement("span");p.className="ph";p.innerHTML='<span class="pi">'+CAM_SVG+'</span>'+(slot==="sB"||job.before?"タップして撮影":"施工前の<br>あとに撮れます");s.appendChild(p);}
 }
 function openJob(j){
  job=j;$("home").hidden=true;$("detail").hidden=false;
@@ -599,15 +659,34 @@ function openJob(j){
 }
 function refreshDetail(){
  setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);
- setTx("bBefore",job.before?"撮り直す":"施工前を撮る");
- $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);setTx("bAfter",job.after?"撮り直す":"施工後を撮る");
+ // empty tiles are the camera buttons; 撮り直す shows under a photo
+ $("bBefore").hidden=!job.before;$("bAfter").hidden=!job.after;
+ $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);
+ $("sA").parentNode.classList.toggle("off",!job.before);
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
  showPlace();renderThumbs();$("dTitle").textContent=job.site||"現場の詳細";
- $("bMask").disabled=!job.before;setTx("bMask",job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)");
+ $("bMask").disabled=!job.before;$("bMask").hidden=!job.before;setTx("bMask",job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)");
  const n=$("camNote");
  if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中の色の判定は出ません)。";n.hidden=false;}
  else n.hidden=true;
+ showNext();
 }
+// The one "next step" button at the bottom, and the 1-2-3 steps at the top.
+function showNext(){
+ if(!job)return;
+ const step=!job.before?"b":!job.after?"a":"c", savedCmp=!!(job.cmpSavedAt&&job.cmpSavedAt>=Math.max(job.beforeAt||0,job.afterAt||0));
+ document.querySelectorAll("#steps li").forEach(li=>{const k=li.dataset.s, order="bac";
+  li.classList.toggle("done",order.indexOf(k)<order.indexOf(step)||(step==="c"&&k==="c"&&savedCmp));li.classList.toggle("cur",k===step&&!(step==="c"&&savedCmp));});
+ const nb=$("nextBtn");nb.className="next "+{b:"m-before",a:"m-after",c:"m-cmp"}[step];
+ $("nextT").textContent={b:"施工前を撮る",a:"施工後を撮る",c:"比較写真を保存する"}[step];
+ $("nextS").textContent={b:"同じ角度で撮るための基準の写真です",a:"施工前の写真を重ねて合わせられます",c:(savedCmp?"保存済み ・ ":"")+$("bSaveSub").textContent}[step];
+ $("nextI").innerHTML=step==="c"?'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>':CAM_SVG;
+ $("nextBar").hidden=camFail&&step!=="c";
+}
+$("nextBtn").onclick=()=>{if(!job)return;if(!job.before)$("bBefore").click();else if(!job.after)$("bAfter").click();else $("bSave").click();};
+// Tapping an empty photo tile opens the camera.
+$("sB").addEventListener("click",()=>{if(job&&!job.before&&!camFail)$("bBefore").click();});
+$("sA").addEventListener("click",()=>{if(job&&job.before&&!job.after&&!camFail)$("bAfter").click();});
 async function saveJob(){job.site=$("site").value.trim();job.memo=$("memo").value.trim();await putJob(job);}
 $("site").addEventListener("input",()=>{$("dTitle").textContent=$("site").value.trim()||"現場の詳細";});
 $("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
@@ -1498,7 +1577,7 @@ function compose(c,k,iB,iA){
 $("cLabel").checked=withLabels;
 $("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}make();};
 // The save button says which layout will be saved.
-function showLayout(){$("lyV").checked=layout==="v";$("lyH").checked=layout==="h";$("bSaveSub").textContent=layout==="v"?"縦並びで保存されます":"横並びで保存されます";}
+function showLayout(){$("lyV").checked=layout==="v";$("lyH").checked=layout==="h";$("bSaveSub").textContent=layout==="v"?"縦並びで保存されます":"横並びで保存されます";showNext();}
 showLayout();
 document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-lay",layout);}catch(err){}showLayout();make();});
 let toastT=null;
@@ -1584,9 +1663,19 @@ window.addEventListener("resize",()=>{if(!$("viewer").hidden)vFit(false);});
 $("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(await fullBlob()));};
 
 function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
+function photoName(kind,t){const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);return kind+"_"+(site?site+"_":"")+stamp(t)+".jpg";}
+// App only: writes the photo into the phone's DCIM/Camera. Returns true when saved.
+async function toPhone(blob,kind,t){
+ try{const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(",")[1]);fr.onerror=rej;fr.readAsDataURL(blob);});
+  return window.AndroidApp.savePhoto(b64,photoName(kind,t))==="ok";}catch(e){return false;}
+}
 async function saveBlob(blob,kind,t){
- const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);
- const name=kind+"_"+(site?site+"_":"")+stamp(t)+".jpg";
+ const name=photoName(kind,t);
+ if(window.AndroidApp){
+  const ok=await toPhone(blob,kind,t);
+  saved(ok,ok?"保存しました":"保存できませんでした。もう一度お試しください。");
+  return;
+ }
  const file=new File([blob],name,{type:"image/jpeg"});
  // Android: save straight to the Download folder (shows up in Google Photos).
  // iPhone etc.: downloads don't reach the photo library, so use the share sheet.
@@ -1599,9 +1688,23 @@ async function saveBlob(blob,kind,t){
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
  saved(true,"保存しました");
 }
-$("bSave").onclick=async()=>{await makeDone;if(!imgs.b)return;saveBlob(await fullBlob(),"施工前後",Date.now());};
+$("bSave").onclick=async()=>{await makeDone;if(!imgs.b)return;await saveBlob(await fullBlob(),"施工前後",Date.now());
+ if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();await saveJob();showNext();}};
 $("svB").onclick=()=>{if(job.before)saveBlob(job.before,"施工前",job.beforeAt);};
 $("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);};
+
+/* ---------- Android app hooks ---------- */
+// Back button: close the camera, then go back to the site list. Returns true when handled.
+window.appBack=()=>{
+ if(!$("viewer").hidden){if(editing)noteEnd(true);else closeViewer();return true;}
+ if(sel.size){selClear();return true;}
+ if(!$("med").hidden){$("med").hidden=true;return true;}
+ if($("cam").style.display==="flex"){stopCam();return true;}
+ if(!$("detail").hidden){$("dBack").click();return true;}
+ return false;
+};
+// Release the camera when the app goes to the background.
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&stream)stopCam();});
 
 /* ---------- start ---------- */
 (async()=>{IDB=await openDB();showHome();})();
