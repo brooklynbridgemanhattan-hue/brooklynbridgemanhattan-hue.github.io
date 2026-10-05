@@ -171,6 +171,22 @@ label.btn{cursor:pointer}
 .vnote label .st{margin-left:auto;color:#4ADE80;font-weight:700;background:none!important;padding:0!important;border:0!important}
 .vnote textarea{width:100%;box-sizing:border-box;resize:none;border:0;outline:0;background:transparent;color:#fff;font:inherit;font-size:18px;line-height:1.45;min-height:1.45em;max-height:5.8em;padding:0}
 .vnote textarea::placeholder{color:rgba(255,255,255,.5)}
+.vnote .row{display:flex;align-items:flex-end;gap:10px}
+.vnote .row textarea{flex:1}
+.vnote .ok{flex:none;height:46px;min-width:68px;padding:0 16px;border-radius:12px;border:0;background:#22C55E;color:#04260F;font-size:18px;font-weight:800}
+/* the comment written on the photo: drag to move, pinch or corner to resize (like Google Photos text) */
+#vTag{position:absolute;left:0;top:0;pointer-events:auto;touch-action:none;display:none}
+#vTag canvas{display:block;width:100%;height:100%}
+#vTag.on{outline:calc(2px * var(--k,1)) dashed #fff;outline-offset:calc(6px * var(--k,1))}
+#vTag i{position:absolute;display:none;width:calc(34px * var(--k,1));height:calc(34px * var(--k,1));border-radius:50%;background:#fff;box-shadow:0 0 0 calc(2px * var(--k,1)) rgba(0,0,0,.35);align-items:center;justify-content:center}
+#vTag.on i{display:flex}
+#vTag i svg{width:62%;height:62%;stroke:#111;stroke-width:2.6;fill:none}
+#vTag .mv{left:calc(-14px * var(--k,1));top:calc(-14px * var(--k,1))}
+#vTag .rs{right:calc(-14px * var(--k,1));bottom:calc(-14px * var(--k,1))}
+#vTag .rm{right:calc(-14px * var(--k,1));top:calc(-14px * var(--k,1));background:#EF4444}
+#vTag .rm svg{stroke:#fff}
+#vSave{background:linear-gradient(135deg,#3B82F6,#2563EB)!important;border-color:rgba(255,255,255,.4)!important;height:58px!important;padding:0 26px!important;font-size:20px!important}
+#vSave svg.i{width:24px;height:24px}
 .thumbs .cm{position:absolute;right:5px;bottom:5px;width:24px;height:24px;border-radius:50%;background:rgba(15,23,42,.75);display:flex;align-items:center;justify-content:center}
 .thumbs .cm svg{width:14px;height:14px;stroke:#fff;stroke-width:2.4;fill:none}
 .vbar button{height:52px!important;padding:0 20px!important;font-size:18px!important}
@@ -367,7 +383,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </main>
 </div>
 
-<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><label for="vNoteT"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>コメント<span class="st" id="vNoteS"></span></label><textarea id="vNoteT" rows="1" maxlength="300" placeholder="ここをタップしてコメントを入力(例:分電盤の状態)"></textarea></div><span class="cnt" id="vCnt"></span><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>保存</button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
+<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTag"><canvas id="vTagC"></canvas><i class="mv"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></i><i class="rs"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M10 7h7v7M14 17H7v-7"/></svg></i><i class="rm"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></i></div></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><label for="vNoteT"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>コメント<span class="st" id="vNoteS"></span></label><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="ここをタップしてコメントを入力(例:分電盤の状態)"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><span class="cnt" id="vCnt"></span><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>保存</button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
@@ -1112,9 +1128,12 @@ function openGallery(i,kind){
  if(kind==="extra"){const t=$("vNoteT");t.value=(job.extras[i]&&job.extras[i].note)||"";$("vNoteS").textContent="";noteFit();}
  $("vBar").hidden=false;$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
  openViewer(blobUrl(xs[i].blob));
+ tagShow(kind==="extra"?job.extras[i]:null,false);
 }
 function galNav(d){if(gal&&galItems(gal.kind)[gal.i+d])openGallery(gal.i+d,gal.kind);}
-$("vSave").onclick=()=>{if(gal){const x=galItems(gal.kind)[gal.i];if(x)saveBlob(x.blob,x.name,x.at);}};
+$("vSave").onclick=async()=>{if(!gal)return;const x=galItems(gal.kind)[gal.i];if(!x)return;
+ const e=gal.kind==="extra"&&job.extras[gal.i];
+ saveBlob(e&&e.tag&&e.note?await withTag(e):x.blob,x.name,x.at);};
 // Tapping the 施工前 / 施工後 photo opens it full screen.
 $("sB").addEventListener("click",()=>{if(job&&job.before)openGallery(0,"pair");});
 $("sA").addEventListener("click",()=>{if(job&&job.after)openGallery(job.before?1:0,"pair");});
@@ -1130,6 +1149,87 @@ $("vNoteT").addEventListener("input",()=>{
  noteFor={x,v:$("vNoteT").value.trim()};$("vNoteS").textContent="";clearTimeout(noteT);noteT=setTimeout(noteFlush,500);
 });
 $("vNoteT").addEventListener("blur",noteFlush);
+$("vNoteT").addEventListener("input",()=>{const x=gal&&gal.kind==="extra"&&job.extras[gal.i];if(x&&x.tag)tagDraw($("vNoteT").value.trim(),x.tag);});
+// OK: write the comment on the photo (top left at first), then it can be moved / resized.
+$("vNoteOk").onclick=async()=>{
+ if(!gal||gal.kind!=="extra")return;const x=job.extras[gal.i];if(!x)return;
+ const v=$("vNoteT").value.trim();$("vNoteT").blur();
+ if(!v){toast("コメントを入力してください",true);return;}
+ noteFor={x,v};
+ if(!x.tag)x.tag={x:0.03,y:0.03,s:0.05};
+ await noteFlush();await saveJob();
+ tagShow(x,true);$("vNoteS").textContent="写真に入れました";
+};
+/* ---------- comment text on the photo ---------- */
+// tag = {x,y: top-left as 0-1 of the photo, s: font size as part of the photo width}
+const TAG_FONT='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif';
+function tagLayout(ctx,text,W,s){
+ const fs=Math.max(8,s*W), pad=fs*0.38, lh=fs*1.3, maxW=W*0.94-pad*2;
+ ctx.font="800 "+fs+"px "+TAG_FONT;
+ const lines=[];
+ for(const para of text.split("\n")){let cur="";
+  for(const ch of para){if(cur&&ctx.measureText(cur+ch).width>maxW){lines.push(cur);cur=ch;}else cur+=ch;}
+  lines.push(cur);}
+ const w=Math.max(...lines.map(l=>ctx.measureText(l).width))+pad*2, h=lines.length*lh+pad*2-(lh-fs)*0.6;
+ return {fs,pad,lh,lines,w:Math.ceil(w),h:Math.ceil(h)};
+}
+function tagPaint(ctx,L,x0,y0){
+ ctx.save();ctx.fillStyle="rgba(0,0,0,.58)";const r=L.fs*0.28;
+ ctx.beginPath();ctx.roundRect?ctx.roundRect(x0,y0,L.w,L.h,r):ctx.rect(x0,y0,L.w,L.h);ctx.fill();
+ ctx.fillStyle="#fff";ctx.textBaseline="top";ctx.font="800 "+L.fs+"px "+TAG_FONT;
+ L.lines.forEach((l,i)=>ctx.fillText(l,x0+L.pad,y0+L.pad+i*L.lh+L.fs*0.04));
+ ctx.restore();
+}
+let tagX=null, tagL=null;
+function tagDraw(text,t){
+ const el=$("vTag"), c=$("vTagC");
+ if(!text||!t||!vw.nw){el.style.display="none";tagL=null;return;}
+ const L=tagLayout(c.getContext("2d"),text,vw.nw,t.s);tagL=L;
+ // keep the whole text on the photo
+ t.x=Math.min(Math.max(0,t.x),Math.max(0,1-L.w/vw.nw));t.y=Math.min(Math.max(0,t.y),Math.max(0,1-L.h/vw.nh));
+ c.width=L.w;c.height=L.h;tagPaint(c.getContext("2d"),L,0,0);
+ el.style.display="block";el.style.left=t.x*vw.nw+"px";el.style.top=t.y*vw.nh+"px";el.style.width=L.w+"px";el.style.height=L.h+"px";
+}
+function tagShow(x,select){
+ tagX=x||null;$("vTag").style.display="none";tagSel(false);
+ const go=()=>{tagDraw(tagX&&tagX.note,tagX&&tagX.tag);tagSel(!!select&&!!(tagX&&tagX.tag));};
+ const im=$("vImg");if(!x){go();return;}
+ if(im.complete&&im.naturalWidth&&vw.nw===im.naturalWidth)go();else im.addEventListener("load",()=>setTimeout(go,0),{once:true});
+}
+function tagSel(on){$("vTag").classList.toggle("on",!!on);}
+// Moving / resizing with the finger(s), in photo pixels.
+const tp=new Map();let tg=null;
+$("vTag").addEventListener("pointerdown",e=>{
+ e.stopPropagation();e.preventDefault();if(!tagX||!tagX.tag)return;
+ if(e.target.closest(".rm")){tagX.tag=null;tagDraw(null);tagSel(false);saveJob();$("vNoteS").textContent="写真から外しました";return;}
+ $("vTag").setPointerCapture(e.pointerId);tagSel(true);
+ tp.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ const t=tagX.tag;
+ if(tp.size===2){const [a,b]=[...tp.values()];tg={mode:"pinch",d:Math.hypot(a.x-b.x,a.y-b.y)||1,s:t.s,cx:t.x+tagL.w/vw.nw/2,cy:t.y+tagL.h/vw.nh/2};}
+ else tg={mode:e.target.closest(".rs")?"size":"move",x0:e.clientX,y0:e.clientY,tx:t.x,ty:t.y,s:t.s,w:tagL.w};
+});
+$("vTag").addEventListener("pointermove",e=>{
+ if(!tp.has(e.pointerId)||!tg||!tagX||!tagX.tag)return;e.stopPropagation();
+ tp.set(e.pointerId,{x:e.clientX,y:e.clientY});const t=tagX.tag, text=tagX.note;
+ if(tg.mode==="pinch"&&tp.size>=2){const [a,b]=[...tp.values()];
+  t.s=Math.min(0.25,Math.max(0.015,tg.s*Math.hypot(a.x-b.x,a.y-b.y)/tg.d));tagDraw(text,t);
+  t.x=tg.cx-tagL.w/vw.nw/2;t.y=tg.cy-tagL.h/vw.nh/2;tagDraw(text,t);}
+ else if(tg.mode==="move"){t.x=tg.tx+(e.clientX-tg.x0)/vw.s/vw.nw;t.y=tg.ty+(e.clientY-tg.y0)/vw.s/vw.nh;tagDraw(text,t);}
+ else if(tg.mode==="size"){const dw=((e.clientX-tg.x0)+(e.clientY-tg.y0))/2/vw.s;t.s=Math.min(0.25,Math.max(0.015,tg.s*(tg.w+dw)/tg.w));tagDraw(text,t);}
+});
+const tagUp=e=>{if(!tp.has(e.pointerId))return;e.stopPropagation();tp.delete(e.pointerId);
+ if(tp.size===1&&tagX&&tagX.tag){const p=[...tp.values()][0];tg={mode:"move",x0:p.x,y0:p.y,tx:tagX.tag.x,ty:tagX.tag.y,s:tagX.tag.s,w:tagL.w};}
+ if(!tp.size){tg=null;saveJob();}};
+$("vTag").addEventListener("pointerup",tagUp);$("vTag").addEventListener("pointercancel",tagUp);
+// The photo with its comment written in, full size, for saving.
+async function withTag(x){
+ const im=await createImageBitmap(x.blob), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
+ const ctx=c.getContext("2d");ctx.drawImage(im,0,0);
+ const L=tagLayout(ctx,x.note,im.width,x.tag.s);
+ const tx=Math.min(Math.max(0,x.tag.x),Math.max(0,1-L.w/im.width)), ty=Math.min(Math.max(0,x.tag.y),Math.max(0,1-L.h/im.height));
+ tagPaint(ctx,L,tx*im.width,ty*im.height);
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.95));
+}
 $("vDel").onclick=async()=>{
  if(!gal||gal.kind!=="extra")return;
  if(!galDelArm){galDelArm=true;setTx("vDel","もう一度押すと削除");return;}
@@ -1358,7 +1458,7 @@ function openViewer(src,topSrc){
  im.src=src;if(im.complete&&im.naturalWidth)im.onload();
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
-function closeViewer(){noteFlush();if(document.activeElement===$("vNoteT"))$("vNoteT").blur();gal=null;$("vBar").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function closeViewer(){noteFlush();tagShow(null);if(document.activeElement===$("vNoteT"))$("vNoteT").blur();gal=null;$("vBar").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
 function vApply(anim){
@@ -1366,14 +1466,15 @@ function vApply(anim){
  vw.x=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,vw.x));
  vw.y=h<=H?(H-h)/2:Math.min(0,Math.max(H-h,vw.y));
  const im=$("vStage");im.classList.toggle("anim",!!anim);
- im.style.transform="translate("+vw.x+"px,"+vw.y+"px) scale("+vw.s+")";
+ im.style.transform="translate("+vw.x+"px,"+vw.y+"px) scale("+vw.s+")";im.style.setProperty("--k",1/vw.s);
 }
 // Zoom to scale s keeping screen point (px,py) still.
 function vZoomAt(s,px,py,anim){const cx=(px-vw.x)/vw.s, cy=(py-vw.y)/vw.s;vw.s=s;vw.x=px-cx*s;vw.y=py-cy*s;vApply(anim);}
 const vMax=()=>Math.max(vw.fit*6,1.5);
 $("viewer").addEventListener("pointerdown",e=>{
- if(e.target.closest("#vClose,#vOp,#vBar"))return;
+ if(e.target.closest("#vClose,#vOp,#vBar,#vTag"))return;
  if(document.activeElement===$("vNoteT")){$("vNoteT").blur();return;}
+ tagSel(false);
  $("viewer").setPointerCapture(e.pointerId);
  vw.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(vw.pts.size===2){
