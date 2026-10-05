@@ -189,6 +189,10 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <button id="bBefore">施工前を撮る</button>
   <button class="y" id="bAfter" disabled>施工後を撮る</button>
  </div>
+ <div class="links">
+  <button id="svB" disabled><b>施工前</b>写真を保存</button>
+  <button id="svA" disabled><b>施工後</b>写真を保存</button>
+ </div>
  <div class="btns" id="nativeBtns" hidden>
   <label class="btn" id="nBefore" for="fBefore">スマホのカメラで施工前</label>
   <label class="btn y off" id="nAfter" for="fAfter">スマホのカメラで施工後</label>
@@ -220,10 +224,6 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <label class="f" for="ovOp">重ねて確認(タップで拡大)</label>
   <div class="ov" id="ovWrap"><img id="ovA" alt="施工後の写真"><img class="top" id="ovB" alt="施工前の写真(重ね)"></div>
   <div class="ovr"><span>施工後</span><input type="range" id="ovOp" min="0" max="100" value="50"><span>施工前</span></div>
- </div>
- <div class="links">
-  <button id="svB" disabled><b>施工前</b>写真を保存</button>
-  <button id="svA" disabled><b>施工後</b>写真を保存</button>
  </div>
  <p class="msg" id="saveMsg"></p>
  <button class="rep" id="bReport"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 1.5V9h5.5L13 3.5ZM8 13h8v1.6H8V13Zm0 3.4h8V18H8v-1.6Z"/></svg>施工完了報告書に添付する</button>
