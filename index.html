@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>施工前・施工後カメラ</title>
+<style>
+:root{--paper:#EEF0EE;--sheet:#FFF;--ink:#1C2B3A;--soft:#5A6673;--line:#D3D8DC;--gas:#E5AE00;--warn:#B8432C;--ok:#2F7A55}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#151B21;--sheet:#1E262E;--ink:#E7ECF0;--soft:#9AA6B1;--line:#33404B;--gas:#F2C230;--warn:#E97B63;--ok:#6CC497;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#151B21;--sheet:#1E262E;--ink:#E7ECF0;--soft:#9AA6B1;--line:#33404B;--gas:#F2C230;--warn:#E97B63;--ok:#6CC497;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif;line-height:1.6;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:21px;margin:0 0 4px;border-left:7px solid var(--gas);padding-left:10px}
+.sub{font-size:13px;color:var(--soft);margin:0 0 16px 17px}
+h2{font-size:15px;margin:20px 0 8px}
+button{font:inherit;font-size:16px;font-weight:800;padding:14px 10px;border:0;cursor:pointer;background:var(--ink);color:var(--paper)}
+button.y{background:var(--gas);color:#1C2B3A}
+button.o{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+button.w{background:transparent;color:var(--warn);border:2px solid var(--warn);font-size:14px;padding:10px}
+button:disabled,label.btn.off{opacity:.35;cursor:default}
+label.btn{display:flex;align-items:center;justify-content:center;text-align:center;font-size:16px;font-weight:800;padding:14px 10px;cursor:pointer;background:var(--ink);color:var(--paper);user-select:none}
+label.btn.y{background:var(--gas);color:#1C2B3A}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none}
+.full{width:100%}
+.job{display:flex;gap:12px;align-items:center;background:var(--sheet);border:1px solid var(--line);border-left:5px solid var(--gas);padding:10px;margin-bottom:8px;cursor:pointer;width:100%;text-align:left;font-weight:400;color:var(--ink)}
+.job.done{border-left-color:var(--ok)}
+.job img{width:58px;height:58px;object-fit:cover;flex:none;background:var(--line)}
+.job .jt{font-weight:800;font-size:15px;line-height:1.4}
+.job .jd{font-size:12.5px;color:var(--soft)}
+.st{display:inline-block;font-size:11.5px;font-weight:800;padding:0 7px;margin-left:4px;color:#1C2B3A;background:var(--gas)}
+.job.done .st{background:var(--ok);color:#fff}
+.empty{color:var(--soft);font-size:14px}
+label.f{display:block;font-size:13px;font-weight:700;margin:0 0 4px}
+input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);background:var(--sheet);color:var(--ink);margin-bottom:12px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.slot{background:var(--sheet);border:2px dashed var(--line);aspect-ratio:3/4;max-width:100%;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.slot.has{border-style:solid;border-color:var(--ink)}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tag{position:absolute;top:0;left:0;z-index:2;font-size:13px;font-weight:800;padding:3px 10px;color:#fff;background:#1C2B3A}
+.slot.after .tag{background:var(--gas);color:#1C2B3A}
+.slot .ph{font-size:13px;color:var(--soft);text-align:center;padding:0 8px}
+.slot .dt{position:absolute;bottom:0;right:0;z-index:2;font-size:11.5px;background:rgba(0,0,0,.6);color:#fff;padding:1px 6px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.links button{font-size:13px;padding:8px;background:transparent;color:var(--ink);border:1px solid var(--line)}
+.row{display:flex;gap:8px;margin:6px 0 12px}
+.row button{flex:1;font-size:14px;padding:10px}
+.row button.on{background:var(--ink);color:var(--paper)}
+.row button:not(.on){background:transparent;color:var(--ink);border:2px solid var(--line)}
+#result{display:none;margin-top:6px}
+#result img{width:100%;border:1px solid var(--line);display:block;margin-bottom:10px}
+.msg{font-size:13px;color:var(--soft);margin:6px 0}
+.back{background:transparent;color:var(--ink);padding:6px 0;font-size:14px;margin-bottom:8px}
+.note{font-size:12px;color:var(--soft);margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
+/* overlay check */
+.ov{position:relative;border:1px solid var(--line);background:var(--sheet);margin-bottom:6px;max-width:100%}
+.ov img{display:block;width:100%}
+.ov img.top{position:absolute;inset:0;height:100%;object-fit:cover}
+.ovr{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;margin-bottom:12px}
+.ovr input{flex:1;accent-color:var(--gas)}
+/* in-page camera (kept for when the viewer allows it) */
+.cam{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column;color:#fff}
+.cam .view{position:relative;flex:1;overflow:hidden}
+.cam video,.cam .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cam .ghost{pointer-events:none}
+.grid{position:absolute;inset:0;pointer-events:none;display:none;
+ background-image:linear-gradient(to right,transparent calc(33.333% - 1px),rgba(255,255,255,.7) calc(33.333% - 1px),rgba(255,255,255,.7) 33.333%,transparent 33.333%,transparent calc(66.666% - 1px),rgba(255,255,255,.7) calc(66.666% - 1px),rgba(255,255,255,.7) 66.666%,transparent 66.666%),
+ linear-gradient(to bottom,transparent calc(33.333% - 1px),rgba(255,255,255,.7) calc(33.333% - 1px),rgba(255,255,255,.7) 33.333%,transparent 33.333%,transparent calc(66.666% - 1px),rgba(255,255,255,.7) calc(66.666% - 1px),rgba(255,255,255,.7) 66.666%,transparent 66.666%)}
+.grid::after{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,255,255,.8);border-radius:50%}
+.grid.on{display:block}
+.panel{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:8px;right:8px;background:rgba(0,0,0,.62);padding:8px 10px;font-size:13.5px;z-index:3;display:none}
+.panel .big{font-size:17px;font-weight:800;margin-bottom:4px}
+.panel .big.ok{color:#6CE59E}.panel .big.ng{color:#FFD24A}.panel .big.na{color:#ddd}
+.panel .ln{display:grid;grid-template-columns:5.5em 4.6em 1fr;gap:4px;line-height:1.55}
+.panel .ln b{font-weight:700}
+.panel .good{color:#6CE59E}.panel .bad{color:#FFD24A}
+.cam .bar{background:#111;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.cam .bar .r{display:flex;align-items:center;gap:10px;font-size:13px}
+.cam input[type=range]{flex:1;accent-color:#E5AE00}
+.cam .tools{display:flex;gap:8px}
+.cam .tools button{flex:1;font-size:13.5px;padding:9px 6px;background:#222;color:#eee;border:1px solid #444}
+.cam .tools button.on{background:#E5AE00;color:#1C2B3A;border-color:#E5AE00}
+.cam .shoot{display:flex;gap:10px}
+.cam .shoot button{flex:1}
+.cam .shoot .cancel{background:transparent;color:#eee;border:2px solid #666}
+.cam .shoot .shot{flex:2}
+.diffbox{background:#1C2B3A;color:#fff;padding:10px 12px;margin:4px 0 12px;font-size:13.5px}
+.diffbox .big{font-size:16px;font-weight:800;margin-bottom:4px}
+.diffbox .big.ok{color:#6CE59E}.diffbox .big.ng{color:#FFD24A}.diffbox .big.na{color:#ddd}
+.diffbox .ln{display:grid;grid-template-columns:5.5em 4.6em 1fr;gap:4px;line-height:1.55}
+.diffbox .good{color:#6CE59E}.diffbox .bad{color:#FFD24A}
+input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="home">
+ <h1>施工前・施工後カメラ</h1>
+ <p class="sub">現場ごとに施工前を残して、後日同じ角度で施工後を撮れます</p>
+ <button class="y full" id="hNew">新しい現場を始める</button>
+ <h2>施工後待ちの現場</h2><div id="lWait"></div>
+ <h2>完了した現場</h2><div id="lDone"></div>
+ <p class="note">写真はこのスマホのブラウザの中に保存されます(ネットには上がりません)。ブラウザのデータを消すと写真も消えるので、大事な比較写真は「保存する」でスマホにも保存してください。</p>
+</div>
+
+<div class="wrap" id="detail" hidden>
+ <button class="back" id="dBack">← 現場の一覧へ</button>
+ <label class="f" for="site">現場名</label>
+ <input class="t" id="site" type="text" placeholder="例:杉並区 ○○様邸 給湯器交換">
+ <label class="f" for="memo">メモ(任意)</label>
+ <input class="t" id="memo" type="text" placeholder="例:旧機種 → 新機種">
+ <div class="pair">
+  <div class="slot" id="sB"><span class="tag">施工前</span><span class="ph">まだ撮っていません</span></div>
+  <div class="slot after" id="sA"><span class="tag">施工後</span><span class="ph">施工前を撮ると<br>重ねて撮れます</span></div>
+ </div>
+ <div class="btns">
+  <button id="bBefore">施工前を撮る</button>
+  <button class="y" id="bAfter" disabled>施工後を撮る</button>
+ </div>
+ <div class="btns" id="nativeBtns" hidden>
+  <label class="btn" id="nBefore" for="fBefore">スマホのカメラで施工前</label>
+  <label class="btn y off" id="nAfter" for="fAfter">スマホのカメラで施工後</label>
+ </div>
+ <p class="msg" id="camNote" hidden></p>
+ <div class="diffbox" id="diffBox" hidden></div>
+ <div id="ovBox" hidden>
+  <label class="f" for="ovOp">重ねて確認</label>
+  <div class="ov"><img id="ovA" alt="施工後の写真"><img class="top" id="ovB" alt="施工前の写真(重ね)"></div>
+  <div class="ovr"><span>施工後</span><input type="range" id="ovOp" min="0" max="100" value="50"><span>施工前</span></div>
+ </div>
+ <div class="links">
+  <button id="svB" disabled>施工前の写真を保存</button>
+  <button id="svA" disabled>施工後の写真を保存</button>
+ </div>
+ <label class="f" style="margin-top:12px">並べ方</label>
+ <div class="row"><button id="lyH" class="on">左右に並べる</button><button id="lyV">上下に並べる</button></div>
+ <button class="o full" id="bMake" disabled>比較写真を作る</button>
+ <div id="result">
+  <img id="out" alt="施工前と施工後の比較写真">
+  <button class="y full" id="bSave">比較写真を保存する</button>
+ </div>
+ <p class="msg" id="saveMsg"></p>
+ <button class="w full" id="bDel" style="margin-top:24px">この現場を削除</button>
+ <input type="file" class="vh" id="fBefore" accept="image/*" capture="environment" tabindex="-1">
+ <input type="file" class="vh" id="fAfter" accept="image/*" capture="environment" tabindex="-1" disabled>
+</div>
+
+<div class="cam" id="cam">
+ <div class="view">
+  <video id="vid" playsinline muted autoplay></video>
+  <img class="ghost" id="ghost" alt="">
+  <div class="grid" id="grid"></div>
+  <div class="panel" id="panel"></div>
+ </div>
+ <div class="bar">
+  <div class="r" id="opRow"><span>重ね具合</span><input type="range" id="op" min="0" max="80" value="35"></div>
+  <div class="tools">
+   <button id="tGrid">グリッド</button>
+   <button id="tGhost" class="on">施工前を重ねる</button>
+   <button id="tDiff" class="on">ずれ表示</button>
+  </div>
+  <div class="shoot"><button class="cancel" id="cCancel">やめる</button><button class="y shot" id="cShot">撮影</button></div>
+ </div>
+</div>
+<script>
+// ---- alignment core (pure, testable) ----
+// imgs: Float32Array edge maps, size W x H. Params p={tx,ty,s,r}: before -> current.
+function nccScore(B,C,W,H,p){
+ const cx=W/2, cy=H/2, cs=Math.cos(p.r), sn=Math.sin(p.r), is=1/p.s;
+ let n=0,sb=0,sc=0,sbb=0,scc=0,sbc=0;
+ for(let y=1;y<H-1;y+=1){
+  const yy=y-cy-p.ty;
+  for(let x=1;x<W-1;x+=1){
+   const xx=x-cx-p.tx;
+   // inverse rotate & scale
+   const bx=( cs*xx+sn*yy)*is+cx, by=(-sn*xx+cs*yy)*is+cy;
+   const ix=bx|0, iy=by|0;
+   if(ix<1||iy<1||ix>=W-2||iy>=H-2)continue;
+   const fx=bx-ix, fy=by-iy, i=iy*W+ix;
+   const b=(B[i]*(1-fx)+B[i+1]*fx)*(1-fy)+(B[i+W]*(1-fx)+B[i+W+1]*fx)*fy;
+   const c=C[y*W+x];
+   n++;sb+=b;sc+=c;sbb+=b*b;scc+=c*c;sbc+=b*c;
+  }
+ }
+ if(n<W*H*0.35)return -1;
+ const vb=sbb-sb*sb/n, vc=scc-sc*sc/n;
+ if(vb<=1e-6||vc<=1e-6)return -1;
+ return (sbc-sb*sc/n)/Math.sqrt(vb*vc);
+}
+function refine(B,C,W,H,p0,rounds){
+ let p={...p0}, best=nccScore(B,C,W,H,p);
+ const steps=[[2,0.04,0.03],[1,0.02,0.015],[0.5,0.01,0.008]];
+ for(const [dt,ds,dr] of steps){
+  for(let k=0;k<rounds;k++){
+   let moved=false;
+   const cand=[{tx:dt},{tx:-dt},{ty:dt},{ty:-dt},{s:ds},{s:-ds},{r:dr},{r:-dr}];
+   for(const c of cand){
+    const q={tx:p.tx+(c.tx||0),ty:p.ty+(c.ty||0),s:Math.min(1.6,Math.max(0.6,p.s+(c.s||0))),r:Math.min(0.35,Math.max(-0.35,p.r+(c.r||0)))};
+    const v=nccScore(B,C,W,H,q);
+    if(v>best+1e-4){best=v;p=q;moved=true;}
+   }
+   if(!moved)break;
+  }
+ }
+ return {p,score:best};
+}
+function coarse(B,C,W,H){
+ let bestP={tx:0,ty:0,s:1,r:0}, best=-2;
+ const R=Math.round(W*0.25), st=Math.max(2,Math.round(W/24));
+ for(const s of [0.85,1,1.18])for(const r of [-0.1,0,0.1])
+  for(let ty=-R;ty<=R;ty+=st)for(let tx=-R;tx<=R;tx+=st){
+   const v=nccScore(B,C,W,H,{tx,ty,s,r});
+   if(v>best){best=v;bestP={tx,ty,s,r};}
+  }
+ return refine(B,C,W,H,bestP,4);
+}
+function edgeMap(gray,W,H){
+ const E=new Float32Array(W*H);
+ for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){
+  const i=y*W+x;
+  const gx=gray[i+1]-gray[i-1]+0.5*(gray[i-W+1]-gray[i-W-1]+gray[i+W+1]-gray[i+W-1]);
+  const gy=gray[i+W]-gray[i-W]+0.5*(gray[i+W-1]-gray[i-W-1]+gray[i+W+1]-gray[i-W+1]);
+  E[i]=Math.sqrt(gx*gx+gy*gy);
+ }
+ return E;
+}
+
+const $=id=>document.getElementById(id);
+const pad2=n=>String(n).padStart(2,"0");
+const fmtD=t=>{const d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate();};
+const fmtFull=t=>{const d=new Date(t);return d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日";};
+const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- storage (IndexedDB) ---------- */
+let IDB=null;
+function openDB(){return new Promise(res=>{try{const r=indexedDB.open("ba-camera",1);r.onupgradeneeded=()=>r.result.createObjectStore("jobs",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>res(null);}catch(e){res(null);}});}
+function tx(mode){return IDB.transaction("jobs",mode).objectStore("jobs");}
+function allJobs(){return new Promise(res=>{if(!IDB)return res(MEM);const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>res([]);});}
+function putJob(j){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==j.id).concat([j]);return res();}const r=tx("readwrite").put(j);r.onsuccess=()=>res();r.onerror=()=>res();});}
+function delJob(id){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==id);return res();}const r=tx("readwrite").delete(id);r.onsuccess=()=>res();r.onerror=()=>res();});}
+let MEM=[];
+
+/* ---------- home ---------- */
+let job=null, urls=[];
+function blobUrl(b){const u=URL.createObjectURL(b);urls.push(u);return u;}
+async function showHome(){
+ urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
+ $("detail").hidden=true;$("home").hidden=false;job=null;
+ const js=(await allJobs()).sort((a,b)=>b.created-a.created);
+ const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<img alt="">')+
+  '<div><div class="jt">'+esc(j.site||"現場名なし")+'<span class="st">'+(j.after?"完了":"施工後待ち")+'</span></div><div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・施工後 '+fmtD(j.afterAt):'')+'</div></div></button>';
+ const w=js.filter(j=>!j.after), d=js.filter(j=>j.after);
+ $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">ありません</p>';
+ $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">ありません</p>';
+ window.scrollTo(0,0);
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(!b)return;allJobs().then(js=>{const j=js.find(x=>x.id===b.dataset.job);if(j)openJob(j);});});
+$("hNew").onclick=()=>openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:""});
+
+/* ---------- detail ---------- */
+let layout="h", lastBlob=null, delArm=false;
+function setSlot(slot,blob,at){
+ const s=$(slot);s.querySelectorAll("img,.ph,.dt").forEach(x=>x.remove());
+ if(blob){s.classList.add("has");const i=document.createElement("img");i.alt="";i.src=blobUrl(blob);s.appendChild(i);
+  const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);}
+ else{s.classList.remove("has");const p=document.createElement("span");p.className="ph";p.innerHTML=slot==="sB"?"まだ撮っていません":(job.before?"施工後を<br>撮ってください":"施工前を撮ると<br>重ねて確認できます");s.appendChild(p);}
+}
+function openJob(j){
+ job=j;$("home").hidden=true;$("detail").hidden=false;
+ $("site").value=j.site||"";$("memo").value=j.memo||"";
+ $("result").style.display="none";$("saveMsg").textContent="";lastBlob=null;delArm=false;$("bDel").textContent="この現場を削除";
+ refreshDetail();photoDiff();window.scrollTo(0,0);
+}
+function refreshDetail(){
+ setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);
+ $("bBefore").textContent=job.before?"施工前を撮り直す":"施工前を撮る";
+ $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);$("bAfter").textContent=job.after?"施工後を撮り直す":"施工後を撮る";
+ $("bMake").disabled=!(job.before&&job.after);
+ $("svB").disabled=!job.before;$("svA").disabled=!job.after;
+ const n=$("camNote");
+ if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中のずれ表示は出ません)。";n.hidden=false;}
+ else n.hidden=true;
+ const both=!!(job.before&&job.after);
+ $("ovBox").hidden=!both;
+ if(both){$("ovA").src=blobUrl(job.after);$("ovB").src=blobUrl(job.before);$("ovB").style.opacity=$("ovOp").value/100;}
+}
+$("ovOp").oninput=e=>{$("ovB").style.opacity=e.target.value/100;};
+async function saveJob(){job.site=$("site").value.trim();job.memo=$("memo").value.trim();await putJob(job);}
+$("site").onchange=saveJob;$("memo").onchange=saveJob;
+$("dBack").onclick=async()=>{if(job&&(job.before||job.site))await saveJob();showHome();};
+$("bDel").onclick=async()=>{
+ if(!delArm){delArm=true;$("bDel").textContent="もう一度押すと削除します(元に戻せません)";return;}
+ await delJob(job.id);showHome();
+};
+
+/* ---------- camera ---------- */
+// Live camera with the before-photo overlay. If the browser refuses the camera,
+// show <label> buttons that open the phone's own camera through the file inputs.
+let camFail=false;
+function noCam(){camFail=true;$("nativeBtns").hidden=false;refreshDetail();}
+$("bBefore").onclick=()=>startCam("before");
+$("bAfter").onclick=()=>startCam("after");
+let stream=null, camMode=null, ori={beta:null,gamma:null}, oriOK=false, loop=null;
+window.addEventListener("deviceorientation",e=>{if(e.beta!=null){ori={beta:e.beta,gamma:e.gamma};oriOK=true;}});
+async function askOri(){try{if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission();}catch(e){}}
+
+async function startCam(mode){
+ camMode=mode;await askOri();
+ if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){noCam();return;}
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1440}},audio:false});
+ }catch(err){noCam();return;}
+ const v=$("vid");v.srcObject=stream;
+ const after=mode==="after";
+ $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
+ $("opRow").style.display=after?"flex":"none";$("tGhost").style.display=after?"":"none";$("tDiff").style.display=after?"":"none";
+ $("panel").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
+ $("panel").innerHTML='<div class="big na">施工前と比べています…</div>';
+ if(after){$("ghost").src=blobUrl(job.before);$("ghost").style.opacity=$("op").value/100;}
+ $("cam").style.display="flex";
+ if(after){await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});startAlign();}
+}
+function stopCam(){
+ if(loop){clearTimeout(loop);loop=null;}
+ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+ $("cam").style.display="none";
+}
+$("cCancel").onclick=stopCam;
+$("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
+$("tGrid").onclick=()=>{$("tGrid").classList.toggle("on");$("grid").classList.toggle("on");};
+$("tGhost").onclick=()=>{const on=$("tGhost").classList.toggle("on");$("ghost").style.display=on?"block":"none";$("opRow").style.display=on?"flex":"none";};
+$("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("panel").style.display=on?"block":"none";};
+
+$("cShot").onclick=()=>{
+ const v=$("vid");if(!v.videoWidth)return;
+ const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;
+ c.getContext("2d").drawImage(v,0,0);
+ const mode=camMode, o=oriOK?{...ori}:null;
+ c.toBlob(async b=>{stopCam();await gotPhoto(mode,b,o);},"image/jpeg",0.92);
+};
+$("fBefore").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("before",f,null);};
+$("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
+async function gotPhoto(mode,blob,o){
+ const now=Date.now();
+ if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;}
+ else{job.after=blob;job.afterAt=now;job.afterOri=o;}
+ await saveJob();refreshDetail();
+ $("result").style.display="none";lastBlob=null;
+ photoDiff();
+}
+
+/* ---------- alignment ---------- */
+const AW=96;let AH=72, Bedge=null, est={tx:0,ty:0,s:1,r:0}, estScore=-1, lastCoarse=0;
+const sc=document.createElement("canvas"), sctx=sc.getContext("2d",{willReadFrequently:true});
+function grayOf(drawFn){
+ sc.width=AW;sc.height=AH;sctx.imageSmoothingEnabled=true;sctx.imageSmoothingQuality="medium";
+ sctx.clearRect(0,0,AW,AH);drawFn(sctx);
+ const d=sctx.getImageData(0,0,AW,AH).data, g=new Float32Array(AW*AH);
+ for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.299*d[j]+0.587*d[j+1]+0.114*d[j+2];
+ return g;
+}
+function drawCoverTo(ctx,src,sw,sh,w,h){
+ const r=Math.max(w/sw,h/sh), cw=w/r, ch=h/r;
+ ctx.drawImage(src,(sw-cw)/2,(sh-ch)/2,cw,ch,0,0,w,h);
+}
+async function startAlign(){
+ const v=$("vid");AH=Math.round(AW*v.videoHeight/v.videoWidth);
+ const im=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=$("ghost").src;});
+ Bedge=edgeMap(grayOf(ctx=>drawCoverTo(ctx,im,im.naturalWidth,im.naturalHeight,AW,AH)),AW,AH);
+ est={tx:0,ty:0,s:1,r:0};estScore=-1;lastCoarse=0;
+ if($("tDiff").classList.contains("on"))$("panel").style.display="block";
+ $("panel").innerHTML='<div class="big na">施工前と比べています…</div>';
+ tick();
+}
+function tick(){
+ if(!stream||camMode!=="after")return;
+ const v=$("vid");
+ if(v.videoWidth&&$("tDiff").classList.contains("on")){
+  const C=edgeMap(grayOf(ctx=>ctx.drawImage(v,0,0,AW,AH)),AW,AH);
+  const now=performance.now();
+  let res;
+  if(estScore<0.3&&now-lastCoarse>1500){res=coarse(Bedge,C,AW,AH);lastCoarse=now;}
+  else res=refine(Bedge,C,AW,AH,est,2);
+  if(res.score>=estScore-0.15||res.score>0.3){est=res.p;}
+  estScore=res.score;
+  showDiff();
+ }
+ loop=setTimeout(tick,220);
+}
+function showDiff(){
+ $("panel").innerHTML=diffHtml(est,estScore,(job.beforeOri&&oriOK)?ori.beta-job.beforeOri.beta:null,true);
+}
+function diffHtml(est,estScore,dBeta,live){
+ const lines=[];let allOk=true;
+ const ok=estScore>=0.3;
+ const row=(name,val,good,txt)=>{if(!good)allOk=false;lines.push('<div class="ln"><b>'+name+'</b><span class="'+(good?"good":"bad")+'">'+val+'</span><span class="'+(good?"good":"bad")+'">'+txt+'</span></div>');};
+ if(ok){
+  const W0=est.W||AW, H0=est.H||AH;
+  const px=est.tx/W0*100, py=est.ty/H0*100, sz=(est.s-1)*100, deg=est.r*180/Math.PI;
+  const hx=-px, hy=py, sg=v=>(v>0?"+":"")+v.toFixed(0);
+  row("左右の位置",sg(hx)+"%",Math.abs(hx)<3,Math.abs(hx)<3?"OK":(hx<0?"右へ動かす →":"← 左へ動かす"));
+  row("高さ",sg(hy)+"%",Math.abs(hy)<3,Math.abs(hy)<3?"OK":(hy>0?"下げる ↓":"上げる ↑"));
+  row("距離",(sz>0?"+":"")+sz.toFixed(0)+"%",Math.abs(sz)<4,Math.abs(sz)<4?"OK":(sz>0?"少し離れる":"少し近づく"));
+  row("傾き",(deg>0?"+":"")+deg.toFixed(1)+"°",Math.abs(deg)<1.5,Math.abs(deg)<1.5?"OK":(deg>0?"右回りに回す ↻":"左回りに回す ↺"));
+ }
+ if(dBeta!=null){
+  const db=dBeta;
+  row("向き(上下)",(db>0?"+":"")+db.toFixed(1)+"°",Math.abs(db)<2,Math.abs(db)<2?"OK":(db>0?"上に向ける":"下に向ける"));
+ }
+ const head=ok?(allOk?'<div class="big ok">'+(live?"ぴったりです。撮影どうぞ":"施工前とほぼ同じ位置です")+'</div>':'<div class="big ng">施工前とずれています'+(live?"":"(撮り直す時の目安)")+'</div>')
+  :'<div class="big na">'+(live?"比べられません(同じ場所を写すと表示されます)":"比べられませんでした(写っている範囲が違いすぎる可能性があります)")+'</div>';
+ return head+lines.join("");
+}
+async function photoDiff(){
+ const box=$("diffBox");
+ if(!(job.before&&job.after)){box.hidden=true;return;}
+ box.hidden=false;box.innerHTML='<div class="big na">施工前と比べています…</div>';
+ const iB=await loadImg(job.before), iA=await loadImg(job.after);
+ const W=96, H=Math.round(W*iB.naturalHeight/iB.naturalWidth);
+ const saveH=AH; AH=H;
+ const B=edgeMap(grayOf(ctx=>drawCoverTo(ctx,iB,iB.naturalWidth,iB.naturalHeight,W,H)),W,H);
+ const C=edgeMap(grayOf(ctx=>drawCoverTo(ctx,iA,iA.naturalWidth,iA.naturalHeight,W,H)),W,H);
+ AH=saveH;
+ const res=coarse(B,C,W,H);
+ const p={...res.p,W,H};
+ const dBeta=(job.beforeOri&&job.afterOri)?job.afterOri.beta-job.beforeOri.beta:null;
+ box.innerHTML=diffHtml(p,res.score,dBeta,false);
+}
+
+/* ---------- compose & save ---------- */
+$("lyH").onclick=()=>{layout="h";$("lyH").classList.add("on");$("lyV").classList.remove("on");if(lastBlob)make();};
+$("lyV").onclick=()=>{layout="v";$("lyV").classList.add("on");$("lyH").classList.remove("on");if(lastBlob)make();};
+function loadImg(b){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=blobUrl(b);});}
+function drawCover(ctx,im,x,y,w,h){const r=Math.max(w/im.naturalWidth,h/im.naturalHeight),sw=w/r,sh=h/r;ctx.drawImage(im,(im.naturalWidth-sw)/2,(im.naturalHeight-sh)/2,sw,sh,x,y,w,h);}
+async function make(){
+ await saveJob();
+ const iB=await loadImg(job.before), iA=await loadImg(job.after);
+ const portrait=iB.naturalHeight>=iB.naturalWidth, pw=portrait?900:1200, ph=portrait?1200:900;
+ const gap=12,pad=24,label=64,foot=110;
+ const W=layout==="h"?pad*2+pw*2+gap:pad*2+pw, H=layout==="h"?pad+label+ph+foot:pad+(label+ph)*2+gap+foot;
+ const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+ x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
+ const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif';
+ const cells=[{im:iB,t:"施工前",d:job.beforeAt,x:pad,y:pad,bg:"#1C2B3A",fg:"#FFFFFF"},
+  {im:iA,t:"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+label+ph+gap,bg:"#E5AE00",fg:"#1C2B3A"}];
+ cells.forEach(k=>{x.fillStyle=k.bg;x.fillRect(k.x,k.y,pw,label);x.fillStyle=k.fg;x.textBaseline="middle";
+  x.font="800 38px "+font;x.textAlign="left";x.fillText(k.t,k.x+22,k.y+label/2+1);
+  x.font="600 28px "+font;x.textAlign="right";x.fillText(fmtFull(k.d),k.x+pw-22,k.y+label/2+1);x.textAlign="left";
+  drawCover(x,k.im,k.x,k.y+label,pw,ph);});
+ const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12,foot);
+ x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 36px "+font;x.fillText(job.site||"現場名未入力",pad+14,fy+48,W-pad*2-20);
+ x.font="500 28px "+font;x.fillStyle="#C9D2DA";x.fillText(job.memo||"",pad+14,fy+88,W-pad*2-20);
+ c.toBlob(b=>{lastBlob=b;$("out").src=blobUrl(b);$("result").style.display="block";$("saveMsg").textContent="";$("result").scrollIntoView({behavior:"smooth",block:"start"});},"image/jpeg",0.9);
+}
+$("bMake").onclick=make;
+
+function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
+async function saveBlob(blob,kind,t){
+ const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);
+ const name=kind+"_"+(site?site+"_":"")+stamp(t)+".jpg";
+ const file=new File([blob],name,{type:"image/jpeg"});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){
+  try{await navigator.share({files:[file]});$("saveMsg").textContent="共有メニューから「画像を保存」を選ぶと写真アプリに保存されます。";}
+  catch(err){$("saveMsg").textContent=(err&&err.name==="AbortError")?"保存をやめました。":"保存できませんでした。写真を長押しして保存してください。";}
+  return;
+ }
+ const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+ $("saveMsg").textContent="保存しました:"+name;
+}
+$("bSave").onclick=()=>{if(lastBlob)saveBlob(lastBlob,"施工前後",Date.now());};
+$("svB").onclick=()=>{if(job.before)saveBlob(job.before,"施工前",job.beforeAt);};
+$("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);};
+
+/* ---------- start ---------- */
+(async()=>{IDB=await openDB();showHome();})();
+</script>
+</body>
+</html>
