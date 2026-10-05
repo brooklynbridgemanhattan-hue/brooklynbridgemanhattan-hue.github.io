@@ -176,6 +176,8 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 #vid{transform-origin:50% 50%}
 /* easy-to-grab zoom slider; pinch on the picture works too */
 .cam .view{touch-action:none}
+.sl{flex:1;min-width:0;display:flex;align-items:center;touch-action:none;padding:6px 0;cursor:pointer}
+.sl input{pointer-events:none;width:100%;margin:0}
 #zm{-webkit-appearance:none;appearance:none;height:40px;background:transparent;padding:0 4px}
 #zm::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#5a5a5a}
 #zm::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:32px;height:32px;margin-top:-12px;border-radius:50%;background:#E5AE00;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
@@ -684,6 +686,22 @@ function setZoom(z){
  if(!zRaf)zRaf=requestAnimationFrame(()=>{zRaf=0;applyZoom(zTarget);});
 }
 $("zm").oninput=e=>setZoom(+e.target.value);
+// Camera sliders are driven by our own touch handling: the built-in slider misreads the
+// finger direction when the panel is turned sideways. Position is read in the slider's own
+// coordinates (offsetX), so it works upright and turned.
+function fingerSlider(input){
+ const wrap=document.createElement("span");wrap.className="sl";
+ input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
+ const set=e=>{
+  const w=wrap.clientWidth, r=16, t=Math.min(1,Math.max(0,(e.offsetX-r)/Math.max(1,w-2*r)));
+  const min=+input.min, max=+input.max, step=+input.step||1;
+  input.value=Math.round((min+t*(max-min))/step)*step;
+  input.dispatchEvent(new Event("input"));
+ };
+ wrap.addEventListener("pointerdown",e=>{wrap.setPointerCapture(e.pointerId);e.preventDefault();set(e);});
+ wrap.addEventListener("pointermove",e=>{if(wrap.hasPointerCapture(e.pointerId))set(e);});
+}
+fingerSlider($("zm"));fingerSlider($("op"));
 // Pinch on the camera picture to zoom, like the phone's own camera.
 const pinchPts=new Map();let pinch0=null;
 const camView=document.querySelector("#cam .view");
