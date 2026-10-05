@@ -172,18 +172,39 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <div class="shoot"><button class="cancel" id="cCancel">やめる</button><button class="y shot" id="cShot">撮影</button></div>
  </div>
 </div>
-<script>
-// ---- alignment core (pure, testable) ----
-// imgs: Float32Array edge maps, size W x H. Params p={tx,ty,s,r}: before -> current.
-function nccScore(B,C,W,H,p){
+<script type="text/plain" id="alignSrc">
+// Alignment search: before photo -> live frame. Inputs are grayscale Float32Arrays (W x H).
+// Returns {p:{tx,ty,s,r}, score, idScore}: best transform, its match score, and the score
+// with no movement at all (how well the overlay lines up right now).
+function edges(g,W,H){
+ const E=new Float32Array(W*H);
+ for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){
+  const i=y*W+x;
+  const gx=g[i+1]-g[i-1]+0.5*(g[i-W+1]-g[i-W-1]+g[i+W+1]-g[i+W-1]);
+  const gy=g[i+W]-g[i-W]+0.5*(g[i+W-1]-g[i-W-1]+g[i+W+1]-g[i-W+1]);
+  E[i]=Math.sqrt(gx*gx+gy*gy);
+ }
+ return blur(blur(E,W,H),W,H);
+}
+function blur(A,W,H){
+ const T=new Float32Array(W*H), O=new Float32Array(W*H);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;T[i]=(A[i]+(x>0?A[i-1]:A[i])+(x<W-1?A[i+1]:A[i]))/3;}
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;O[i]=(T[i]+(y>0?T[i-W]:T[i])+(y<H-1?T[i+W]:T[i]))/3;}
+ return O;
+}
+function half(A,W,H){
+ const w=W>>1,h=H>>1,O=new Float32Array(w*h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=2*y*W+2*x;O[y*w+x]=(A[i]+A[i+1]+A[i+W]+A[i+W+1])/4;}
+ return O;
+}
+function ncc(B,C,W,H,p){
  const cx=W/2, cy=H/2, cs=Math.cos(p.r), sn=Math.sin(p.r), is=1/p.s;
  let n=0,sb=0,sc=0,sbb=0,scc=0,sbc=0;
- for(let y=1;y<H-1;y+=1){
+ for(let y=1;y<H-1;y++){
   const yy=y-cy-p.ty;
-  for(let x=1;x<W-1;x+=1){
+  for(let x=1;x<W-1;x++){
    const xx=x-cx-p.tx;
-   // inverse rotate & scale
-   const bx=( cs*xx+sn*yy)*is+cx, by=(-sn*xx+cs*yy)*is+cy;
+   const bx=(cs*xx+sn*yy)*is+cx, by=(-sn*xx+cs*yy)*is+cy;
    const ix=bx|0, iy=by|0;
    if(ix<1||iy<1||ix>=W-2||iy>=H-2)continue;
    const fx=bx-ix, fy=by-iy, i=iy*W+ix;
@@ -192,21 +213,19 @@ function nccScore(B,C,W,H,p){
    n++;sb+=b;sc+=c;sbb+=b*b;scc+=c*c;sbc+=b*c;
   }
  }
- if(n<W*H*0.35)return -1;
+ if(n<W*H*0.3)return -1;
  const vb=sbb-sb*sb/n, vc=scc-sc*sc/n;
  if(vb<=1e-6||vc<=1e-6)return -1;
  return (sbc-sb*sc/n)/Math.sqrt(vb*vc);
 }
-function refine(B,C,W,H,p0,rounds){
- let p={...p0}, best=nccScore(B,C,W,H,p);
- const steps=[[2,0.04,0.03],[1,0.02,0.015],[0.5,0.01,0.008]];
- for(const [dt,ds,dr] of steps){
-  for(let k=0;k<rounds;k++){
+function refine(B,C,W,H,p0){
+ let p={...p0}, best=ncc(B,C,W,H,p);
+ for(const [dt,ds,dr] of [[2,0.03,0.02],[1,0.015,0.01],[0.5,0.007,0.005]]){
+  for(let k=0;k<6;k++){
    let moved=false;
-   const cand=[{tx:dt},{tx:-dt},{ty:dt},{ty:-dt},{s:ds},{s:-ds},{r:dr},{r:-dr}];
-   for(const c of cand){
-    const q={tx:p.tx+(c.tx||0),ty:p.ty+(c.ty||0),s:Math.min(1.6,Math.max(0.6,p.s+(c.s||0))),r:Math.min(0.35,Math.max(-0.35,p.r+(c.r||0)))};
-    const v=nccScore(B,C,W,H,q);
+   for(const c of [{tx:dt},{tx:-dt},{ty:dt},{ty:-dt},{s:ds},{s:-ds},{r:dr},{r:-dr}]){
+    const q={tx:p.tx+(c.tx||0),ty:p.ty+(c.ty||0),s:Math.min(1.5,Math.max(0.67,p.s+(c.s||0))),r:Math.min(0.3,Math.max(-0.3,p.r+(c.r||0)))};
+    const v=ncc(B,C,W,H,q);
     if(v>best+1e-4){best=v;p=q;moved=true;}
    }
    if(!moved)break;
@@ -214,40 +233,45 @@ function refine(B,C,W,H,p0,rounds){
  }
  return {p,score:best};
 }
-function coarse(B,C,W,H){
- let bestP={tx:0,ty:0,s:1,r:0}, best=-2;
- const R=Math.round(W*0.25), st=Math.max(2,Math.round(W/24));
- for(const s of [0.85,1,1.18])for(const r of [-0.1,0,0.1])
-  for(let ty=-R;ty<=R;ty+=st)for(let tx=-R;tx<=R;tx+=st){
-   const v=nccScore(B,C,W,H,{tx,ty,s,r});
-   if(v>best){best=v;bestP={tx,ty,s,r};}
+function search(Bg,Cg,W,H){
+ const B0=edges(Bg,W,H), C0=edges(Cg,W,H);
+ const w=W>>1,h=H>>1, B1=half(B0,W,H), C1=half(C0,W,H);
+ // Full search at half size every time, so a wrong match can never stick.
+ const R=Math.round(w*0.3), cand=[];
+ const combos=[[0.84,0],[1,0],[1.19,0],[1,-0.06],[1,0.06]];
+ for(const [s,r] of combos)
+  for(let ty=-R;ty<=R;ty+=2)for(let tx=-R;tx<=R;tx+=2){
+   const v=ncc(B1,C1,w,h,{tx,ty,s,r});
+   if(v>-1)cand.push({v,p:{tx,ty,s,r}});
   }
- return refine(B,C,W,H,bestP,4);
-}
-function edgeMap(gray,W,H){
- const E=new Float32Array(W*H);
- for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){
-  const i=y*W+x;
-  const gx=gray[i+1]-gray[i-1]+0.5*(gray[i-W+1]-gray[i-W-1]+gray[i+W+1]-gray[i+W-1]);
-  const gy=gray[i+W]-gray[i-W]+0.5*(gray[i+W-1]-gray[i-W-1]+gray[i+W+1]-gray[i-W+1]);
-  E[i]=Math.sqrt(gx*gx+gy*gy);
+ cand.sort((a,b)=>b.v-a.v);
+ let best={p:{tx:0,ty:0,s:1,r:0},score:-1};
+ const seen=[];
+ for(const c of cand){
+  if(seen.length>=3)break;
+  if(seen.some(q=>Math.abs(q.tx-c.p.tx)<4&&Math.abs(q.ty-c.p.ty)<4&&q.s===c.p.s))continue;
+  seen.push(c.p);
+  const res=refine(B0,C0,W,H,{tx:c.p.tx*2,ty:c.p.ty*2,s:c.p.s,r:c.p.r});
+  if(res.score>best.score)best=res;
  }
- return E;
+ const idScore=ncc(B0,C0,W,H,{tx:0,ty:0,s:1,r:0});
+ return {p:best.p,score:best.score,idScore};
 }
+</script>
+<script>
 
-// Run the alignment search in a worker so taps stay responsive.
-let worker=null, wSeq=0;const wWait=new Map();
+// Run the alignment search (alignSrc) in a worker so taps stay responsive.
+const ALIGN_SRC=document.getElementById("alignSrc").textContent;
+let worker=null, wSeq=0, searchFn=null;const wWait=new Map();
 try{
- const src=[nccScore,refine,coarse].map(f=>f.toString()).join("\n")+
-  "\nonmessage=e=>{const d=e.data;const res=d.mode==='coarse'?coarse(d.B,d.C,d.W,d.H):refine(d.B,d.C,d.W,d.H,d.p,d.rounds);postMessage({id:d.id,res});};";
- worker=new Worker(URL.createObjectURL(new Blob([src],{type:"text/javascript"})));
+ worker=new Worker(URL.createObjectURL(new Blob([ALIGN_SRC+"\nonmessage=e=>{const d=e.data;postMessage({id:d.id,res:search(d.B,d.C,d.W,d.H)});};"],{type:"text/javascript"})));
  worker.onmessage=e=>{const f=wWait.get(e.data.id);if(f){wWait.delete(e.data.id);f(e.data.res);}};
  worker.onerror=()=>{worker=null;wWait.forEach(f=>f(null));wWait.clear();};
 }catch(e){worker=null;}
 function align(m){
- if(worker)return new Promise(res=>{const id=++wSeq;wWait.set(id,r=>res(r||run(m)));worker.postMessage({...m,id});});
- return Promise.resolve(run(m));
- function run(m){return m.mode==="coarse"?coarse(m.B,m.C,m.W,m.H):refine(m.B,m.C,m.W,m.H,m.p,m.rounds);}
+ const local=()=>{searchFn=searchFn||new Function(ALIGN_SRC+";return search;")();return searchFn(m.B,m.C,m.W,m.H);};
+ if(worker)return new Promise(res=>{const id=++wSeq;wWait.set(id,r=>res(r||local()));worker.postMessage({...m,id});});
+ return Promise.resolve(local());
 }
 
 const $=id=>document.getElementById(id);
@@ -376,7 +400,7 @@ async function gotPhoto(mode,blob,o){
 }
 
 /* ---------- alignment ---------- */
-const AW=96;let AH=72, camGen=0, Bedge=null, est={tx:0,ty:0,s:1,r:0}, estScore=-1, lastCoarse=0;
+const AW=128;let AH=96, camGen=0, Bgray=null, est={tx:0,ty:0,s:1,r:0}, estScore=-1, estId=-1;
 const sc=document.createElement("canvas"), sctx=sc.getContext("2d",{willReadFrequently:true});
 function grayOf(drawFn){
  sc.width=AW;sc.height=AH;sctx.imageSmoothingEnabled=true;sctx.imageSmoothingQuality="medium";
@@ -392,8 +416,8 @@ function drawCoverTo(ctx,src,sw,sh,w,h){
 async function startAlign(){
  const v=$("vid");AH=Math.round(AW*v.videoHeight/v.videoWidth);
  const im=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=$("ghost").src;});
- Bedge=edgeMap(grayOf(ctx=>drawCoverTo(ctx,im,im.naturalWidth,im.naturalHeight,AW,AH)),AW,AH);
- est={tx:0,ty:0,s:1,r:0};estScore=-1;lastCoarse=0;
+ Bgray=grayOf(ctx=>drawCoverTo(ctx,im,im.naturalWidth,im.naturalHeight,AW,AH));
+ est={tx:0,ty:0,s:1,r:0};estScore=-1;estId=-1;
  if($("tDiff").classList.contains("on"))$("panel").style.display="block";
  $("panel").innerHTML='<div class="big na">施工前と比べています…</div>';
  tick(++camGen);
@@ -403,24 +427,24 @@ async function tick(gen){
  if(!live())return;
  const v=$("vid");
  if(v.videoWidth&&$("tDiff").classList.contains("on")){
-  const C=edgeMap(grayOf(ctx=>ctx.drawImage(v,0,0,AW,AH)),AW,AH);
-  const now=performance.now(), big=estScore<0.3&&now-lastCoarse>1500;
-  if(big)lastCoarse=now;
-  const res=await align(big?{mode:"coarse",B:Bedge,C,W:AW,H:AH}:{mode:"refine",B:Bedge,C,W:AW,H:AH,p:est,rounds:2});
+  // Full search on every frame: compares the live view with the before photo from scratch.
+  const C=grayOf(ctx=>ctx.drawImage(v,0,0,AW,AH));
+  const res=await align({B:Bgray,C,W:AW,H:AH});
   if(!live())return;
-  if(res.score>=estScore-0.15||res.score>0.3){est=res.p;}
-  estScore=res.score;
+  est=res.p;estScore=res.score;estId=res.idScore;
   showDiff();
  }
- loop=setTimeout(()=>tick(gen),150);
+ loop=setTimeout(()=>tick(gen),60);
 }
 function showDiff(){
- $("panel").innerHTML=diffHtml(est,estScore,(job.beforeOri&&oriOK)?ori.beta-job.beforeOri.beta:null,true);
+ $("panel").innerHTML=diffHtml(est,estScore,estId,(job.beforeOri&&oriOK)?ori.beta-job.beforeOri.beta:null,true);
 }
-function diffHtml(est,estScore,dBeta,live){
+function diffHtml(est,estScore,idScore,dBeta,live){
  const lines=[];let allOk=true;
  const ok=estScore>=0.3;
  const row=(name,val,good,txt)=>{if(!good)allOk=false;lines.push('<div class="it '+(good?"good":"bad")+'"><span class="lb">'+name+' '+val+'</span><span class="ac">'+txt+'</span></div>');};
+ // OK also needs the overlay to match as it stands (no movement).
+ if(ok&&idScore<0.5)allOk=false;
  if(ok){
   const W0=est.W||AW, H0=est.H||AH;
   const px=est.tx/W0*100, py=est.ty/H0*100, sz=(est.s-1)*100, deg=est.r*180/Math.PI;
@@ -443,16 +467,16 @@ async function photoDiff(){
  if(!(job.before&&job.after)){box.hidden=true;return;}
  box.hidden=false;box.innerHTML='<div class="big na">施工前と比べています…</div>';
  const iB=await loadImg(job.before), iA=await loadImg(job.after);
- const W=96, H=Math.round(W*iB.naturalHeight/iB.naturalWidth);
+ const W=AW, H=Math.round(W*iB.naturalHeight/iB.naturalWidth);
  const saveH=AH; AH=H;
- const B=edgeMap(grayOf(ctx=>drawCoverTo(ctx,iB,iB.naturalWidth,iB.naturalHeight,W,H)),W,H);
- const C=edgeMap(grayOf(ctx=>drawCoverTo(ctx,iA,iA.naturalWidth,iA.naturalHeight,W,H)),W,H);
+ const B=grayOf(ctx=>drawCoverTo(ctx,iB,iB.naturalWidth,iB.naturalHeight,W,H));
+ const C=grayOf(ctx=>drawCoverTo(ctx,iA,iA.naturalWidth,iA.naturalHeight,W,H));
  AH=saveH;
- const forJob=job, res=await align({mode:"coarse",B,C,W,H});
+ const forJob=job, res=await align({B,C,W,H});
  if(job!==forJob)return;
  const p={...res.p,W,H};
  const dBeta=(job.beforeOri&&job.afterOri)?job.afterOri.beta-job.beforeOri.beta:null;
- box.innerHTML=diffHtml(p,res.score,dBeta,false);
+ box.innerHTML=diffHtml(p,res.score,res.idScore,dBeta,false);
 }
 
 /* ---------- compose & save ---------- */
