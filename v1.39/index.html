@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>施工前・施工後カメラ</title>
+<style>
+/* Design: light app shell with white cards; each job has its own colour (施工前 indigo, 施工後 amber,
+   比較写真 violet, その他 teal, 報告書 green); dark glass camera. Type scale 14 / 16-17 / 18-22. */
+:root{
+ --bg:#F2F4F8;--card:#FFFFFF;--ink:#0F172A;--sub:#5B6475;--line:#E3E8EF;--fill:#F6F8FB;
+ --brand:#2563EB;
+ --before:#3554B5;--before-soft:#E8EEFC;
+ --after:#E39A00;--after-ink:#3D2A00;--after-soft:#FFF4D9;--after-text:#8A5A00;
+ --cmp:#7C3AED;--cmp-soft:#F1EAFE;
+ --extra:#0891B2;--extra-soft:#E0F5FA;
+ --ok:#16A34A;--ok-soft:#E3F8EA;
+ --danger:#DC2626;
+ --r:18px;--r-s:12px;
+ --sh:0 1px 2px rgba(15,23,42,.06),0 6px 20px rgba(15,23,42,.06);
+ color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif;font-size:16px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+svg.i{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none}
+.wrap{max-width:640px;margin:0 auto;padding:14px 16px 40px}
+.full{width:100%}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:12px 16px;border-radius:var(--r-s);font-size:17px;font-weight:700;line-height:1.25;text-align:center;user-select:none}
+button,label.btn,.job{touch-action:manipulation;transition:transform .1s,filter .1s,background-color .15s}
+button:active:not(:disabled),label.btn:active:not(.off),.job:active{transform:scale(.97);filter:brightness(.92)}
+button:disabled,label.btn.off{opacity:.38;cursor:default}
+.b-primary{background:linear-gradient(135deg,#0EA5E9,#2563EB 50%,#7C3AED);color:#fff;box-shadow:0 8px 20px rgba(37,99,235,.28)}
+.b-before{background:var(--before);color:#fff}
+.b-after{background:var(--after);color:var(--after-ink)}
+.s-before{background:var(--before-soft);color:var(--before)}
+.s-after{background:var(--after-soft);color:var(--after-text)}
+.o-before{background:#fff;color:var(--before);border:2px solid var(--before)}
+.b-cmp{background:var(--cmp);color:#fff;box-shadow:0 6px 16px rgba(124,58,237,.25)}
+.b-extra{background:var(--extra);color:#fff}
+.b-rep{background:var(--ok);color:#fff;box-shadow:0 6px 16px rgba(22,163,74,.25)}
+.t-danger{background:transparent;color:var(--danger);font-size:16px;min-height:50px}
+.big{min-height:62px;font-size:19px;border-radius:16px}
+
+/* ---------- home ---------- */
+.hero{display:flex;align-items:center;gap:14px;padding:22px 20px 24px;background:linear-gradient(135deg,#0EA5E9,#2563EB 50%,#7C3AED);color:#fff;border-radius:0 0 26px 26px}
+.logo{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}
+.logo svg{width:34px;height:34px}
+.hero h1{margin:0;font-size:22px;line-height:1.3}
+.hero .sub{margin:2px 0 0;font-size:14px;opacity:.92}
+#hNew{margin:4px 0 6px}
+.lh{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:800;margin:20px 4px 10px}
+.dot{width:10px;height:10px;border-radius:50%}.dot.wait{background:var(--after)}.dot.done{background:var(--ok)}
+.list{display:flex;flex-direction:column;gap:10px}
+.job{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px 10px 10px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);text-align:left;color:var(--ink)}
+.job img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex:none;background:var(--fill)}
+.job img:not([src]){background:var(--before-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233554B5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/%3E%3Ccircle cx='12' cy='13' r='3.2'/%3E%3C/svg%3E") center/30px no-repeat}
+.jbody{flex:1;min-width:0}
+.jt{font-size:17px;font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jd{font-size:14px;color:var(--sub);display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jd svg.i{width:15px;height:15px}
+.st{flex:none;font-size:14px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--after-soft);color:var(--after-text)}
+.job.done .st{background:var(--ok-soft);color:#11803A}
+.empty{margin:0;font-size:15px;color:var(--sub);padding:16px;text-align:center;background:var(--card);border-radius:var(--r);border:1.5px dashed var(--line)}
+.note{font-size:14px;color:var(--sub);margin:24px 4px 0;line-height:1.65}
+
+/* ---------- detail ---------- */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(242,244,248,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.iconbtn{width:46px;height:46px;border-radius:14px;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center;flex:none}
+.tb-title{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.tb-title small{font-size:14px;color:var(--sub);font-weight:600}
+.tb-title span{font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{position:relative;overflow:hidden;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:18px 16px 16px;margin-bottom:14px}
+.card::before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:var(--accent)}
+.c-info{--accent:var(--brand);--num:var(--brand)}
+.c-shot{--accent:linear-gradient(90deg,var(--before) 50%,var(--after) 50%);--num:#334155}
+.c-cmp{--accent:var(--cmp);--num:var(--cmp)}
+.c-extra{--accent:var(--extra);--num:var(--extra)}
+.c-rep{--accent:var(--ok);--num:var(--ok)}
+.sec{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:19px;font-weight:800;line-height:1.3}
+.num{width:30px;height:30px;border-radius:50%;background:var(--num);color:#fff;font-size:16px;font-weight:800;display:grid;place-items:center;flex:none}
+.sec small{margin-left:auto;font-size:14px;font-weight:600;color:var(--sub)}
+.field{display:block;margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.fl-l{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.fl-l svg.i{width:18px;height:18px}
+input.t{width:100%;font:inherit;font-size:17px;padding:13px 14px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--fill);color:var(--ink);outline:none}
+input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.place{display:flex;gap:8px}
+.pv{flex:1;min-width:0;display:flex;align-items:center;padding:13px 14px;border-radius:var(--r-s);background:var(--fill);border:1.5px solid var(--line);font-size:17px;font-weight:700}
+.pv span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pv.none{color:var(--sub);font-weight:500}
+.chipbtn{display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:var(--r-s);background:#EAF1FF;color:var(--brand);font-size:15px;font-weight:700;white-space:nowrap}
+.chipbtn svg.i{width:19px;height:19px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.col .btn{min-height:52px;padding:10px 8px;font-size:16px;gap:7px}
+.col .btn svg.i{width:20px;height:20px}
+.slot{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:14px;overflow:hidden;background:var(--fill);border:2px dashed #CBD3DF;display:flex;align-items:center;justify-content:center}
+.col.before .slot.has{border:2px solid var(--before)}
+.col.after .slot.has{border:2px solid var(--after)}
+.slot.has{cursor:zoom-in}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0F172A}
+.tag{position:absolute;top:8px;left:8px;z-index:2;font-size:14px;font-weight:800;padding:3px 11px;border-radius:999px;background:var(--before);color:#fff}
+.col.after .tag{background:var(--after);color:var(--after-ink)}
+.slot .ph{font-size:14px;color:var(--sub);text-align:center;padding:0 10px;line-height:1.55}
+.slot .dt{position:absolute;right:8px;bottom:8px;z-index:2;font-size:13px;font-weight:700;background:rgba(15,23,42,.72);color:#fff;padding:2px 9px;border-radius:999px}
+.tmask{position:absolute;border:2px dashed #FACC15;background:rgba(250,204,21,.14);z-index:1;pointer-events:none}
+.tmask span,.cmask span{position:absolute;left:5px;top:3px;font-size:12px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
+#bMask{margin-top:12px}
+#nativeBtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+label.btn{cursor:pointer}
+.msg{font-size:14px;color:var(--sub);margin:10px 2px 0}
+#result{display:none}
+#out{width:100%;height:auto;display:block;border-radius:var(--r-s);box-shadow:0 0 0 1px var(--line);cursor:zoom-in;background:#fff}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;margin:14px 0 10px;background:var(--fill);border:1px solid var(--line);border-radius:14px}
+.opt{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:10px;font-size:16px;font-weight:700;color:var(--sub);cursor:pointer;white-space:nowrap}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt:has(input:checked){background:var(--card);color:var(--cmp);box-shadow:0 1px 4px rgba(15,23,42,.14)}
+.switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;margin-bottom:12px;background:var(--fill);border:1px solid var(--line);border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
+.switch>span{display:flex;align-items:center;gap:8px;min-width:0}
+.switch>span svg.i{color:var(--cmp)}
+.switch input{position:absolute;opacity:0;pointer-events:none}
+.switch i{flex:none;width:52px;height:30px;border-radius:999px;background:#CBD3DF;position:relative;transition:background .2s}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
+.switch input:checked+i{background:var(--cmp)}
+.switch input:checked+i::after{left:25px}
+#bSave{min-height:64px;justify-content:center}
+#bSave .tx2{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3}
+#bSave b{font-size:19px}
+#bSave .bsub{font-size:15px;font-weight:600;opacity:.92}
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:12px;border-radius:12px;overflow:hidden}
+.thumbs button{position:relative;aspect-ratio:1;overflow:hidden;border-radius:0;background:#DCE6F5;padding:0;border:0;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .15s,border-radius .15s;-webkit-user-drag:none;pointer-events:none}
+/* selecting (long press): picked photos shrink with a blue tick, like Google Photos */
+.thumbs .ck{position:absolute;left:6px;top:6px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);display:none;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.thumbs .ck svg{width:16px;height:16px;stroke:#fff;stroke-width:3.4;fill:none;display:none}
+.thumbs.sel .ck{display:flex}
+.thumbs button.on img{transform:scale(.84);border-radius:10px}
+.thumbs button.on .ck{background:#2563EB;border-color:#fff}
+.thumbs button.on .ck svg{display:block}
+.selbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 8px;background:#0F172A;color:#fff;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.selbar .cnt{flex:1;font-size:18px;font-weight:800}
+.selbar button{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:50px;border-radius:14px;border:0;font-size:18px;font-weight:800}
+.selbar .x{width:50px;background:transparent;color:#fff}
+.selbar .del{padding:0 20px;background:var(--danger);color:#fff}
+.selbar svg.i{width:22px;height:22px}
+.c-extra .none{margin:10px 2px 0;font-size:14px;color:var(--sub)}
+#bDel{margin-top:6px}
+
+/* ---------- full-screen viewer ---------- */
+.viewer{position:fixed;inset:0;background:#000;z-index:70;touch-action:none;overflow:hidden;user-select:none;-webkit-user-select:none}
+#vStage{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none}
+#vStage.anim{transition:transform .22s ease-out}
+#vStage img{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block;-webkit-user-drag:none}
+#vImg2{object-fit:cover}
+/* viewer: 戻る + count at the top, comment box and 保存 / 削除 at the bottom */
+.vtop{position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:3;display:flex;align-items:center;gap:12px}
+.vtop .cnt{color:#fff;font-size:17px;font-weight:800;text-shadow:0 1px 3px #000}
+.vback,.vclose{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:48px;padding:0 18px 0 12px;border-radius:999px;background:rgba(20,22,28,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.22);font-size:17px;font-weight:800}
+.vback svg.i{width:22px;height:22px}
+.vclose{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;width:48px;padding:0;z-index:3}
+.vbar{position:absolute;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2;display:flex;flex-direction:column;gap:14px}
+.vbar .btns{display:flex;gap:14px}
+.vbar .btns button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:58px;border-radius:999px;color:#fff;font-size:20px;font-weight:800;border:1px solid rgba(255,255,255,.35)}
+.vbar svg.i{width:24px;height:24px}
+#vSave{background:linear-gradient(135deg,#3B82F6,#2563EB)}
+#vDel{background:rgba(220,38,38,.88)}
+#vDel[hidden]{display:none}
+.viewer.editing .vbar .btns,.viewer.editing .vtop .cnt{display:none}
+/* comments on an other-photo */
+.vnote{display:flex;flex-direction:column;gap:8px;background:rgba(20,22,28,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:12px 14px}
+.vnote[hidden]{display:none}
+.vnote .hd{display:flex;align-items:center;gap:8px;color:#CBD5E1;font-size:15px;font-weight:700;min-height:36px;white-space:nowrap}
+.vnote .hd.msg{color:#4ADE80}
+.vnote .hd svg.i{width:18px;height:18px}
+.vnote .st{display:none}
+.vnote .add{margin-left:auto;flex:none;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;font-size:15px;font-weight:800}
+.vnote .add svg.i{width:18px;height:18px}
+.vnote .add[hidden]{display:none}
+.vnote .row{display:flex;align-items:flex-end;gap:12px}
+.vnote textarea{flex:1;box-sizing:border-box;resize:none;border:0;outline:0;background:rgba(255,255,255,.08);border-radius:12px;color:#fff;font:inherit;font-size:18px;line-height:1.45;min-height:48px;max-height:7.5em;padding:11px 12px}
+.vnote textarea::placeholder{color:rgba(255,255,255,.55)}
+.vnote .ok{display:none;flex:none;height:48px;min-width:76px;padding:0 18px;border-radius:12px;border:0;background:#22C55E;color:#04260F;font-size:19px;font-weight:800}
+.vnote.editing .ok{display:block}
+.vnote.editing textarea{background:rgba(255,255,255,.14)}
+/* the comments written on the photo: drag to move, pinch or corner to resize (like Google Photos text) */
+.vtag{position:absolute;left:0;top:0;pointer-events:auto;touch-action:none}
+.vtag canvas{display:block;width:100%;height:100%}
+.vtag.on{outline:calc(2px * var(--k,1)) dashed #fff;outline-offset:calc(6px * var(--k,1))}
+.vtag i{position:absolute;display:none;width:calc(30px * var(--k,1));height:calc(30px * var(--k,1));border-radius:50%;background:#fff;box-shadow:0 0 0 calc(2px * var(--k,1)) rgba(0,0,0,.35);align-items:center;justify-content:center}
+.vtag.on i{display:flex}
+.vtag i svg{width:62%;height:62%;stroke:#111;stroke-width:2.6;fill:none}
+.vtag .mv{left:calc(-16px * var(--k,1));top:calc(-16px * var(--k,1))}
+.vtag .rs{right:calc(-16px * var(--k,1));bottom:calc(-16px * var(--k,1))}
+.vtag .rm{right:calc(-16px * var(--k,1));top:calc(-16px * var(--k,1));background:#EF4444}
+.vtag .rm svg{stroke:#fff}
+.thumbs .cm{position:absolute;right:5px;bottom:5px;min-width:24px;height:24px;padding:0 5px;box-sizing:border-box;border-radius:12px;background:rgba(15,23,42,.75);display:flex;align-items:center;justify-content:center;gap:2px;color:#fff;font-size:12px;font-weight:800}
+.thumbs .cm svg{width:13px;height:13px;stroke:#fff;stroke-width:2.4;fill:none}
+.vop{position:absolute;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(20,22,28,.65);color:#fff;font-size:15px;font-weight:700;border-radius:14px}
+.vop input{flex:1;accent-color:#F5A300}
+.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;display:flex;align-items:center;gap:10px;background:var(--ok);color:#fff;font-size:20px;font-weight:800;padding:16px 28px;border:3px solid #fff;border-radius:18px;box-shadow:0 0 0 3px var(--ok),0 14px 34px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap;transition:opacity .3s}
+.toast.out{opacity:0}
+.toast.ng{background:var(--danger);box-shadow:0 0 0 3px var(--danger),0 14px 34px rgba(0,0,0,.35)}
+
+/* ---------- box editor ---------- */
+.med{position:fixed;inset:0;z-index:60;background:#0B1020;color:#fff;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 0 calc(12px + env(safe-area-inset-bottom,0px))}
+.med .mt{margin:0 16px 10px;font-size:22px;font-weight:800;line-height:1.4}
+.med .mt ul{margin:6px 0 0;padding:0;list-style:none;font-size:17px;font-weight:700;line-height:1.5;color:#E2E8F0;display:flex;flex-wrap:wrap;column-gap:1.4em}
+.med .mt li{padding-left:1.1em;text-indent:-1.1em;white-space:nowrap;max-width:100%}
+@media (max-width:480px){.med .mt li{white-space:normal}}
+.med .mt li::before{content:"・"}
+.med .mt b{color:#FACC15}
+.mstage{position:relative;flex:1;min-height:0}
+#mImg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.mwrap{position:absolute;overflow:hidden;touch-action:none}
+.mwrap *{pointer-events:none}
+.mrect{position:absolute;border:3px solid #FACC15;background:rgba(250,204,21,.16);box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+.mrect i{position:absolute;width:26px;height:26px;border-radius:50%;background:#FACC15;border:3px solid #0B1020}
+.mrect .tl{left:-14px;top:-14px}.mrect .tr{right:-14px;top:-14px}.mrect .bl{left:-14px;bottom:-14px}.mrect .br{right:-14px;bottom:-14px}
+.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 16px 0}
+.mbtns .o2{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.3);font-size:16px}
+.mbtns .ok{background:#FACC15;color:#1A1400;font-size:18px}
+
+/* ---------- camera ---------- */
+.cam{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column;color:#fff}
+.cam[data-mode=before]{--mode:#4F74E3;--mode-ink:#fff}
+.cam[data-mode=after]{--mode:#F5A300;--mode-ink:#2B1D00}
+.cam[data-mode=extra]{--mode:#06B6D4;--mode-ink:#00262E}
+.cam .view{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;touch-action:none}
+/* the stage has the camera picture's own shape, so the preview shows exactly what is saved */
+.cam .stage{position:relative;overflow:hidden;width:100%;height:100%}
+.cam video,.cam .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#vid{transform-origin:50% 50%}
+/* app camera: the phone's own preview shows through under the stage */
+html.natcam,html.natcam body,html.natcam .cam{background:transparent!important}
+html.natcam body>*:not(#cam):not(#toast){visibility:hidden}
+html.natcam #vid{display:none}
+.cam .ghost{pointer-events:none}
+.cam .ghost.rot{inset:auto;left:50%;top:50%;max-width:none;max-height:none}
+.grid{position:absolute;inset:0;pointer-events:none;display:none;
+ background-image:linear-gradient(to right,transparent calc(33.333% - 1px),rgba(255,255,255,.7) calc(33.333% - 1px),rgba(255,255,255,.7) 33.333%,transparent 33.333%,transparent calc(66.666% - 1px),rgba(255,255,255,.7) calc(66.666% - 1px),rgba(255,255,255,.7) 66.666%,transparent 66.666%),
+ linear-gradient(to bottom,transparent calc(33.333% - 1px),rgba(255,255,255,.7) calc(33.333% - 1px),rgba(255,255,255,.7) 33.333%,transparent 33.333%,transparent calc(66.666% - 1px),rgba(255,255,255,.7) calc(66.666% - 1px),rgba(255,255,255,.7) 66.666%,transparent 66.666%)}
+.grid::after{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,255,255,.8);border-radius:50%}
+.grid.on{display:block}
+.cmask{position:absolute;border:2px dashed rgba(255,255,255,.9);background:rgba(0,0,0,.28);z-index:2;pointer-events:none}
+.cam.clean .cmask{display:none!important}
+.cam .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;transition:opacity .25s}
+.cam .flash.on{opacity:.7;transition:none}
+.pill{position:absolute;z-index:5;display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;font-size:15px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.pill svg.i{width:18px;height:18px}
+.cmode{top:10px;left:10px;background:var(--mode);color:var(--mode-ink)}
+.sidew{top:52px;left:10px;background:rgba(20,22,28,.7);color:#fff}
+.shotn{top:10px;right:10px;background:rgba(20,22,28,.7);color:#fff}
+/* match frame: green = lined up, yellow = close, red = off, grey = can't compare */
+.frame{position:absolute;inset:0;border:8px solid rgba(255,255,255,.35);pointer-events:none;z-index:3;transition:border-color .15s;display:none}
+.flab{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:5;font-size:17px;font-weight:800;padding:6px 18px;border-radius:999px;background:rgba(255,255,255,.88);color:#111;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.frame.ok{border-color:#22C55E}.flab.ok{background:#22C55E;color:#052E14}
+.frame.near{border-color:#FACC15}.flab.near{background:#FACC15;color:#2B2200}
+.frame.far{border-color:#EF4444}.flab.far{background:#EF4444;color:#fff}
+.cam:not(.judging) .flab{display:none}
+.cam .bar{background:rgba(12,14,20,.94);padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;border-top:1px solid rgba(255,255,255,.08)}
+.cam .bar .r{display:flex;align-items:center;gap:10px}
+.rl{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#D6DBE4;white-space:nowrap}
+.rl svg.i{width:19px;height:19px}
+#zmV{min-width:3.4em;text-align:right;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.cam .fl{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;height:42px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font-size:15px;font-weight:700;border:1px solid rgba(255,255,255,.16)}
+.cam .fl svg.i{width:19px;height:19px}
+.cam .fl.on{background:#FACC15;color:#1A1400;border-color:#FACC15}
+.cam .fl.auto{background:rgba(250,204,21,.16);color:#FACC15;border-color:#FACC15}
+/* sliders are driven by our own touch handling (see fingerSlider) */
+.sl{flex:1;min-width:0;display:flex;align-items:center;touch-action:none;padding:6px 0;cursor:pointer}
+.sl input{pointer-events:none;width:100%;margin:0}
+.cam input[type=range]{-webkit-appearance:none;appearance:none;height:36px;background:transparent;padding:0 4px}
+.cam input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:rgba(255,255,255,.28)}
+.cam input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:30px;height:30px;margin-top:-12px;border-radius:50%;background:#fff;border:4px solid var(--mode,#F5A300);box-shadow:0 1px 5px rgba(0,0,0,.5)}
+.cam input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.28)}
+.cam input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:4px solid var(--mode,#F5A300)}
+.cam .tools{display:flex;gap:8px}
+.cam .tools button{--tc:#E2E8F0;--tc-ink:#0F172A;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:8px 4px;border-radius:14px;background:rgba(255,255,255,.08);color:#C9D1DC;font-size:14px;font-weight:700;line-height:1.2;border:1px solid rgba(255,255,255,.1);white-space:nowrap}
+.cam .tools button svg.i{width:24px;height:24px}
+.cam .tools button.on{background:var(--tc);color:var(--tc-ink);border-color:var(--tc)}
+.cam .tools .t-mask{--tc:#4F74E3;--tc-ink:#fff}
+.cam .tools .t-ovl{--tc:#F5A300;--tc-ink:#2B1D00}
+.cam .tools .t-judge{--tc:#22C55E;--tc-ink:#052E14}
+.cam .tools .t-off{--tc:#F87171;--tc-ink:#fff}
+.cam .tools .lg{display:none}
+.cam .shoot{display:flex;gap:10px}
+.cam .cancel{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:62px;border-radius:16px;background:rgba(255,255,255,.1);color:#fff;font-size:18px;font-weight:700;border:1px solid rgba(255,255,255,.16)}
+.cam .shot{flex:2.2;display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;border-radius:16px;background:var(--mode);color:var(--mode-ink);font-size:23px;font-weight:800;box-shadow:0 0 0 3px #0C0E14,0 0 0 5px rgba(255,255,255,.85)}
+.cam .shot svg.i{width:26px;height:26px}
+.cam .shot.busy{filter:brightness(.75)}
+/* phone held sideways: labels and controls turn to face the user, laid over the picture */
+.camhud{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none}
+.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(12,14,20,.62);gap:8px;padding:8px 12px;border:0}
+.cam .camhud .tools{position:absolute;right:8px;top:8px;display:grid;grid-template-columns:1fr 1fr;align-content:center;gap:8px;pointer-events:auto}
+.cam .camhud .tools button{min-height:58px;font-size:16px;background:rgba(20,22,28,.72)}
+.cam .camhud .tools button.on{background:var(--tc)}
+.cam .camhud .tools .fl{height:auto;min-height:58px;border-radius:14px;font-size:16px}
+.cam .camhud .rl{font-size:16px}
+.cam .camhud #zmV{font-size:19px}
+.cam .camhud .shot{font-size:25px}
+.cam .camhud .cancel{font-size:20px}
+.camhud .flab{top:12px;bottom:auto}
+.camhud .cmode{top:10px;left:10px}
+.camhud .sidew{top:54px;left:10px}
+.camhud .shotn{top:98px;left:10px;right:auto}
+
+input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div id="home">
+ <header class="hero"><div class="logo"><svg viewBox="0 0 108 108" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M28 42V34a6 6 0 0 1 6-6h8M66 28h8a6 6 0 0 1 6 6v8M80 66v8a6 6 0 0 1-6 6h-8M42 80h-8a6 6 0 0 1-6-6v-8"/><circle cx="48" cy="50" r="13" stroke-opacity=".55"/></g><circle cx="58" cy="58" r="13" fill="#fff"/><circle cx="58" cy="58" r="5" fill="#2563EB"/><circle cx="72" cy="38" r="4" fill="#BEF264"/></svg></div><div><h1>施工前後カメラ</h1><p class="sub">同じ角度で、施工前と施工後を撮影</p></div></header>
+ <main class="wrap">
+  <button class="btn b-primary big full" id="hNew"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>新しい現場を始める</span></button>
+  <h2 class="lh"><span class="dot wait"></span>施工後待ちの現場</h2><div class="list" id="lWait"></div>
+  <h2 class="lh"><span class="dot done"></span>完了した現場</h2><div class="list" id="lDone"></div>
+  <p class="note">写真はこのスマホのブラウザの中に保存されます(ネットには上がりません)。ブラウザのデータを消すと写真も消えるので、大事な比較写真は「保存する」でスマホにも保存してください。</p>
+ </main>
+</div>
+
+<div id="detail" hidden>
+ <header class="topbar"><button class="iconbtn" id="dBack" aria-label="現場の一覧へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><div class="tb-title"><small>現場</small><span id="dTitle">現場の詳細</span></div></header>
+ <main class="wrap">
+ <section class="card c-info">
+  <h2 class="sec"><span class="num">1</span>現場の情報</h2>
+  <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
+   <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
+  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><input class="t" id="site" type="text" placeholder="例:山田様"></label>
+  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" placeholder="例:旧機種 → 新機種"></label>
+ </section>
+
+ <section class="card c-shot">
+  <h2 class="sec"><span class="num">2</span>施工前・施工後を撮る</h2>
+  <div class="pair">
+   <div class="col before">
+    <div class="slot" id="sB"><span class="tag">施工前</span><span class="ph">まだ撮っていません</span></div>
+    <button class="btn b-before" id="bBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">施工前を撮る</span></button>
+    <button class="btn s-before" id="svB" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span>写真を保存</span></button>
+   </div>
+   <div class="col after">
+    <div class="slot after" id="sA"><span class="tag">施工後</span><span class="ph">施工前を撮ると<br>重ねて撮れます</span></div>
+    <button class="btn b-after" id="bAfter" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">施工後を撮る</span></button>
+    <button class="btn s-after" id="svA" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span>写真を保存</span></button>
+   </div>
+  </div>
+  <div id="nativeBtns" hidden>
+   <label class="btn b-before" id="nBefore" for="fBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで施工前</label>
+   <label class="btn b-after off" id="nAfter" for="fAfter"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで施工後</label>
+  </div>
+  <button class="btn o-before full" id="bMask" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="8" height="8" rx="1.5"/></svg><span class="tx">交換する機器を枠で囲む(任意)</span></button>
+  <p class="msg" id="camNote" hidden></p>
+ </section>
+
+ <section class="card c-cmp" id="result">
+  <h2 class="sec"><span class="num">3</span>比較写真<small>タップで拡大</small></h2>
+  <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
+  <div class="seg" role="radiogroup" aria-label="並べ方">
+   <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>横に並べる</label>
+   <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="8" rx="1.5"/><rect x="5" y="13" width="14" height="8" rx="1.5"/></svg>縦に並べる</label>
+  </div>
+  <label class="switch" for="cLabel"><span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg>「施工前」「施工後」の文字を入れる</span><input type="checkbox" id="cLabel" checked><i></i></label>
+  <button class="btn b-cmp full" id="bSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
+ </section>
+
+ <section class="card c-extra">
+  <h2 class="sec"><span class="num">4</span>その他の写真</h2>
+  <button class="btn b-extra full" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>カメラを起動して撮る</span></button>
+  <label class="btn b-extra full" id="nExtra" for="fExtra" hidden style="margin-top:8px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで撮る</label>
+  <div class="thumbs" id="thumbs"></div>
+  <p class="none" id="thumbsNone">まだありません。撮った写真はここに並びます(タップで拡大・長押しで選択)。</p>
+ </section>
+
+ <section class="card c-rep">
+  <h2 class="sec"><span class="num">5</span>報告書</h2>
+  <button class="btn b-rep full" id="bReport"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span>施工完了報告書に添付する</span></button>
+ </section>
+ <p class="msg" id="saveMsg"></p>
+ <button class="btn t-danger full" id="bDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この現場を削除</span></button>
+ <input type="file" class="vh" id="fBefore" accept="image/*" capture="environment" tabindex="-1">
+ <input type="file" class="vh" id="fAfter" accept="image/*" capture="environment" tabindex="-1" disabled>
+ <input type="file" class="vh" id="fExtra" accept="image/*" capture="environment" tabindex="-1">
+ </main>
+</div>
+
+<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>保存</button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
+
+<div class="med" id="med" hidden>
+ <div class="mt">交換する機器を枠で囲んでください<ul><li>枠の中は、施工前と施工後で<b>比べません</b></li><li>新しい機器が大きくなる場合は、<b>少し大きめ</b>に囲む</li><li>枠の中を引っぱると<b>移動</b>、角の丸で<b>大きさ</b>を変更</li></ul></div>
+ <div class="mstage" id="mStage"><img id="mImg" alt="施工前の写真"><div class="mwrap" id="mWrap"><div class="mrect" id="mRect"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div></div></div>
+ <div class="mbtns"><button class="btn o2" id="mNone">枠なし(全体で比べる)</button><button class="btn ok" id="mOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>決定</button></div>
+</div>
+
+<div class="cam" id="cam" data-mode="before">
+ <div class="view"><div class="stage" id="stage">
+  <video id="vid" playsinline muted autoplay></video>
+  <img class="ghost" id="ghost" alt="">
+  <div class="grid" id="grid"></div>
+  <div class="cmask" id="camMask" hidden><span>比べない</span></div>
+  <div class="flash" id="flash"></div>
+  <div class="pill cmode" id="camMode"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>施工前を撮影</span></div>
+  <div class="pill shotn" id="shotN" hidden></div>
+  <div class="pill sidew" id="sideW" hidden>横向きで保存</div>
+  <div class="frame" id="frame"><span class="flab" id="fLabel"></span></div>
+ </div></div>
+ <div class="camhud" id="camHud" hidden></div>
+ <div class="bar">
+  <div class="r zr" id="zoomRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>ズーム</span><input type="range" id="zm" min="1.6" max="6.4" step="0.1" value="1.6" aria-label="ズーム"><b id="zmV">標準</b><button class="fl" id="tFlash" aria-label="フラッシュ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span class="tx">オフ</span></button></div>
+  <div class="r" id="opRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg>重ね具合</span><input type="range" id="op" min="0" max="80" value="35" aria-label="重ね具合"></div>
+  <div class="tools">
+   <button id="tGrid"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg><span>グリッド</span></button>
+   <button id="tMask" class="t-mask on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="8" height="8" rx="1.5"/></svg><span class="lg">交換する機器を枠で囲む</span><span class="sh">枠で囲む</span></button>
+   <button id="tGhost" class="t-ovl on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3" stroke-dasharray="3 2.5"/></svg><span class="lg">施工前を重ねる</span><span class="sh">重ねる</span></button>
+   <button id="tLine" class="t-ovl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M7 15l3-4 3 3 4-5"/></svg><span class="lg">線で重ねる</span><span class="sh">線表示</span></button>
+   <button id="tDiff" class="t-judge on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span class="lg">色で判定</span><span class="sh">色判定</span></button>
+   <button id="tAllOff" class="t-off"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.1A10 10 0 0 1 12 5c5 0 9 4.5 10 7a13 13 0 0 1-3 4.1M6.6 6.6C4.4 8 2.9 10 2 12c1 2.5 5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/></svg><span class="tx">表示オフ</span></button>
+  </div>
+  <div class="shoot"><button class="cancel" id="cCancel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg><span class="tx">やめる</span></button><button class="shot" id="cShot"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>撮影</span></button></div>
+ </div>
+</div>
+<script type="text/plain" id="alignSrc">
+// Alignment search: before photo -> live frame. Inputs are grayscale Float32Arrays (W x H).
+// M (optional) is a box {x0,y0,x1,y1} in pixels that is left out of the comparison: the
+// equipment being replaced, which looks different before and after.
+// Returns {p:{tx,ty,s,r}, score, idScore}: best transform, its match score, and the score
+// with no movement at all (how well the overlay lines up right now).
+function edges(g,W,H){
+ const E=new Float32Array(W*H);
+ for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){
+  const i=y*W+x;
+  const gx=g[i+1]-g[i-1]+0.5*(g[i-W+1]-g[i-W-1]+g[i+W+1]-g[i+W-1]);
+  const gy=g[i+W]-g[i-W]+0.5*(g[i+W-1]-g[i-W-1]+g[i+W+1]-g[i-W+1]);
+  E[i]=Math.sqrt(gx*gx+gy*gy);
+ }
+ return blur(blur(E,W,H),W,H);
+}
+function blur(A,W,H){
+ const T=new Float32Array(W*H), O=new Float32Array(W*H);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;T[i]=(A[i]+(x>0?A[i-1]:A[i])+(x<W-1?A[i+1]:A[i]))/3;}
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;O[i]=(T[i]+(y>0?T[i-W]:T[i])+(y<H-1?T[i+W]:T[i]))/3;}
+ return O;
+}
+function half(A,W,H){
+ const w=W>>1,h=H>>1,O=new Float32Array(w*h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=2*y*W+2*x;O[y*w+x]=(A[i]+A[i+1]+A[i+W]+A[i+W+1])/4;}
+ return O;
+}
+function ncc(B,C,W,H,p,M){
+ const cx=W/2, cy=H/2, cs=Math.cos(p.r), sn=Math.sin(p.r), is=1/p.s;
+ let n=0,sb=0,sc=0,sbb=0,scc=0,sbc=0;
+ for(let y=1;y<H-1;y++){
+  const yy=y-cy-p.ty;
+  for(let x=1;x<W-1;x++){
+   const xx=x-cx-p.tx;
+   const bx=(cs*xx+sn*yy)*is+cx, by=(-sn*xx+cs*yy)*is+cy;
+   const ix=bx|0, iy=by|0;
+   if(ix<1||iy<1||ix>=W-2||iy>=H-2)continue;
+   if(M&&((x>=M.x0&&x<M.x1&&y>=M.y0&&y<M.y1)||(bx>=M.x0&&bx<M.x1&&by>=M.y0&&by<M.y1)))continue;
+   const fx=bx-ix, fy=by-iy, i=iy*W+ix;
+   const b=(B[i]*(1-fx)+B[i+1]*fx)*(1-fy)+(B[i+W]*(1-fx)+B[i+W+1]*fx)*fy;
+   const c=C[y*W+x];
+   n++;sb+=b;sc+=c;sbb+=b*b;scc+=c*c;sbc+=b*c;
+  }
+ }
+ if(n<W*H*0.3*(M?M.keep:1))return -1;
+ const vb=sbb-sb*sb/n, vc=scc-sc*sc/n;
+ if(vb<=1e-6||vc<=1e-6)return -1;
+ return (sbc-sb*sc/n)/Math.sqrt(vb*vc);
+}
+function refine(B,C,W,H,p0,M){
+ let p={...p0}, best=ncc(B,C,W,H,p,M);
+ for(const [dt,ds,dr] of [[2,0.03,0.02],[1,0.015,0.01],[0.5,0.007,0.005]]){
+  for(let k=0;k<6;k++){
+   let moved=false;
+   for(const c of [{tx:dt},{tx:-dt},{ty:dt},{ty:-dt},{s:ds},{s:-ds},{r:dr},{r:-dr}]){
+    const q={tx:p.tx+(c.tx||0),ty:p.ty+(c.ty||0),s:Math.min(1.5,Math.max(0.67,p.s+(c.s||0))),r:Math.min(0.3,Math.max(-0.3,p.r+(c.r||0)))};
+    const v=ncc(B,C,W,H,q,M);
+    if(v>best+1e-4){best=v;p=q;moved=true;}
+   }
+   if(!moved)break;
+  }
+ }
+ return {p,score:best};
+}
+function maskAt(M,W,H,k){
+ if(!M)return null;
+ const x0=M.x0*k,y0=M.y0*k,x1=M.x1*k,y1=M.y1*k;
+ return {x0,y0,x1,y1,keep:Math.max(0.15,1-((x1-x0)*(y1-y0))/(W*H))};
+}
+function search(Bg,Cg,W,H,Mpx){
+ const B0=edges(Bg,W,H), C0=edges(Cg,W,H);
+ const w=W>>1,h=H>>1, B1=half(B0,W,H), C1=half(C0,W,H);
+ const M0=maskAt(Mpx,W,H,1), M1=maskAt(Mpx,w,h,0.5);
+ // Full search at half size every time, so a wrong match can never stick.
+ const R=Math.round(w*0.3), cand=[];
+ const combos=[[0.84,0],[1,0],[1.19,0],[1,-0.06],[1,0.06]];
+ for(const [s,r] of combos)
+  for(let ty=-R;ty<=R;ty+=2)for(let tx=-R;tx<=R;tx+=2){
+   const v=ncc(B1,C1,w,h,{tx,ty,s,r},M1);
+   if(v>-1)cand.push({v,p:{tx,ty,s,r}});
+  }
+ cand.sort((a,b)=>b.v-a.v);
+ // Always also try "no movement" as a starting point, then the strongest coarse matches.
+ let best=refine(B0,C0,W,H,{tx:0,ty:0,s:1,r:0},M0);
+ const seen=[];
+ for(const c of cand){
+  if(seen.length>=4)break;
+  if(seen.some(q=>Math.abs(q.tx-c.p.tx)<4&&Math.abs(q.ty-c.p.ty)<4&&q.s===c.p.s))continue;
+  seen.push(c.p);
+  const res=refine(B0,C0,W,H,{tx:c.p.tx*2,ty:c.p.ty*2,s:c.p.s,r:c.p.r},M0);
+  if(res.score>best.score)best=res;
+ }
+ const idScore=ncc(B0,C0,W,H,{tx:0,ty:0,s:1,r:0},M0);
+ return {p:best.p,score:best.score,idScore};
+}
+</script>
+<script>
+
+// Run the alignment search (alignSrc) in a worker so taps stay responsive.
+const ALIGN_SRC=document.getElementById("alignSrc").textContent;
+let worker=null, wSeq=0, searchFn=null;const wWait=new Map();
+try{
+ worker=new Worker(URL.createObjectURL(new Blob([ALIGN_SRC+"\nonmessage=e=>{const d=e.data;postMessage({id:d.id,res:search(d.B,d.C,d.W,d.H,d.M)});};"],{type:"text/javascript"})));
+ worker.onmessage=e=>{const f=wWait.get(e.data.id);if(f){wWait.delete(e.data.id);f(e.data.res);}};
+ worker.onerror=()=>{worker=null;wWait.forEach(f=>f(null));wWait.clear();};
+}catch(e){worker=null;}
+function align(m){
+ const local=()=>{searchFn=searchFn||new Function(ALIGN_SRC+";return search;")();return searchFn(m.B,m.C,m.W,m.H,m.M);};
+ if(worker)return new Promise(res=>{const id=++wSeq;wWait.set(id,r=>res(r||local()));worker.postMessage({...m,id});});
+ return Promise.resolve(local());
+}
+
+const $=id=>document.getElementById(id);
+// Sets a button's label without removing its icon (label lives in .tx when present).
+function setTx2(id,t){const el=$(id).querySelector("span");if(el)el.textContent=t;}
+function setTx(id,t){const el=$(id), x=el.querySelector(".tx");(x||el).textContent=t;}
+const pad2=n=>String(n).padStart(2,"0");
+const fmtD=t=>{const d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate();};
+const fmtFull=t=>{const d=new Date(t);return d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日";};
+const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- storage (IndexedDB) ---------- */
+let IDB=null;
+function openDB(){return new Promise(res=>{try{const r=indexedDB.open("ba-camera",1);r.onupgradeneeded=()=>r.result.createObjectStore("jobs",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>res(null);}catch(e){res(null);}});}
+function tx(mode){return IDB.transaction("jobs",mode).objectStore("jobs");}
+function allJobs(){return new Promise(res=>{if(!IDB)return res(MEM);const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>res([]);});}
+function putJob(j){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==j.id).concat([j]);return res();}const r=tx("readwrite").put(j);r.onsuccess=()=>res();r.onerror=()=>res();});}
+function delJob(id){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==id);return res();}const r=tx("readwrite").delete(id);r.onsuccess=()=>res();r.onerror=()=>res();});}
+let MEM=[];
+
+/* ---------- home ---------- */
+let job=null, urls=[];
+function blobUrl(b){const u=URL.createObjectURL(b);urls.push(u);return u;}
+async function showHome(){
+ try{selClear();}catch(e){}
+ urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
+ $("detail").hidden=true;$("home").hidden=false;job=null;
+ const js=(await allJobs()).sort((a,b)=>b.created-a.created);
+ const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<img alt="">')+
+  '<div class="jbody"><div class="jt">'+esc(j.site||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
+  '<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div></div><span class="st">'+(j.after?"完了":"施工後待ち")+'</span></button>';
+ const w=js.filter(j=>!j.after), d=js.filter(j=>j.after);
+ $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">ありません</p>';
+ $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">ありません</p>';
+ window.scrollTo(0,0);
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(!b)return;allJobs().then(js=>{const j=js.find(x=>x.id===b.dataset.job);if(j)openJob(j);});});
+$("hNew").onclick=()=>{openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:"",extras:[]});getPlace();};
+
+/* ---------- detail ---------- */
+let delArm=false;
+// Remembered per phone: whether the comparison photo carries the 施工前/施工後 bands.
+let withLabels=true, layout="h";
+try{withLabels=localStorage.getItem("ba-labels")!=="0";layout=localStorage.getItem("ba-lay")==="v"?"v":"h";}catch(e){}
+function setSlot(slot,blob,at){
+ const s=$(slot);s.querySelectorAll("img,.ph,.dt").forEach(x=>x.remove());
+ s.querySelectorAll(".tmask").forEach(x=>x.remove());
+ if(blob){s.classList.add("has");const i=document.createElement("img");i.alt="";i.src=blobUrl(blob);s.appendChild(i);
+  if(slot==="sB"&&job.mask)i.onload=()=>{const m=document.createElement("div");m.className="tmask";m.innerHTML="<span>比べない</span>";s.appendChild(m);placeBox(m,job.mask,i.naturalWidth,i.naturalHeight,s.clientWidth,s.clientHeight);};
+  const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);}
+ else{s.classList.remove("has");const p=document.createElement("span");p.className="ph";p.innerHTML=slot==="sB"?"まだ撮っていません":(job.before?"施工後を<br>撮ってください":"施工前を撮ると<br>重ねて確認できます");s.appendChild(p);}
+}
+function openJob(j){
+ job=j;$("home").hidden=true;$("detail").hidden=false;
+ $("site").value=j.site||"";$("memo").value=j.memo||"";
+ $("result").style.display="none";$("saveMsg").textContent="";delArm=false;setTx("bDel","この現場を削除");
+ refreshDetail();make();window.scrollTo(0,0);
+}
+function refreshDetail(){
+ setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);
+ setTx("bBefore",job.before?"撮り直す":"施工前を撮る");
+ $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);setTx("bAfter",job.after?"撮り直す":"施工後を撮る");
+ $("svB").disabled=!job.before;$("svA").disabled=!job.after;
+ showPlace();renderThumbs();$("dTitle").textContent=job.site||"現場の詳細";
+ $("bMask").disabled=!job.before;setTx("bMask",job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)");
+ const n=$("camNote");
+ if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中の色の判定は出ません)。";n.hidden=false;}
+ else n.hidden=true;
+}
+async function saveJob(){job.site=$("site").value.trim();job.memo=$("memo").value.trim();await putJob(job);}
+$("site").addEventListener("input",()=>{$("dTitle").textContent=$("site").value.trim()||"現場の詳細";});
+$("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
+$("dBack").onclick=async()=>{if(job&&(job.before||job.site))await saveJob();showHome();};
+$("bDel").onclick=async()=>{
+ if(!delArm){delArm=true;setTx("bDel","もう一度押すと削除します(元に戻せません)");return;}
+ await delJob(job.id);showHome();
+};
+
+/* ---------- camera ---------- */
+// Live camera with the before-photo overlay. If the browser refuses the camera,
+// show <label> buttons that open the phone's own camera through the file inputs.
+let camFail=false;
+function noCam(){camFail=true;$("nativeBtns").hidden=false;$("nExtra").hidden=false;refreshDetail();}
+$("bBefore").onclick=()=>startCam("before");
+$("bAfter").onclick=()=>startCam("after");
+$("bExtra").onclick=()=>startCam("extra");
+let stream=null, camMode=null, ori={beta:null,gamma:null}, oriOK=false, loop=null;
+window.addEventListener("deviceorientation",e=>{if(e.beta!=null){ori={beta:e.beta,gamma:e.gamma};oriOK=true;}});
+async function askOri(){try{if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission();}catch(e){}}
+
+async function startCam(mode){
+ camMode=mode;await askOri();
+ const v=$("vid");
+ if(NATIVE){
+  // App: the phone's camera runs natively (full resolution); its preview shows under the page.
+  const info=await natOpen();
+  if(!info||info.error){noCam();return;}
+  stream={getTracks:()=>[]};natInfo=info;natFrame=null;
+  document.documentElement.classList.add("natcam");
+  natPull(++natGen);natSetup(info);
+ }else{
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){noCam();return;}
+  try{
+   stream=await openStream();
+  }catch(err){noCam();return;}
+  v.srcObject=stream;
+  setupTrack();
+ }
+ const after=mode==="after";
+ $("cam").dataset.mode=mode;$("camMode").querySelector("span").textContent={before:"施工前を撮影",after:"施工後を撮影",extra:"その他の写真"}[mode];
+ // After camera starts with every overlay off; switch on what is needed.
+ if(after){["tGrid","tGhost","tLine","tDiff"].forEach(id=>$(id).classList.remove("on"));$("grid").classList.remove("on");}
+ $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
+ $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff","tAllOff"].forEach(id=>$(id).style.display=after?"":"none");
+ $("tMask").style.display=mode==="before"?"":"none";$("tMask").classList.toggle("on",maskAfterShot);
+ savedLook=null;setTx("tAllOff","表示オフ");$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");
+ $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
+ $("cam").classList.toggle("judging",after&&$("tDiff").classList.contains("on"));
+ setFrame("na","比べています…");lvlShown=null;
+ $("camMask").hidden=true;
+ shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");
+ if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();}
+ $("cam").style.display="flex";
+ if(NATIVE){const t0=Date.now();while(!natFrame&&stream&&Date.now()-t0<4000)await sleep(50);}
+ else await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});
+ if(!stream)return;
+ fitStage();
+ if(after)startAlign();
+}
+// Size the stage to the camera picture's aspect (no cropping), centred in the view.
+function fitStage(){
+ const st=$("stage"), box=st.parentElement;
+ if(!srcW())return;
+ const ar=srcW()/srcH();let w=box.clientWidth, h=w/ar;
+ if(h>box.clientHeight){h=box.clientHeight;w=h*ar;}
+ st.style.width=w+"px";st.style.height=h+"px";
+ natLayout();
+}
+window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
+function stopCam(){
+ setSideUI(0);
+ camGen++;track=null;imgCap=null;photoCaps=null;
+ if(loop){clearTimeout(loop);loop=null;}
+ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+ if(NATIVE){natGen++;natFrame=null;natPlace="";window.AndroidCam.close();document.documentElement.classList.remove("natcam");}
+ $("cam").style.display="none";
+}
+$("cCancel").onclick=stopCam;
+$("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
+$("tGrid").onclick=()=>{$("tGrid").classList.toggle("on");$("grid").classList.toggle("on");};
+$("tGhost").onclick=()=>{const on=$("tGhost").classList.toggle("on");$("ghost").style.display=on?"block":"none";ghostLook();};
+$("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").style.display=on?"block":"none";$("cam").classList.toggle("judging",on);};
+// Outlines don't hide the live view, so they show at full strength without the slider.
+function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost").classList.contains("on");
+ $("ghost").style.opacity=line?1:$("op").value/100;$("opRow").style.display=g&&!line&&camMode==="after"?"flex":"none";}
+// 交換する機器を枠で囲む (before camera): open the box editor right after the shot or not.
+let maskAfterShot=true;try{maskAfterShot=localStorage.getItem("ba-maskshot")!=="0";}catch(e){}
+$("tMask").onclick=()=>{maskAfterShot=$("tMask").classList.toggle("on");try{localStorage.setItem("ba-maskshot",maskAfterShot?"1":"0");}catch(e){}
+ toast(maskAfterShot?"撮影後に枠で囲む画面を出します":"撮影後に枠で囲む画面を出しません");};
+// 表示オフ: turn every overlay off for a clean view; 元に戻す brings back what was on.
+let savedLook=null;
+const LOOK=["tGrid","tGhost","tLine","tDiff"];
+$("tAllOff").onclick=()=>{
+ if(!savedLook){savedLook=LOOK.filter(id=>$(id).classList.contains("on"));savedLook.forEach(id=>$(id).click());savedLook=savedLook.length?savedLook:[];setTx("tAllOff","元に戻す");$("tAllOff").classList.add("on");$("cam").classList.add("clean");}
+ else{const back=savedLook;savedLook=null;back.forEach(id=>{if(!$(id).classList.contains("on"))$(id).click();});setTx("tAllOff","表示オフ");$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");}
+};
+LOOK.forEach(id=>$(id).addEventListener("click",e=>{if(savedLook&&e.isTrusted){savedLook=null;setTx("tAllOff","表示オフ");$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");}}));
+$("tLine").onclick=async()=>{const on=$("tLine").classList.toggle("on");$("ghost").src=on?await outlineSrc():photoSrc;ghostLook();};
+let photoSrc="", outlineFor=null, outlineUrl="";
+// The before photo as bright outlines only, so a new unit doesn't hide behind the old one.
+async function outlineSrc(){
+ if(outlineFor===job.before&&outlineUrl)return outlineUrl;
+ const im=await loadImg(job.before), W=480, H=Math.round(W*im.naturalHeight/im.naturalWidth);
+ const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d",{willReadFrequently:true});
+ x.drawImage(im,0,0,W,H);
+ const d=x.getImageData(0,0,W,H), g=new Float32Array(W*H), m=new Float32Array(W*H);
+ for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.299*d.data[j]+0.587*d.data[j+1]+0.114*d.data[j+2];
+ for(let y=1;y<H-1;y++)for(let xx=1;xx<W-1;xx++){const i=y*W+xx;
+  const gx=g[i+1]-g[i-1]+0.5*(g[i-W+1]-g[i-W-1]+g[i+W+1]-g[i+W-1]), gy=g[i+W]-g[i-W]+0.5*(g[i+W-1]-g[i-W-1]+g[i+W+1]-g[i-W+1]);
+  m[i]=Math.sqrt(gx*gx+gy*gy);}
+ const thr=Float32Array.from(m).sort()[Math.floor(m.length*0.88)]||1;
+ for(let i=0,j=0;i<m.length;i++,j+=4){const a=m[i]>thr?Math.min(255,140+115*(m[i]-thr)/thr):0;d.data[j]=80;d.data[j+1]=240;d.data[j+2]=255;d.data[j+3]=a;}
+ x.putImageData(d,0,0);
+ const b=await new Promise(r=>c.toBlob(r,"image/png"));
+ outlineFor=job.before;outlineUrl=blobUrl(b);return outlineUrl;
+}
+
+let shotCount=0;
+let shooting=false;
+$("cShot").onclick=async()=>{
+ if(!camReady()||shooting)return;
+ shooting=true;
+ const mode=camMode, o=oriOK?{...ori}:null;
+ const fl=$("flash");fl.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));
+ $("cShot").classList.add("busy");setTx2("cShot","撮影中…");
+ let b=null;try{b=await grab();}finally{shooting=false;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
+ if(!b){if(stream)toast("撮影できませんでした。もう一度押してください");return;}
+ if(mode==="extra"){
+  // Other photos: stay in the camera so several can be taken in a row.
+  shotCount++;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
+  gotPhoto("extra",b,o,true);
+  return;
+ }
+ stopCam();await gotPhoto(mode,b,o);
+};
+
+/* ---------- holding the phone sideways ---------- */
+// With the screen staying portrait, a phone held sideways gives sideways camera frames.
+// camRot() is the turn (degrees, canvas direction) that makes such a frame upright.
+let grav={x:0,y:9.8}, rotNow=0;
+window.addEventListener("devicemotion",e=>{const g=e.accelerationIncludingGravity;if(g&&g.x!=null&&g.y!=null)grav={x:g.x,y:g.y};});
+function camRot(){
+ const portraitScreen=window.innerHeight>=window.innerWidth;
+ if(!portraitScreen){rotNow=0;return 0;}
+ const ax=Math.abs(grav.x), ay=Math.abs(grav.y);
+ if(rotNow===0){if(ax>ay+2)rotNow=grav.x>0?-90:90;}
+ else if(ay>ax+2)rotNow=0;
+ else rotNow=grav.x>0?-90:90;
+ return rotNow;
+}
+// UI turned to face the user: the camera screen and the box editor follow the phone.
+let sideDeg=0;const homes=new Map();
+function setSideUI(deg){
+ if(deg===sideDeg)return;sideDeg=deg;
+ const cam=$("cam"), hud=$("camHud"), tools=cam.querySelector(".tools");
+ // [element, where it goes when sideways, put first?]
+ const moves=[[$("camMode"),hud],[$("fLabel"),hud],[$("shotN"),hud],[$("sideW"),hud],[cam.querySelector(".bar"),hud],[tools,hud],[$("tFlash"),tools,true]];
+ if(deg){
+  moves.forEach(([e,to,first])=>{homes.set(e,{p:e.parentNode,n:e.nextSibling});first?to.insertBefore(e,to.firstChild):to.appendChild(e);});
+  hud.hidden=false;hud.style.width=cam.clientHeight+"px";hud.style.height=cam.clientWidth+"px";hud.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";
+ }else{
+  moves.slice().reverse().forEach(([e])=>{const h=homes.get(e);if(h)h.p.insertBefore(e,h.n);});
+  hud.hidden=true;tools.style.width=tools.style.bottom="";
+ }
+ fitStage();alignRot=null;prepAlign();
+ if(deg){
+  // column width = the black space beside the picture (at least wide enough for the labels)
+  const free=(cam.clientHeight-$("stage").clientHeight)/2;
+  tools.style.width=Math.max(104,free-16)+"px";tools.style.bottom=(cam.querySelector(".bar").offsetHeight+8)+"px";
+ }
+}
+function turnFixed(el,deg){
+ if(deg){el.style.inset="auto";el.style.left="50%";el.style.top="50%";el.style.width=window.innerHeight+"px";el.style.height=window.innerWidth+"px";el.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";}
+ else el.style.inset=el.style.left=el.style.top=el.style.width=el.style.height=el.style.transform="";
+}
+let medDeg=0;
+setInterval(()=>{
+ const rot=camRot();
+ if(stream){$("sideW").hidden=rot===0;setSideUI(-rot);natLayout();
+  // keep the tool column clear of the bottom panel (it grows when 重ね具合 appears)
+  if(sideDeg){const tl=$("cam").querySelector(".tools"), bar=$("cam").querySelector(".bar");tl.style.bottom=(bar.offsetHeight+8)+"px";}}
+ if(!$("med").hidden&&-rot!==medDeg){medDeg=-rot;turnFixed($("med"),medDeg);layoutMask();}
+},300);
+
+/* ---------- app camera (native, full resolution) ---------- */
+// In the Android app the photo is taken by the phone's camera itself (CameraX) at full
+// resolution. Its preview is placed exactly under #stage; small frames for the alignment
+// check are fetched from /cam/frame, and finished photos from /cam/shot/<id>.
+const NATIVE=!!window.AndroidCam;
+let natInfo=null, natFrame=null, natGen=0, natPlace="";
+function srcW(){return NATIVE?(natFrame?natFrame.width:0):$("vid").videoWidth;}
+function srcH(){return NATIVE?(natFrame?natFrame.height:0):$("vid").videoHeight;}
+function camReady(){return srcW()>0;}
+function natOpen(){return new Promise(res=>{
+ const t=setTimeout(()=>{window.onAppCam=null;res(null);},60000);
+ window.onAppCam=j=>{clearTimeout(t);window.onAppCam=null;try{res(JSON.parse(j));}catch(e){res(null);}};
+ window.AndroidCam.open();});}
+async function natPull(gen){
+ while(gen===natGen){
+  try{const r=await fetch("/cam/frame?"+Date.now(),{cache:"no-store"});
+   if(r.ok){const bm=await createImageBitmap(await r.blob());if(gen!==natGen){bm.close();break;}const old=natFrame;natFrame=bm;if(old)old.close();}}catch(e){}
+  await sleep(90);
+ }
+}
+// Keeps the phone's preview lined up with the stage (screen pixels).
+function natLayout(){
+ if(!NATIVE||!stream)return;const r=$("stage").getBoundingClientRect(), d=window.devicePixelRatio||1;
+ const k=[r.left,r.top,r.width,r.height].map(n=>Math.round(n*d)), key=k.join();
+ if(key===natPlace||!r.width)return;natPlace=key;window.AndroidCam.layout(k[0],k[1],k[2],k[3]);
+}
+function natSetup(info){
+ const zm=$("zm");digitalZoom=1;$("vid").style.transform="";
+ const lo=Math.max(info.zoomMin||1,Math.min(1,info.zoomMax||1)), hi=Math.max(lo,Math.min(info.zoomMax||1,lo*4));
+ zm.min=lo;zm.max=hi;zm.step=0.05;zm.value=lo;applyZoom(lo);
+ $("zmV").textContent=zoomLabel(lo);
+ showFlash();
+}
+function natShot(rot){return new Promise(res=>{
+ const t=setTimeout(()=>{window.onAppShot=null;res(null);},20000);
+ window.onAppShot=async s=>{clearTimeout(t);window.onAppShot=null;
+  if(!String(s).startsWith("ok:")){res(null);return;}
+  try{const r=await fetch("/cam/shot/"+s.slice(3),{cache:"no-store"});res(r.ok?await r.blob():null);}catch(e){res(null);}};
+ window.AndroidCam.capture(flashMode,rot|0);});}
+
+/* ---------- lens choice, zoom, flash ---------- */
+let track=null, trackCaps={}, imgCap=null, photoCaps=null, digitalZoom=1, zoomPend=null;
+let flashMode="off";try{flashMode=localStorage.getItem("ba-flash")||"off";}catch(e){}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// "Facing back" can open the ultra-wide lens on multi-camera phones. Use the main back
+// camera instead: the lowest-numbered back camera ("camera2 0, facing back").
+async function mainBackCamera(){
+ try{
+  const back=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput"&&/back|rear|environment|背面/i.test(d.label));
+  if(back.length<2)return null;
+  // "camera2 0, facing back" -> 0 (the number after the "camera2" API name)
+  const num=d=>{const m=d.label.match(/camera\d*\s+(\d+)/i)||d.label.match(/(\d+)\s*,/);return m?+m[1]:99;};
+  back.sort((a,b)=>num(a)-num(b));return back[0].deviceId;
+ }catch(e){return null;}
+}
+async function openStream(){
+ const size={width:{ideal:2560},height:{ideal:1920},zoom:true}; // zoom:true lets Chrome expose the camera zoom
+ let id=null;try{id=localStorage.getItem("ba-cam2");}catch(e){}
+ if(id){try{return await navigator.mediaDevices.getUserMedia({video:{...size,deviceId:{exact:id}},audio:false});}catch(e){}}
+ let s=await navigator.mediaDevices.getUserMedia({video:{...size,facingMode:{ideal:"environment"}},audio:false});
+ const main=await mainBackCamera(), cur=s.getVideoTracks()[0].getSettings().deviceId;
+ if(main&&main!==cur){try{const s2=await navigator.mediaDevices.getUserMedia({video:{...size,deviceId:{exact:main}},audio:false});s.getTracks().forEach(t=>t.stop());s=s2;}catch(e){}}
+ try{localStorage.setItem("ba-cam2",s.getVideoTracks()[0].getSettings().deviceId||"");}catch(e){}
+ return s;
+}
+// 1.6x of the raw camera matches the phone's own camera; it is shown as 標準 and the
+// slider zooms in from there (labels are relative to it).
+const ZOOM_BASE=1.6;
+// In the app the camera's own 1x is the phone camera's standard view.
+function zoomLabel(z){const k=z/(NATIVE?1:ZOOM_BASE);return k<1.05?"標準":k.toFixed(1)+"x";}
+function setupTrack(){
+ track=stream.getVideoTracks()[0];
+ trackCaps={};try{trackCaps={...(track.getCapabilities?track.getCapabilities():{})};}catch(e){}
+ const zm=$("zm");digitalZoom=1;$("vid").style.transform="";
+ if(trackCaps.zoom&&trackCaps.zoom.max>trackCaps.zoom.min){
+  // Camera zoom, starting at the standard 1.6x.
+  zm.min=Math.max(trackCaps.zoom.min,Math.min(ZOOM_BASE,trackCaps.zoom.max));zm.max=Math.min(trackCaps.zoom.max,ZOOM_BASE*4);zm.step=trackCaps.zoom.step||0.1;
+ }
+ if(!(trackCaps.zoom&&trackCaps.zoom.max>=ZOOM_BASE)){trackCaps.zoom=null;zm.min=ZOOM_BASE;zm.max=ZOOM_BASE*4;zm.step=0.1;}
+ zm.value=zm.min;applyZoom(+zm.value);
+ $("zmV").textContent=zoomLabel(+zm.value);
+ imgCap=null;photoCaps=null;
+ try{if(window.ImageCapture){imgCap=new ImageCapture(track);imgCap.getPhotoCapabilities().then(c=>{photoCaps=c;showFlash();}).catch(()=>{});}}catch(e){imgCap=null;}
+ showFlash();
+}
+function applyZoom(z){
+ if(NATIVE){window.AndroidCam.zoom(z);return;}
+ if(trackCaps.zoom){zoomPend=z;track.applyConstraints({advanced:[{zoom:z}]}).catch(()=>{});return;}
+ digitalZoom=z;$("vid").style.transform=z>1?"scale("+z+")":"";
+}
+// Zoom changes are applied at most once per frame so sliding / pinching stays smooth.
+let zTarget=null, zRaf=0;
+function setZoom(z){
+ const zm=$("zm");z=Math.min(+zm.max,Math.max(+zm.min,z));
+ zm.value=z;$("zmV").textContent=zoomLabel(z);zTarget=z;
+ if(!zRaf)zRaf=requestAnimationFrame(()=>{zRaf=0;applyZoom(zTarget);});
+}
+$("zm").oninput=e=>setZoom(+e.target.value);
+// Camera sliders are driven by our own touch handling: the built-in slider misreads the
+// finger direction when the panel is turned sideways. Position is read in the slider's own
+// coordinates (offsetX), so it works upright and turned.
+function fingerSlider(input){
+ const wrap=document.createElement("span");wrap.className="sl";
+ input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
+ const set=e=>{
+  const w=wrap.clientWidth, r=16, t=Math.min(1,Math.max(0,(e.offsetX-r)/Math.max(1,w-2*r)));
+  const min=+input.min, max=+input.max, step=+input.step||1;
+  input.value=Math.round((min+t*(max-min))/step)*step;
+  input.dispatchEvent(new Event("input"));
+ };
+ wrap.addEventListener("pointerdown",e=>{wrap.setPointerCapture(e.pointerId);e.preventDefault();set(e);});
+ wrap.addEventListener("pointermove",e=>{if(wrap.hasPointerCapture(e.pointerId))set(e);});
+}
+fingerSlider($("zm"));fingerSlider($("op"));
+// Pinch on the camera picture to zoom, like the phone's own camera.
+const pinchPts=new Map();let pinch0=null;
+const camView=document.querySelector("#cam .view");
+camView.addEventListener("pointerdown",e=>{pinchPts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pinchPts.size===2){const [a,b]=[...pinchPts.values()];pinch0={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:+$("zm").value};}});
+camView.addEventListener("pointermove",e=>{if(!pinchPts.has(e.pointerId))return;pinchPts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pinch0&&pinchPts.size>=2){const [a,b]=[...pinchPts.values()];setZoom(pinch0.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch0.d);}});
+const pinchEnd=e=>{pinchPts.delete(e.pointerId);if(pinchPts.size<2)pinch0=null;};
+camView.addEventListener("pointerup",pinchEnd);camView.addEventListener("pointercancel",pinchEnd);
+const hasFlash=()=>NATIVE?!!(natInfo&&natInfo.flash):!!(trackCaps.torch||(photoCaps&&photoCaps.fillLightMode&&photoCaps.fillLightMode.indexOf("flash")>=0));
+function showFlash(){
+ const b=$("tFlash");b.hidden=!hasFlash();
+ setTx("tFlash",{off:"オフ",on:"オン",auto:"自動"}[flashMode]);
+ b.classList.toggle("on",flashMode==="on");b.classList.toggle("auto",flashMode==="auto");
+}
+$("tFlash").onclick=()=>{flashMode={off:"on",on:"auto",auto:"off"}[flashMode];try{localStorage.setItem("ba-flash",flashMode);}catch(e){}showFlash();};
+// The visible part of the video (digital zoom crops the centre) drawn into w x h.
+function drawVideo(ctx,w,h){
+ if(NATIVE){if(natFrame)ctx.drawImage(natFrame,0,0,w,h);return;}
+ const v=$("vid"), z=digitalZoom, sw=v.videoWidth/z, sh=v.videoHeight/z;
+ ctx.drawImage(v,(v.videoWidth-sw)/2,(v.videoHeight-sh)/2,sw,sh,0,0,w,h);
+}
+function isDark(){const c=document.createElement("canvas");c.width=32;c.height=24;const x=c.getContext("2d",{willReadFrequently:true});drawVideo(x,32,24);
+ const d=x.getImageData(0,0,32,24).data;let t=0;for(let i=0;i<d.length;i+=4)t+=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];return t/(d.length/4)<70;}
+async function cropBlob(blob,z){
+ const im=await createImageBitmap(blob), sw=im.width/z, sh=im.height/z, c=document.createElement("canvas");
+ c.width=Math.round(sw);c.height=Math.round(sh);c.getContext("2d").drawImage(im,(im.width-sw)/2,(im.height-sh)/2,sw,sh,0,0,c.width,c.height);
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));
+}
+// Takes the picture, firing the flash when asked (real flash where the phone allows it,
+// otherwise the light is switched on for the shot).
+async function grab(){
+ if(NATIVE){await steady();return await natShot(camRot());}
+ const rot=camRot(), b=await grabRaw();
+ return rot&&b?await rotateBlob(b,rot):b;
+}
+async function rotateBlob(blob,deg){
+ const im=await createImageBitmap(blob), c=document.createElement("canvas");
+ c.width=im.height;c.height=im.width;const x=c.getContext("2d");
+ x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);x.drawImage(im,-im.width/2,-im.height/2);
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));
+}
+// Waits (max 0.6 s) for the phone to settle after the shutter tap, so the shot isn't shaken.
+let spin=0;
+window.addEventListener("devicemotion",e=>{const q=e.rotationRate;if(q&&q.alpha!=null)spin=Math.abs(q.alpha)+Math.abs(q.beta)+Math.abs(q.gamma);});
+async function steady(){const t0=performance.now();await sleep(120);while(spin>25&&performance.now()-t0<600)await sleep(40);}
+// Small grey thumbnail of what is on screen now (used to line the still photo up with the preview).
+function viewThumb(W,H){const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d",{willReadFrequently:true});drawVideo(x,W,H);return grayData(x,W,H);}
+function grayData(x,W,H){const d=x.getImageData(0,0,W,H).data,g=new Float32Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.299*d[j]+0.587*d[j+1]+0.114*d[j+2];return g;}
+function nccFlat(a,b){let n=a.length,sa=0,sb=0,saa=0,sbb=0,sab=0;for(let i=0;i<n;i++){sa+=a[i];sb+=b[i];saa+=a[i]*a[i];sbb+=b[i]*b[i];sab+=a[i]*b[i];}
+ const va=saa-sa*sa/n,vb=sbb-sb*sb/n;return va>0&&vb>0?(sab-sa*sb/n)/Math.sqrt(va*vb):0;}
+// Draws the still photo turned by deg, cut to the preview's shape and zoom, into W x H.
+function drawPhoto(ctx,im,W,H,deg,sc){
+ const iw=im.width, ih=im.height, rw=deg%180?ih:iw, rh=deg%180?iw:ih, k=Math.max(W/rw,H/rh)*digitalZoom*(sc||1);
+ ctx.save();ctx.translate(W/2,H/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(im,-iw*k/2,-ih*k/2,iw*k,ih*k);ctx.restore();
+}
+// Still photo -> same framing and orientation as the preview (the phone may hand it over turned).
+async function fitPhoto(blob,ref,RW,RH){
+ const im=await createImageBitmap(blob), v=$("vid");
+ const portraitView=v.videoHeight>=v.videoWidth, portraitPhoto=im.height>=im.width;
+ const cands=portraitView===portraitPhoto?[0,180]:[90,-90];
+ // Also find how much tighter the still is framed than the preview, so it shows the same area.
+ let best=cands[0],bsc=1,bs=-2;
+ const c0=document.createElement("canvas");c0.width=RW;c0.height=RH;const x0=c0.getContext("2d",{willReadFrequently:true});
+ for(const deg of cands)for(const sc of [1,1.04,1.08,1.12,1.17,1.22,1.28,1.35]){
+  x0.clearRect(0,0,RW,RH);drawPhoto(x0,im,RW,RH,deg,sc);const v2=nccFlat(grayData(x0,RW,RH),ref);if(v2>bs){bs=v2;best=deg;bsc=sc;}
+ }
+ const ar=v.videoWidth/v.videoHeight, rw=best%180?im.height:im.width, rh=best%180?im.width:im.height, z=digitalZoom*bsc;
+ let W=rw/z, H=W/ar;if(H>rh/z){H=rh/z;W=H*ar;}
+ const c=document.createElement("canvas");c.width=Math.round(W);c.height=Math.round(H);drawPhoto(c.getContext("2d"),im,c.width,c.height,best,bsc);
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.93));
+}
+// Preview frames can come out flat (washed out); stretch the brightness range when it is narrow.
+function fixLevels(c){
+ const x=c.getContext("2d",{willReadFrequently:true}), img=x.getImageData(0,0,c.width,c.height), d=img.data, h=new Uint32Array(256);
+ let n=0;for(let i=0;i<d.length;i+=16){h[(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])|0]++;n++;}
+ let lo=0,hi=255,acc=0;for(;lo<255;lo++){acc+=h[lo];if(acc>n*0.005)break;}acc=0;for(;hi>0;hi--){acc+=h[hi];if(acc>n*0.005)break;}
+ if(hi-lo>=225||hi<=lo)return;
+ const k=255/(hi-lo), lut=new Uint8ClampedArray(256);for(let i=0;i<256;i++)lut[i]=(i-lo)*k;
+ for(let i=0;i<d.length;i+=4){d[i]=lut[d[i]];d[i+1]=lut[d[i+1]];d[i+2]=lut[d[i+2]];}
+ x.putImageData(img,0,0);
+}
+function sharpness(c){
+ const W=160,H=Math.round(160*c.height/c.width), t=document.createElement("canvas");t.width=W;t.height=H;const x=t.getContext("2d",{willReadFrequently:true});x.drawImage(c,0,0,W,H);
+ const g=grayData(x,W,H);let s=0,s2=0,n=0;for(let y=1;y<H-1;y++)for(let i=y*W+1;i<y*W+W-1;i++){const l=4*g[i]-g[i-1]-g[i+1]-g[i-W]-g[i+W];s+=l;s2+=l*l;n++;}return s2/n-(s/n)*(s/n);
+}
+async function grabRaw(){
+ const v=$("vid");
+ await steady();
+ const wantFlash=flashMode==="on"||(flashMode==="auto"&&isDark());
+ // 1) the camera's own still photo: sharper and with proper colours
+ if(imgCap){
+  try{
+   const opts={}, fl=photoCaps&&photoCaps.fillLightMode;
+   // ask for a still with the preview's 4:3 shape, at the largest size
+   if(photoCaps&&photoCaps.imageWidth&&photoCaps.imageHeight){const ar=Math.max(v.videoWidth,v.videoHeight)/Math.min(v.videoWidth,v.videoHeight);
+    let w=photoCaps.imageWidth.max, h=Math.round(w/ar);if(h>photoCaps.imageHeight.max){h=photoCaps.imageHeight.max;w=Math.round(h*ar);}opts.imageWidth=w;opts.imageHeight=h;}
+   if(fl){const w=flashMode==="on"?"flash":flashMode==="auto"?"auto":"off";if(fl.indexOf(w)>=0)opts.fillLightMode=w;}
+   let torch=false;
+   if(wantFlash&&!opts.fillLightMode&&trackCaps.torch){try{await track.applyConstraints({advanced:[{torch:true}]});torch=true;await sleep(400);}catch(e){}}
+   const RW=96, RH=Math.max(8,Math.round(96*v.videoHeight/v.videoWidth)), ref=viewThumb(RW,RH);
+   const b=await imgCap.takePhoto(opts);
+   if(torch)track.applyConstraints({advanced:[{torch:false}]}).catch(()=>{});
+   return await fitPhoto(b,ref,RW,RH);
+  }catch(e){}
+ }
+ // 2) no still photo: take a few preview frames and keep the sharpest
+ let torch=false;
+ if(trackCaps.torch&&wantFlash){try{await track.applyConstraints({advanced:[{torch:true}]});torch=true;await sleep(400);}catch(e){}}
+ const z=digitalZoom;let best=null,bs=-1;
+ for(let k=0;k<4;k++){
+  const c=document.createElement("canvas");c.width=Math.round(v.videoWidth/z);c.height=Math.round(v.videoHeight/z);drawVideo(c.getContext("2d"),c.width,c.height);
+  const sc=sharpness(c);if(sc>bs){bs=sc;best=c;}
+  if(k<3)await sleep(70);
+ }
+ if(torch)track.applyConstraints({advanced:[{torch:false}]}).catch(()=>{});
+ fixLevels(best);
+ return await new Promise(r=>best.toBlob(r,"image/jpeg",0.93));
+}
+$("fBefore").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("before",f,null);};
+$("fExtra").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("extra",f,null);};
+$("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
+async function gotPhoto(mode,blob,o,shot){
+ const now=Date.now();
+ if(mode==="extra"){(job.extras=job.extras||[]).push({blob,at:now});await saveJob();renderThumbs();
+  // App: other photos also go straight into the phone's photos (Google Photos), like a camera.
+  const ok=shot&&window.AndroidApp?await toPhone(blob,"写真",now):null;
+  if(stream){if(ok!=null)$("shotN").textContent=shotCount+"枚 "+(ok?"保存しました":"保存できませんでした");}
+  else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
+  return;}
+ if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;}
+ else{job.after=blob;job.afterAt=now;job.afterOri=o;}
+ await saveJob();refreshDetail();
+ $("result").style.display="none";
+ make();
+ if(mode==="before"&&maskAfterShot)openMaskEditor();
+}
+
+/* ---------- place (city / ward of the current position) ---------- */
+function showPlace(){
+ const t=job&&job.place&&job.place.text;
+ $("placeTxt").textContent=t||"まだ取得していません";$("placeBox").classList.toggle("none",!t);
+}
+// "横浜市青葉区" / "杉並区" / "北佐久郡軽井沢町": city (+ ward for the 20 designated cities).
+const SEIREI=["札幌市","仙台市","さいたま市","千葉市","横浜市","川崎市","相模原市","新潟市","静岡市","浜松市","名古屋市","京都市","大阪市","堺市","神戸市","岡山市","広島市","北九州市","福岡市","熊本市"];
+function placeText(a){
+ const t=(a.line||"").replace(/^日本、?\s*/,"").replace(/〒?\d{3}-?\d{4}\s*/,"").replace(/^(東京都|北海道|(京都|大阪)府|[^\s]{2,3}県)/,"").trim();
+ // 1) the full address line names the designated city and its ward
+ for(const d of SEIREI)if(t.startsWith(d)){const m=t.slice(d.length).match(/^([^\s\d０-９]+?区)/);if(m)return d+m[1];}
+ // 2) separate fields: a ward alone gets its city from another field
+ const city=a.city||"", ward=a.ward||"", sub=a.sub||"";
+ if(/市$/.test(city)&&/区$/.test(ward)&&city.indexOf(ward)<0)return city+ward;
+ if(/区$/.test(city)){const c=[sub,a.pref].find(x=>x&&/市$/.test(x));if(c)return c+city;}
+ if(city)return city;
+ // 3) last resort: read it off the address line
+ const m=t.match(/^([^\s]+?郡[^\s]+?[町村]|[^\s]+?[市区町村])/);
+ return m?m[1]:"";
+}
+let placeFor=null;
+function setPlace(a,err){
+ const j=placeFor;placeFor=null;$("bPlace").disabled=false;setTx("bPlace","現在地を取得");
+ if(!j)return;
+ const text=a?placeText(a):"";
+ if(!text){if(j===job)toast(err==="denied"?"位置情報が許可されていません":"場所を取得できませんでした",true);return;}
+ j.place={text,at:Date.now()};putJob(j);if(j===job)showPlace();
+}
+window.onAppPlace=json=>{let a=null,err="";try{const o=JSON.parse(json);if(o.error)err=o.error;else a=o;}catch(e){}setPlace(a,err);};
+function getPlace(){
+ if(!job||placeFor)return;
+ const j=job;placeFor=j;$("bPlace").disabled=true;setTx("bPlace","取得中…");
+ setTimeout(()=>{if(placeFor===j)setPlace(null);},20000); // never leave the button stuck
+ if(window.AndroidApp&&window.AndroidApp.requestPlace){window.AndroidApp.requestPlace();return;}
+ if(!navigator.geolocation){setPlace(null);return;}
+ navigator.geolocation.getCurrentPosition(async pos=>{
+  try{
+   const u="https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=ja&lat="+pos.coords.latitude+"&lon="+pos.coords.longitude;
+   const d=(await (await fetch(u)).json()).address||{};
+   setPlace({city:d.city||d.town||d.village||d.county||"",ward:d.city_district||d.suburb||""});
+  }catch(e){setPlace(null);}
+ },e=>setPlace(null,e&&e.code===1?"denied":""),{enableHighAccuracy:false,timeout:15000,maximumAge:300000});
+}
+$("bPlace").onclick=getPlace;
+
+/* ---------- other photos ---------- */
+function renderThumbs(){
+ const xs=(job&&job.extras)||[];
+ $("thumbs").innerHTML=xs.map((x,i)=>'<button data-x="'+i+'" aria-label="写真 '+(i+1)+(notesOf(x).length?' '+esc(notesOf(x).map(n=>n.t).join(' / ')):'')+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="ck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span>'+(notesOf(x).length?'<span class="cm"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+(notesOf(x).length>1?notesOf(x).length:'')+'</span>':'')+'</button>').join("");
+ $("thumbsNone").hidden=xs.length>0;
+ selClear();
+}
+// Like Google Photos: tap = full screen; long press = select (then tap picks / un-picks).
+const sel=new Set();let selDelArm=false;
+function selShow(){
+ $("thumbs").classList.toggle("sel",sel.size>0);
+ $("thumbs").querySelectorAll("[data-x]").forEach(b=>b.classList.toggle("on",sel.has(+b.dataset.x)));
+ $("selBar").hidden=sel.size===0;$("selN").textContent=sel.size+"枚を選択中";
+ selDelArm=false;setTx("selDel","削除");
+}
+function selClear(){sel.clear();selShow();}
+function selToggle(i){if(sel.has(i))sel.delete(i);else sel.add(i);if(navigator.vibrate)try{navigator.vibrate(15);}catch(e){}selShow();}
+let pressT=0, pressAt=null, pressFired=false;
+$("thumbs").addEventListener("pointerdown",e=>{const b=e.target.closest("[data-x]");if(!b)return;pressFired=false;pressAt={x:e.clientX,y:e.clientY};
+ clearTimeout(pressT);pressT=setTimeout(()=>{pressFired=true;const i=+b.dataset.x;if(!sel.has(i))selToggle(i);if(window.AndroidApp)try{AndroidApp.vibrate(25);}catch(err){}},450);});
+$("thumbs").addEventListener("pointermove",e=>{if(pressAt&&Math.hypot(e.clientX-pressAt.x,e.clientY-pressAt.y)>10)clearTimeout(pressT);});
+["pointerup","pointercancel","pointerleave"].forEach(t=>$("thumbs").addEventListener(t,()=>clearTimeout(pressT)));
+$("thumbs").addEventListener("contextmenu",e=>e.preventDefault());
+$("thumbs").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;
+ if(pressFired){pressFired=false;return;}
+ const i=+b.dataset.x;if(sel.size)selToggle(i);else openGallery(i);};
+$("selX").onclick=selClear;
+$("selDel").onclick=async()=>{
+ if(!sel.size)return;
+ if(!selDelArm){selDelArm=true;setTx("selDel","もう一度押すと削除");return;}
+ const n=sel.size;job.extras=(job.extras||[]).filter((x,i)=>!sel.has(i));
+ await saveJob();renderThumbs();toast(n+"枚 削除しました");
+};
+// Full-screen gallery: kind "extra" = other photos (save / delete), "pair" = 施工前 / 施工後 (save).
+let gal=null, galDelArm=false;
+function galItems(kind){
+ if(kind==="pair")return [job.before&&{blob:job.before,at:job.beforeAt,name:"施工前"},job.after&&{blob:job.after,at:job.afterAt,name:"施工後"}].filter(Boolean);
+ return (job.extras||[]).map((x,i)=>({blob:x.blob,at:x.at,name:"写真"+(i+1)}));
+}
+function openGallery(i,kind){
+ kind=kind||"extra";const xs=galItems(kind);if(!xs.length){closeViewer();return;}
+ i=Math.max(0,Math.min(xs.length-1,i));gal={i,kind};galDelArm=false;setTx("vDel","削除");
+ $("vDel").hidden=kind!=="extra";
+ noteEnd(true);$("vNote").hidden=kind!=="extra";cur=-1;clearTimeout(noteMsgT);$("vNoteL").parentNode.classList.remove("msg");
+ $("vBar").hidden=false;$("vCnt").hidden=false;$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
+ openViewer(blobUrl(xs[i].blob));
+ tagShow();noteUI();
+}
+function galNav(d){if(gal&&galItems(gal.kind)[gal.i+d])openGallery(gal.i+d,gal.kind);}
+$("vSave").onclick=async()=>{if(!gal)return;const x=galItems(gal.kind)[gal.i];if(!x)return;
+ const e=gal.kind==="extra"&&job.extras[gal.i];
+ saveBlob(e&&notesOf(e).length?await withTags(e):x.blob,x.name,x.at);};
+// Tapping the 施工前 / 施工後 photo opens it full screen.
+$("sB").addEventListener("click",()=>{if(job&&job.before)openGallery(0,"pair");});
+$("sA").addEventListener("click",()=>{if(job&&job.after)openGallery(job.before?1:0,"pair");});
+/* ---------- comments written on other photos ---------- */
+// x.notes = [{t: text, tag: {x,y: top-left as 0-1 of the photo, s: font size as part of the photo width}}]
+function notesOf(x){
+ if(!x)return [];
+ if(!x.notes||x.note){x.notes=(x.notes||[]).concat(x.note?[{t:x.note,tag:x.tag||{x:0.03,y:0.03,s:0.05}}]:[]);delete x.note;delete x.tag;}
+ return x.notes;
+}
+const galX=()=>gal&&gal.kind==="extra"?job.extras[gal.i]:null;
+let cur=-1, editing=false, editOrig="", cancelEdit=false;
+function noteFit(){const t=$("vNoteT");t.style.height="auto";t.style.height=Math.max(48,t.scrollHeight)+"px";}
+// The box shows the picked comment (frame on the photo); with none picked, typing adds a new one.
+function noteUI(){
+ const ns=notesOf(galX()), sel=cur>=0?ns[cur]:null, t=$("vNoteT");
+ $("vNote").classList.toggle("editing",editing);$("viewer").classList.toggle("editing",editing);
+ $("vNoteAdd").hidden=editing||!sel;
+ if(!$("vNoteL").parentNode.classList.contains("msg"))$("vNoteL").textContent=sel?(ns.length>1?"コメント "+(cur+1)+" を選択中":"コメントを選択中"):editing?"新しいコメント":ns.length?"コメント "+ns.length+"件":"コメント";
+ if(!editing)t.value=sel?sel.t:"";
+ noteFit();
+ $("vTags").querySelectorAll(".vtag").forEach(el=>el.classList.toggle("on",+el.dataset.n===cur));
+}
+// A short confirmation (写真に入れました etc.) shown in the header for 2 seconds.
+let noteMsgT=0;
+function noteMsg(m){
+ clearTimeout(noteMsgT);const hd=$("vNoteL").parentNode;
+ if(!m){hd.classList.remove("msg");noteUI();return;}
+ hd.classList.add("msg");$("vNoteL").textContent="✓ "+m;
+ noteMsgT=setTimeout(()=>{hd.classList.remove("msg");noteUI();},2000);
+}
+$("vNoteT").addEventListener("focus",()=>{
+ if(!galX())return;editing=true;cancelEdit=false;const ns=notesOf(galX());editOrig=cur>=0&&ns[cur]?ns[cur].t:"";noteMsg("");noteUI();
+});
+$("vNoteT").addEventListener("input",()=>{
+ noteFit();const ns=notesOf(galX());
+ // a comment already on the photo changes as you type
+ if(cur>=0&&ns[cur]&&$("vNoteT").value.trim()){ns[cur].t=$("vNoteT").value.trim();tagsDraw();}
+});
+// Leaving the box (OK, tapping elsewhere) puts the text on the photo; 戻る cancels.
+$("vNoteT").addEventListener("blur",()=>{if(editing)noteEnd(cancelEdit);});
+function noteEnd(cancel){
+ if(!editing)return;editing=false;cancelEdit=false;
+ const x=galX(), ns=notesOf(x), v=$("vNoteT").value.trim();
+ if(x){
+  if(cancel){if(cur>=0&&ns[cur])ns[cur].t=editOrig;}
+  else if(cur>=0&&ns[cur]){if(v){ns[cur].t=v;if(v!==editOrig)noteMsg("直しました");}else{ns.splice(cur,1);cur=-1;noteMsg("消しました");}}
+  else if(v){ns.push({t:v,tag:newTagPos(ns)});cur=ns.length-1;noteMsg("写真に入れました");}
+  saveJob().then(renderThumbs);
+ }
+ if(document.activeElement===$("vNoteT"))$("vNoteT").blur();
+ tagsDraw();noteUI();
+}
+$("vNoteOk").onclick=()=>noteEnd(false);
+// コメント追加: start a new comment while one is picked.
+$("vNoteAdd").onclick=()=>{cur=-1;noteUI();$("vNoteT").focus();};
+// 戻る: while typing it cancels the typing, otherwise it closes the viewer.
+let backWhileEdit=false;
+$("vBack").addEventListener("pointerdown",()=>{backWhileEdit=editing;if(editing)cancelEdit=true;});
+$("vBack").onclick=()=>{if(backWhileEdit||editing){backWhileEdit=false;noteEnd(true);return;}closeViewer();};
+// New text goes top left, under the comments already there.
+function newTagPos(ns){
+ let y=0.03;const c=document.createElement("canvas").getContext("2d");
+ ns.forEach(n=>{if(!n.tag)return;const L=tagLayout(c,n.t,vw.nw,n.tag.s);if(n.tag.x<0.4)y=Math.max(y,n.tag.y+L.h/vw.nh+0.03);});
+ return {x:0.03,y:y>0.85?0.03:y,s:0.05};
+}
+const TAG_FONT='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif';
+function tagLayout(ctx,text,W,s){
+ const fs=Math.max(8,s*W), pad=fs*0.38, lh=fs*1.3, maxW=W*0.94-pad*2;
+ ctx.font="800 "+fs+"px "+TAG_FONT;
+ const lines=[];
+ for(const para of String(text).split("\n")){let cur="";
+  for(const ch of para){if(cur&&ctx.measureText(cur+ch).width>maxW){lines.push(cur);cur=ch;}else cur+=ch;}
+  lines.push(cur);}
+ const w=Math.max(...lines.map(l=>ctx.measureText(l).width))+pad*2, h=lines.length*lh+pad*2-(lh-fs)*0.6;
+ return {fs,pad,lh,lines,w:Math.ceil(w),h:Math.ceil(h)};
+}
+function tagPaint(ctx,L,x0,y0){
+ ctx.save();ctx.fillStyle="rgba(0,0,0,.58)";const r=L.fs*0.28;
+ ctx.beginPath();ctx.roundRect?ctx.roundRect(x0,y0,L.w,L.h,r):ctx.rect(x0,y0,L.w,L.h);ctx.fill();
+ ctx.fillStyle="#fff";ctx.textBaseline="top";ctx.font="800 "+L.fs+"px "+TAG_FONT;
+ L.lines.forEach((l,i)=>ctx.fillText(l,x0+L.pad,y0+L.pad+i*L.lh+L.fs*0.04));
+ ctx.restore();
+}
+const TAG_HANDLES='<i class="mv"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></i><i class="rs"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M10 7h7v7M14 17H7v-7"/></svg></i><i class="rm"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></i>';
+const tagLs=[];
+// Draws every comment of the photo (in photo pixels; the stage does the zoom).
+function tagsDraw(){
+ const box=$("vTags"), ns=notesOf(galX());
+ while(box.children.length>ns.length)box.lastChild.remove();
+ while(box.children.length<ns.length){const d=document.createElement("div");d.className="vtag";d.innerHTML="<canvas></canvas>"+TAG_HANDLES;box.appendChild(d);}
+ ns.forEach((n,i)=>{
+  const el=box.children[i], c=el.firstChild, t=n.tag, L=tagLayout(c.getContext("2d"),n.t,vw.nw,t.s);tagLs[i]=L;
+  t.x=Math.min(Math.max(0,t.x),Math.max(0,1-L.w/vw.nw));t.y=Math.min(Math.max(0,t.y),Math.max(0,1-L.h/vw.nh));
+  c.width=L.w;c.height=L.h;tagPaint(c.getContext("2d"),L,0,0);
+  el.dataset.n=i;el.classList.toggle("on",i===cur);
+  el.style.left=t.x*vw.nw+"px";el.style.top=t.y*vw.nh+"px";el.style.width=L.w+"px";el.style.height=L.h+"px";
+ });
+}
+// Once the photo has loaded (its size is known).
+function tagShow(){
+ $("vTags").innerHTML="";if(!galX())return;
+ const im=$("vImg");
+ if(im.complete&&im.naturalWidth&&vw.nw===im.naturalWidth)tagsDraw();else im.addEventListener("load",()=>setTimeout(tagsDraw,0),{once:true});
+}
+function tagPick(n){cur=n;noteUI();}
+// Finger on a comment: tap picks it, double tap edits it, drag moves, pinch / corner resizes, red x removes.
+const tp=new Map();let tg=null, lastTagTap={n:-1,t:0};
+$("vTags").addEventListener("pointerdown",e=>{
+ const el=e.target.closest(".vtag");if(!el)return;
+ e.stopPropagation();e.preventDefault();
+ if(editing)noteEnd(false);
+ const n=+el.dataset.n, ns=notesOf(galX()), t=ns[n]&&ns[n].tag;if(!t)return;
+ if(e.target.closest(".rm")){ns.splice(n,1);cur=-1;tagsDraw();noteUI();noteMsg("消しました");saveJob().then(renderThumbs);return;}
+ if(cur!==n)tagPick(n);
+ el.setPointerCapture(e.pointerId);tp.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ const L=tagLs[n];
+ if(tp.size===2){const [a,b]=[...tp.values()];tg={n,mode:"pinch",d:Math.hypot(a.x-b.x,a.y-b.y)||1,s:t.s,cx:t.x+L.w/vw.nw/2,cy:t.y+L.h/vw.nh/2};}
+ else tg={n,mode:e.target.closest(".rs")?"size":"move",x0:e.clientX,y0:e.clientY,tx:t.x,ty:t.y,s:t.s,w:L.w,moved:false};
+});
+$("vTags").addEventListener("pointermove",e=>{
+ if(!tp.has(e.pointerId)||!tg)return;e.stopPropagation();
+ tp.set(e.pointerId,{x:e.clientX,y:e.clientY});const n=notesOf(galX())[tg.n];if(!n)return;const t=n.tag;
+ if(tg.mode==="pinch"&&tp.size>=2){const [a,b]=[...tp.values()];
+  t.s=Math.min(0.25,Math.max(0.015,tg.s*Math.hypot(a.x-b.x,a.y-b.y)/tg.d));tagsDraw();
+  const L=tagLs[tg.n];t.x=tg.cx-L.w/vw.nw/2;t.y=tg.cy-L.h/vw.nh/2;tagsDraw();}
+ else if(tg.mode==="move"){if(Math.hypot(e.clientX-tg.x0,e.clientY-tg.y0)>8)tg.moved=true;
+  if(tg.moved){t.x=tg.tx+(e.clientX-tg.x0)/vw.s/vw.nw;t.y=tg.ty+(e.clientY-tg.y0)/vw.s/vw.nh;tagsDraw();}}
+ else if(tg.mode==="size"){const dw=((e.clientX-tg.x0)+(e.clientY-tg.y0))/2/vw.s;t.s=Math.min(0.25,Math.max(0.015,tg.s*(tg.w+dw)/tg.w));tagsDraw();}
+});
+const tagUp=e=>{if(!tp.has(e.pointerId))return;e.stopPropagation();tp.delete(e.pointerId);
+ const was=tg;
+ if(tp.size===1&&was){const p=[...tp.values()][0], t=notesOf(galX())[was.n].tag;tg={n:was.n,mode:"move",x0:p.x,y0:p.y,tx:t.x,ty:t.y,s:t.s,w:tagLs[was.n].w,moved:true};return;}
+ if(tp.size)return;tg=null;saveJob();
+ // double tap on a comment: edit its text
+ if(was&&was.mode==="move"&&!was.moved){const now=performance.now();
+  if(lastTagTap.n===was.n&&now-lastTagTap.t<400){lastTagTap={n:-1,t:0};tagPick(was.n);const t=$("vNoteT");t.focus();t.setSelectionRange(t.value.length,t.value.length);}
+  else lastTagTap={n:was.n,t:now};}
+};
+$("vTags").addEventListener("pointerup",tagUp);$("vTags").addEventListener("pointercancel",tagUp);
+// The photo with its comments written in, full size, for saving.
+async function withTags(x){
+ const im=await createImageBitmap(x.blob), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
+ const ctx=c.getContext("2d");ctx.drawImage(im,0,0);
+ notesOf(x).forEach(n=>{const L=tagLayout(ctx,n.t,im.width,n.tag.s);
+  const tx=Math.min(Math.max(0,n.tag.x),Math.max(0,1-L.w/im.width)), ty=Math.min(Math.max(0,n.tag.y),Math.max(0,1-L.h/im.height));
+  tagPaint(ctx,L,tx*im.width,ty*im.height);});
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.95));
+}
+$("vDel").onclick=async()=>{
+ if(!gal||gal.kind!=="extra")return;
+ if(!galDelArm){galDelArm=true;setTx("vDel","もう一度押すと削除");return;}
+ job.extras.splice(gal.i,1);await saveJob();renderThumbs();toast("削除しました");
+ if(job.extras.length)openGallery(Math.min(gal.i,job.extras.length-1));else closeViewer();
+};
+
+/* ---------- completion report (link added later) ---------- */
+$("bReport").onclick=()=>toast("報告書への添付は準備中です");
+
+/* ---------- "don't compare" box editor ---------- */
+let mEdit=null, mDrag=null;
+function openMaskEditor(){
+ if(!job.before)return;
+ medDeg=-camRot();turnFixed($("med"),medDeg);
+ mEdit=job.mask?{...job.mask}:{x:0.3,y:0.25,w:0.4,h:0.4};
+ const im=$("mImg");im.onload=layoutMask;im.src=blobUrl(job.before);
+ $("med").hidden=false;if(im.complete&&im.naturalWidth)layoutMask();
+}
+function layoutMask(){
+ const st=$("mStage"), im=$("mImg"), wr=$("mWrap");
+ if(!im.naturalWidth)return;
+ const k=Math.min(st.clientWidth/im.naturalWidth,st.clientHeight/im.naturalHeight), w=im.naturalWidth*k, h=im.naturalHeight*k;
+ wr.style.left=(st.clientWidth-w)/2+"px";wr.style.top=(st.clientHeight-h)/2+"px";wr.style.width=w+"px";wr.style.height=h+"px";
+ drawMask();
+}
+function drawMask(){const r=$("mRect").style;r.left=mEdit.x*100+"%";r.top=mEdit.y*100+"%";r.width=mEdit.w*100+"%";r.height=mEdit.h*100+"%";}
+window.addEventListener("resize",()=>{if(!$("med").hidden)layoutMask();});
+$("mWrap").addEventListener("pointerdown",e=>{
+ const b={width:$("mWrap").clientWidth,height:$("mWrap").clientHeight}, px=e.offsetX/b.width, py=e.offsetY/b.height;
+ const tx=34/b.width, ty=34/b.height, m=mEdit;
+ const near=(cx,cy)=>Math.abs(px-cx)<tx&&Math.abs(py-cy)<ty;
+ let mode="new";
+ if(near(m.x,m.y))mode="tl";else if(near(m.x+m.w,m.y))mode="tr";else if(near(m.x,m.y+m.h))mode="bl";else if(near(m.x+m.w,m.y+m.h))mode="br";
+ else if(px>m.x&&px<m.x+m.w&&py>m.y&&py<m.y+m.h)mode="move";
+ mDrag={mode,px,py,start:{...m}};
+ if(mode==="new"){mEdit={x:px,y:py,w:0.01,h:0.01};mDrag.mode="br";mDrag.start={...mEdit};}
+ $("mWrap").setPointerCapture(e.pointerId);e.preventDefault();
+});
+$("mWrap").addEventListener("pointermove",e=>{
+ if(!mDrag)return;
+ const b={width:$("mWrap").clientWidth,height:$("mWrap").clientHeight}, px=Math.min(1,Math.max(0,e.offsetX/b.width)), py=Math.min(1,Math.max(0,e.offsetY/b.height));
+ const s=mDrag.start, dx=px-mDrag.px, dy=py-mDrag.py;
+ let x0=s.x,y0=s.y,x1=s.x+s.w,y1=s.y+s.h;
+ if(mDrag.mode==="move"){const w=s.w,h=s.h;x0=Math.min(1-w,Math.max(0,s.x+dx));y0=Math.min(1-h,Math.max(0,s.y+dy));x1=x0+w;y1=y0+h;}
+ else{if(mDrag.mode[1]==="l")x0=px;else x1=px;if(mDrag.mode[0]==="t")y0=py;else y1=py;}
+ mEdit={x:Math.min(x0,x1),y:Math.min(y0,y1),w:Math.max(0.05,Math.abs(x1-x0)),h:Math.max(0.05,Math.abs(y1-y0))};
+ mEdit.w=Math.min(mEdit.w,1-mEdit.x);mEdit.h=Math.min(mEdit.h,1-mEdit.y);
+ drawMask();
+});
+const endDrag=()=>{mDrag=null;};
+$("mWrap").addEventListener("pointerup",endDrag);$("mWrap").addEventListener("pointercancel",endDrag);
+async function closeMask(m){job.mask=m;$("med").hidden=true;await saveJob();refreshDetail();make();}
+$("mOk").onclick=()=>closeMask({...mEdit});
+$("mNone").onclick=()=>closeMask(null);
+$("bMask").onclick=openMaskEditor;
+
+/* ---------- alignment ---------- */
+const AW=128;let AH=96, camGen=0, Bgray=null, Bmask=null, est={tx:0,ty:0,s:1,r:0}, estScore=-1, estId=-1;
+// Box (0-1 of the photo) onto a w x h box showing the whole photo ("contain").
+function placeBox(el,m,sw,sh,w,h){
+ const r=Math.min(w/sw,h/sh), ox=(sw-w/r)/2, oy=(sh-h/r)/2;
+ el.style.left=((m.x*sw-ox)*r)+"px";el.style.top=((m.y*sh-oy)*r)+"px";el.style.width=(m.w*sw*r)+"px";el.style.height=(m.h*sh*r)+"px";
+}
+// Colour level from the estimated offset: within tolerance = ok, up to 3x = near, beyond = far.
+function levelOf(p,W,H,score,idScore,dBeta){
+ if(score<0.3)return "na";
+ const m=Math.max(Math.abs(p.tx/W*100)/3,Math.abs(p.ty/H*100)/3,Math.abs((p.s-1)*100)/4,Math.abs(p.r*180/Math.PI)/1.5,dBeta!=null?Math.abs(dBeta)/2:0);
+ if(m<=1&&idScore>=0.5)return "ok";
+ return m<=3?"near":"far";
+}
+const LIVE_LABEL={ok:"ぴったり 撮影どうぞ",near:"おしい",far:"ずれています",na:"比べられません"};
+let lvlShown=null, lvlPend=null, lvlCount=0;
+function setFrame(l,text){const c=l==="na"?"":l;$("frame").className="frame "+c;$("fLabel").className="flab "+c;$("fLabel").textContent=text;}
+function vib(ms){try{if(window.AndroidApp&&window.AndroidApp.vibrate)window.AndroidApp.vibrate(ms);else if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+const sc=document.createElement("canvas"), sctx=sc.getContext("2d",{willReadFrequently:true});
+function grayOf(drawFn){
+ sc.width=AW;sc.height=AH;sctx.imageSmoothingEnabled=true;sctx.imageSmoothingQuality="medium";
+ sctx.clearRect(0,0,AW,AH);drawFn(sctx);
+ const d=sctx.getImageData(0,0,AW,AH).data, g=new Float32Array(AW*AH);
+ for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.299*d[j]+0.587*d[j+1]+0.114*d[j+2];
+ return g;
+}
+function drawCoverTo(ctx,src,sw,sh,w,h){
+ const r=Math.max(w/sw,h/sh), cw=w/r, ch=h/r;
+ ctx.drawImage(src,(sw-cw)/2,(sh-ch)/2,cw,ch,0,0,w,h);
+}
+let beforeImg=null, alignRot=null;
+async function startAlign(){
+ AH=Math.round(AW*srcH()/srcW());
+ beforeImg=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=photoSrc;});
+ alignRot=null;prepAlign();
+ tick(++camGen);
+}
+// Before photo turned by deg and cover-fitted into W x H (same as the frame it is compared with).
+function drawRotCover(ctx,im,iw,ih,W,H,deg){
+ const rw=deg?ih:iw, rh=deg?iw:ih, k=Math.max(W/rw,H/rh);
+ ctx.save();ctx.translate(W/2,H/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(im,-iw*k/2,-ih*k/2,iw*k,ih*k);ctx.restore();
+}
+// The "don't compare" box (0-1 of the before photo, padded) in W x H frame pixels.
+function maskBuf(m,iw,ih,W,H,deg){
+ if(!m)return null;
+ const rw=deg?ih:iw, rh=deg?iw:ih, k=Math.max(W/rw,H/rh), pad=0.03;
+ const pts=[[m.x-pad,m.y-pad],[m.x+m.w+pad,m.y-pad],[m.x-pad,m.y+m.h+pad],[m.x+m.w+pad,m.y+m.h+pad]].map(([u,v])=>{
+  const dx=(u-0.5)*iw, dy=(v-0.5)*ih, q=deg===90?[-dy,dx]:deg===-90?[dy,-dx]:[dx,dy];
+  return [W/2+q[0]*k,H/2+q[1]*k];});
+ const xs=pts.map(q=>q[0]), ys=pts.map(q=>q[1]);
+ const x0=Math.max(0,Math.min(...xs)), x1=Math.min(W,Math.max(...xs)), y0=Math.max(0,Math.min(...ys)), y1=Math.min(H,Math.max(...ys));
+ return x1>x0&&y1>y0?{x0,y0,x1,y1}:null;
+}
+// (Re)build the comparison target when the phone is turned; also turns the overlay.
+function prepAlign(){
+ const rot=camRot();if(rot===alignRot||!beforeImg)return;alignRot=rot;
+ const im=beforeImg, iw=im.naturalWidth, ih=im.naturalHeight, deg=-rot;
+ Bgray=grayOf(ctx=>drawRotCover(ctx,im,iw,ih,AW,AH,deg));
+ Bmask=maskBuf(job.mask,iw,ih,AW,AH,deg);
+ est={tx:0,ty:0,s:1,r:0};estScore=-1;estId=-1;lvlShown=null;
+ const st=$("stage"), g=$("ghost");
+ if(deg){g.classList.add("rot");g.style.width=st.clientHeight+"px";g.style.height=st.clientWidth+"px";g.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";}
+ else{g.classList.remove("rot");g.style.width=g.style.height=g.style.transform="";}
+ const cm=$("camMask");
+ if(Bmask){const sx=st.clientWidth/AW, sy=st.clientHeight/AH;cm.style.left=Bmask.x0*sx+"px";cm.style.top=Bmask.y0*sy+"px";cm.style.width=(Bmask.x1-Bmask.x0)*sx+"px";cm.style.height=(Bmask.y1-Bmask.y0)*sy+"px";cm.hidden=false;}
+ else cm.hidden=true;
+}
+async function tick(gen){
+ const live=()=>stream&&camMode==="after"&&gen===camGen;
+ if(!live())return;
+ prepAlign(); // keeps the overlay turned with the phone even when the colour check is off
+ if(camReady()&&$("tDiff").classList.contains("on")){
+  // Full search on every frame: compares the live view with the before photo from scratch.
+  const C=grayOf(ctx=>drawVideo(ctx,AW,AH));
+  const res=await align({B:Bgray,C,W:AW,H:AH,M:Bmask});
+  if(!live())return;
+  est=res.p;estScore=res.score;estId=res.idScore;
+  showDiff();
+ }
+ loop=setTimeout(()=>tick(gen),60);
+}
+function showDiff(){
+ const l=levelOf(est,AW,AH,estScore,estId,(job.beforeOri&&oriOK)?ori.beta-job.beforeOri.beta:null);
+ // Change colour only after two readings agree, so the frame doesn't flicker.
+ if(l===lvlPend)lvlCount++;else{lvlPend=l;lvlCount=1;}
+ if(l!==lvlShown&&(lvlShown===null||lvlCount>=2)){
+  if(l==="ok"&&lvlShown!==null)vib(60);
+  lvlShown=l;setFrame(l,LIVE_LABEL[l]);
+ }
+}
+
+/* ---------- compose & save ---------- */
+function loadImg(b){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=blobUrl(b);});}
+function drawCover(ctx,im,x,y,w,h){const iw=im.naturalWidth||im.width, ih=im.naturalHeight||im.height, r=Math.max(w/iw,h/ih),sw=w/r,sh=h/r;ctx.drawImage(im,(iw-sw)/2,(ih-sh)/2,sw,sh,x,y,w,h);}
+// Built automatically whenever both photos exist. makeDone resolves when the
+// newest build is finished, so saving never picks up an outdated photo.
+let makeSeq=0, makeDone=Promise.resolve();
+function make(){makeDone=build();return makeDone;}
+async function build(){
+ if(!(job&&job.before&&job.after)){$("result").style.display="none";return;}
+ const seq=++makeSeq, forJob=job;
+ const im=await getImgs();
+ if(seq!==makeSeq||job!==forJob)return;
+ // Preview: drawn straight onto the page at reduced size, so option changes show at once.
+ compose($("out"),0.5,im.b,im.a);
+ $("result").style.display="block";
+ // Full-size photo for saving / zooming, prepared in the background.
+ setTimeout(()=>{if(seq===makeSeq&&job===forJob)fullBlob();},250);
+}
+// Decoded photos are kept so a rebuild doesn't decode them again.
+let imgs={bsrc:null,asrc:null,b:null,a:null};
+const decode=async blob=>{try{return await createImageBitmap(blob);}catch(e){return await loadImg(blob);}};
+async function getImgs(){
+ if(imgs.bsrc!==job.before||imgs.asrc!==job.after){
+  const bsrc=job.before, asrc=job.after, [b,a]=await Promise.all([decode(bsrc),decode(asrc)]);
+  imgs={bsrc,asrc,b,a};
+ }
+ return imgs;
+}
+let full={seq:-1,p:null};
+function fullBlob(){
+ if(full.seq===makeSeq&&full.p)return full.p;
+ const c=document.createElement("canvas");compose(c,1,imgs.b,imgs.a);
+ full={seq:makeSeq,p:new Promise(res=>c.toBlob(res,"image/jpeg",0.9))};
+ return full.p;
+}
+// Draws the comparison photo onto canvas c; k scales every size (1 = full size).
+function compose(c,k,iB,iA){
+ const bw=iB.naturalWidth||iB.width, bh=iB.naturalHeight||iB.height;
+ const portrait=bh>=bw, pw=(portrait?900:1200)*k, ph=(portrait?1200:900)*k;
+ const gap=12*k,pad=24*k,label=withLabels?64*k:0,foot=(job.site||job.memo)?110*k:pad;
+ const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+label+ph+foot:pad+(label+ph)*2+gap+foot);
+ c.width=W;c.height=H;const x=c.getContext("2d");
+ x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
+ const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif', px=n=>Math.round(n*k)+"px ";
+ const cells=[{im:iB,t:"施工前",d:job.beforeAt,x:pad,y:pad,bg:"#1C2B3A",fg:"#FFFFFF"},
+  {im:iA,t:"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+label+ph+gap,bg:"#E5AE00",fg:"#1C2B3A"}];
+ cells.forEach(q=>{
+  if(label){x.fillStyle=q.bg;x.fillRect(q.x,q.y,pw,label);x.fillStyle=q.fg;x.textBaseline="middle";
+   x.font="800 "+px(38)+font;x.textAlign="left";x.fillText(q.t,q.x+22*k,q.y+label/2+k);
+   x.font="600 "+px(28)+font;x.textAlign="right";x.fillText(fmtFull(q.d),q.x+pw-22*k,q.y+label/2+k);x.textAlign="left";}
+  drawCover(x,q.im,q.x,q.y+label,pw,ph);});
+ if(!(job.site||job.memo))return;
+ const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12*k,foot);
+ x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 "+px(36)+font;x.fillText(job.site||job.memo,pad+14*k,fy+48*k,W-pad*2-20*k);
+ if(job.site&&job.memo){x.font="500 "+px(28)+font;x.fillStyle="#C9D2DA";x.fillText(job.memo,pad+14*k,fy+88*k,W-pad*2-20*k);}
+}
+$("cLabel").checked=withLabels;
+$("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}make();};
+// The save button says which layout will be saved.
+function showLayout(){$("lyV").checked=layout==="v";$("lyH").checked=layout==="h";$("bSaveSub").textContent=layout==="v"?"縦並びで保存されます":"横並びで保存されます";}
+showLayout();
+document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-lay",layout);}catch(err){}showLayout();make();});
+let toastT=null;
+// Shown for 2 seconds, then fades out.
+function toast(t,ng){const e=$("toast");e.textContent=t;e.classList.toggle("ng",!!ng);e.classList.remove("out");e.hidden=false;clearTimeout(toastT);
+ toastT=setTimeout(()=>{e.classList.add("out");toastT=setTimeout(()=>{e.hidden=true;e.classList.remove("out");},300);},2000);}
+function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
+
+/* ---------- photo viewer ---------- */
+const vw={s:1,fit:1,x:0,y:0,nw:1,nh:1,pts:new Map(),pinch:null,pan:null,lastTap:0,tapX:0,tapY:0,down:null};
+// src = the photo; topSrc (optional) = the before photo laid over it, with a see-through slider.
+function openViewer(src,topSrc){
+ const im=$("vImg"), top=$("vImg2"), st=$("vStage");
+ if(!gal){$("vBar").hidden=true;$("vCnt").hidden=true;}
+ $("viewer").hidden=false;top.hidden=!topSrc;$("vOp").hidden=!topSrc;
+ if(topSrc){top.src=topSrc;$("vOpR").value=50;top.style.opacity=0.5;}
+ im.onload=()=>{vw.nw=im.naturalWidth;vw.nh=im.naturalHeight;st.style.width=vw.nw+"px";st.style.height=vw.nh+"px";vFit(false);};
+ im.src=src;if(im.complete&&im.naturalWidth)im.onload();
+}
+$("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
+function closeViewer(){noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
+function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
+function vApply(anim){
+ const [W,H]=vSize(), w=vw.nw*vw.s, h=vw.nh*vw.s;
+ vw.x=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,vw.x));
+ vw.y=h<=H?(H-h)/2:Math.min(0,Math.max(H-h,vw.y));
+ const im=$("vStage");im.classList.toggle("anim",!!anim);
+ im.style.transform="translate("+vw.x+"px,"+vw.y+"px) scale("+vw.s+")";im.style.setProperty("--k",1/vw.s);
+}
+// Zoom to scale s keeping screen point (px,py) still.
+function vZoomAt(s,px,py,anim){const cx=(px-vw.x)/vw.s, cy=(py-vw.y)/vw.s;vw.s=s;vw.x=px-cx*s;vw.y=py-cy*s;vApply(anim);}
+const vMax=()=>Math.max(vw.fit*6,1.5);
+$("viewer").addEventListener("pointerdown",e=>{
+ if(e.target.closest("#vClose,#vOp,#vBar,.vtop,.vtag"))return;
+ if(editing){noteEnd(false);return;}
+ if(cur>=0){cur=-1;noteUI();}
+ $("viewer").setPointerCapture(e.pointerId);
+ vw.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(vw.pts.size===2){
+  const [a,b]=[...vw.pts.values()];
+  vw.pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,s:vw.s,mx:(a.x+b.x)/2,my:(a.y+b.y)/2,x:vw.x,y:vw.y};vw.pan=null;vw.down=null;
+ }else if(vw.pts.size===1){
+  vw.pan={x0:e.clientX,y0:e.clientY,x:vw.x,y:vw.y};vw.down={x:e.clientX,y:e.clientY,t:performance.now()};
+ }
+});
+$("viewer").addEventListener("pointermove",e=>{
+ if(!vw.pts.has(e.pointerId))return;
+ vw.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(vw.pinch&&vw.pts.size>=2){
+  const [a,b]=[...vw.pts.values()], P=vw.pinch;
+  const s=Math.min(vMax(),Math.max(vw.fit*0.8,P.s*Math.hypot(a.x-b.x,a.y-b.y)/P.d));
+  const mx=(a.x+b.x)/2, my=(a.y+b.y)/2, cx=(P.mx-P.x)/P.s, cy=(P.my-P.y)/P.s;
+  vw.s=s;vw.x=mx-cx*s;vw.y=my-cy*s;vApply(false);
+ }else if(vw.pan){
+  vw.x=vw.pan.x+(e.clientX-vw.pan.x0);vw.y=vw.pan.y+(e.clientY-vw.pan.y0);vApply(false);
+ }
+});
+function vUp(e){
+ if(!vw.pts.has(e.pointerId))return;
+ vw.pts.delete(e.pointerId);
+ if(vw.pts.size<2&&vw.pinch){vw.pinch=null;if(vw.s<vw.fit)vFit(true);
+  if(vw.pts.size===1){const p=[...vw.pts.values()][0];vw.pan={x0:p.x,y0:p.y,x:vw.x,y:vw.y};}return;}
+ if(vw.pts.size===0){
+  vw.pan=null;
+  const d=vw.down;vw.down=null;
+  // Swipe sideways at normal size: next / previous photo.
+  if(gal&&d&&vw.s<=vw.fit*1.02&&Math.abs(e.clientX-d.x)>60&&Math.abs(e.clientX-d.x)>Math.abs(e.clientY-d.y)*1.5){galNav(e.clientX<d.x?1:-1);return;}
+  if(d&&Math.hypot(e.clientX-d.x,e.clientY-d.y)<12&&performance.now()-d.t<300){
+   const now=performance.now();
+   if(now-vw.lastTap<320&&Math.hypot(e.clientX-vw.tapX,e.clientY-vw.tapY)<40){
+    // Double tap: zoom in where tapped, or back to the whole photo.
+    vw.lastTap=0;
+    if(vw.s>vw.fit*1.05)vFit(true);else vZoomAt(Math.min(vMax(),vw.fit*2.5),e.clientX,e.clientY,true);
+   }else{vw.lastTap=now;vw.tapX=e.clientX;vw.tapY=e.clientY;}
+  }
+ }
+}
+$("viewer").addEventListener("pointerup",vUp);$("viewer").addEventListener("pointercancel",vUp);
+$("viewer").addEventListener("wheel",e=>{e.preventDefault();vZoomAt(Math.min(vMax(),Math.max(vw.fit,vw.s*(e.deltaY<0?1.15:1/1.15))),e.clientX,e.clientY,false);},{passive:false});
+$("vClose").onclick=closeViewer;
+window.addEventListener("resize",()=>{if(!$("viewer").hidden)vFit(false);});
+$("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(await fullBlob()));};
+
+function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
+async function saveBlob(blob,kind,t){
+ const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);
+ const name=kind+"_"+(site?site+"_":"")+stamp(t)+".jpg";
+ const file=new File([blob],name,{type:"image/jpeg"});
+ // Android: save straight to the Download folder (shows up in Google Photos).
+ // iPhone etc.: downloads don't reach the photo library, so use the share sheet.
+ const android=/Android/i.test(navigator.userAgent);
+ if(!android&&navigator.canShare&&navigator.canShare({files:[file]})){
+  try{await navigator.share({files:[file]});$("saveMsg").textContent="共有メニューから「画像を保存」を選ぶと写真アプリに保存されます。";}
+  catch(err){if(err&&err.name==="AbortError")$("saveMsg").textContent="保存をやめました。";else saved(false,"保存できませんでした。写真を長押しして保存してください。");}
+  return;
+ }
+ const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+ saved(true,"保存しました");
+}
+$("bSave").onclick=async()=>{await makeDone;if(!imgs.b)return;saveBlob(await fullBlob(),"施工前後",Date.now());};
+$("svB").onclick=()=>{if(job.before)saveBlob(job.before,"施工前",job.beforeAt);};
+$("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);};
+
+/* ---------- start ---------- */
+(async()=>{IDB=await openDB();showHome();})();
+</script>
+</body>
+</html>
