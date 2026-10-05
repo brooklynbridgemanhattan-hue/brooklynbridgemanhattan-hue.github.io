@@ -464,13 +464,16 @@ async function saveBlob(blob,kind,t){
  const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);
  const name=kind+"_"+(site?site+"_":"")+stamp(t)+".jpg";
  const file=new File([blob],name,{type:"image/jpeg"});
- if(navigator.canShare&&navigator.canShare({files:[file]})){
+ // Android: save straight to the Download folder (shows up in Google Photos).
+ // iPhone etc.: downloads don't reach the photo library, so use the share sheet.
+ const android=/Android/i.test(navigator.userAgent);
+ if(!android&&navigator.canShare&&navigator.canShare({files:[file]})){
   try{await navigator.share({files:[file]});$("saveMsg").textContent="共有メニューから「画像を保存」を選ぶと写真アプリに保存されます。";}
   catch(err){$("saveMsg").textContent=(err&&err.name==="AbortError")?"保存をやめました。":"保存できませんでした。写真を長押しして保存してください。";}
   return;
  }
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
- $("saveMsg").textContent="保存しました:"+name;
+ $("saveMsg").textContent="スマホに保存しました(Downloadフォルダ):"+name;
 }
 $("bSave").onclick=()=>{if(lastBlob)saveBlob(lastBlob,"施工前後",Date.now());};
 $("svB").onclick=()=>{if(job.before)saveBlob(job.before,"施工前",job.beforeAt);};
