@@ -149,6 +149,9 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .cam .shoot button{flex:1}
 .cam .shoot .cancel{background:transparent;color:#eee;border:2px solid #666}
 .cam .shoot .shot{flex:2}
+.cam .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;transition:opacity .25s}
+.cam .flash.on{opacity:.7;transition:none}
+.cam .shotn{position:absolute;right:10px;bottom:10px;z-index:4;background:rgba(0,0,0,.6);color:#fff;font-size:15px;font-weight:800;padding:6px 12px;border-radius:999px}
 
 input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
 </style>
@@ -233,6 +236,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <img class="ghost" id="ghost" alt="">
   <div class="grid" id="grid"></div>
   <div class="cmask" id="camMask" hidden><span>比べない</span></div>
+  <div class="flash" id="flash"></div>
+  <div class="shotn" id="shotN" hidden></div>
   <div class="frame" id="frame"><span class="fl" id="fLabel"></span></div>
  </div>
  <div class="bar">
@@ -453,6 +458,7 @@ async function startCam(mode){
  $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
  setFrame("na","比べています…");lvlShown=null;
  $("camMask").hidden=true;
+ shotCount=0;$("shotN").hidden=true;$("cCancel").textContent=mode==="extra"?"戻る":"やめる";
  if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();}
  $("cam").style.display="flex";
  if(after){await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});startAlign();}
@@ -491,11 +497,19 @@ async function outlineSrc(){
  outlineFor=job.before;outlineUrl=blobUrl(b);return outlineUrl;
 }
 
+let shotCount=0;
 $("cShot").onclick=()=>{
  const v=$("vid");if(!v.videoWidth)return;
  const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;
  c.getContext("2d").drawImage(v,0,0);
  const mode=camMode, o=oriOK?{...ori}:null;
+ if(mode==="extra"){
+  // Other photos: stay in the camera so several can be taken in a row.
+  const f=$("flash");f.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>f.classList.remove("on")));
+  shotCount++;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
+  c.toBlob(b=>gotPhoto("extra",b,o),"image/jpeg",0.92);
+  return;
+ }
  c.toBlob(async b=>{stopCam();await gotPhoto(mode,b,o);},"image/jpeg",0.92);
 };
 $("fBefore").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("before",f,null);};
@@ -503,7 +517,7 @@ $("fExtra").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)
 $("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
 async function gotPhoto(mode,blob,o){
  const now=Date.now();
- if(mode==="extra"){(job.extras=job.extras||[]).push({blob,at:now});await saveJob();renderThumbs();toast("写真を追加しました");return;}
+ if(mode==="extra"){(job.extras=job.extras||[]).push({blob,at:now});await saveJob();renderThumbs();if(!stream)toast("写真を追加しました");return;}
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;}
  await saveJob();refreshDetail();
