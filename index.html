@@ -174,6 +174,13 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .cam .fl.on{background:#FACC15;color:#1C2B3A;border-color:#FACC15}
 .cam .fl.auto{background:#1C2B3A;color:#FACC15;border-color:#FACC15}
 #vid{transform-origin:50% 50%}
+/* easy-to-grab zoom slider; pinch on the picture works too */
+.cam .view{touch-action:none}
+#zm{-webkit-appearance:none;appearance:none;height:40px;background:transparent;padding:0 4px}
+#zm::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:#5a5a5a}
+#zm::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:32px;height:32px;margin-top:-12px;border-radius:50%;background:#E5AE00;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+#zm::-moz-range-track{height:8px;border-radius:4px;background:#5a5a5a}
+#zm::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:#E5AE00;border:3px solid #fff}
 .cam input[type=range]{flex:1;accent-color:#E5AE00}
 .cam .tools{display:flex;gap:8px}
 .cam .tools button{flex:1;font-size:12.5px;line-height:1.3;padding:9px 6px;background:#222;color:#eee;border:1px solid #444}
@@ -669,7 +676,23 @@ function applyZoom(z){
  if(trackCaps.zoom){zoomPend=z;track.applyConstraints({advanced:[{zoom:z}]}).catch(()=>{});return;}
  digitalZoom=z;$("vid").style.transform=z>1?"scale("+z+")":"";
 }
-$("zm").oninput=e=>{const z=+e.target.value;$("zmV").textContent=zoomLabel(z);applyZoom(z);};
+// Zoom changes are applied at most once per frame so sliding / pinching stays smooth.
+let zTarget=null, zRaf=0;
+function setZoom(z){
+ const zm=$("zm");z=Math.min(+zm.max,Math.max(+zm.min,z));
+ zm.value=z;$("zmV").textContent=zoomLabel(z);zTarget=z;
+ if(!zRaf)zRaf=requestAnimationFrame(()=>{zRaf=0;applyZoom(zTarget);});
+}
+$("zm").oninput=e=>setZoom(+e.target.value);
+// Pinch on the camera picture to zoom, like the phone's own camera.
+const pinchPts=new Map();let pinch0=null;
+const camView=document.querySelector("#cam .view");
+camView.addEventListener("pointerdown",e=>{pinchPts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pinchPts.size===2){const [a,b]=[...pinchPts.values()];pinch0={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:+$("zm").value};}});
+camView.addEventListener("pointermove",e=>{if(!pinchPts.has(e.pointerId))return;pinchPts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pinch0&&pinchPts.size>=2){const [a,b]=[...pinchPts.values()];setZoom(pinch0.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch0.d);}});
+const pinchEnd=e=>{pinchPts.delete(e.pointerId);if(pinchPts.size<2)pinch0=null;};
+camView.addEventListener("pointerup",pinchEnd);camView.addEventListener("pointercancel",pinchEnd);
 const hasFlash=()=>!!(trackCaps.torch||(photoCaps&&photoCaps.fillLightMode&&photoCaps.fillLightMode.indexOf("flash")>=0));
 function showFlash(){
  const b=$("tFlash");b.hidden=!hasFlash();
