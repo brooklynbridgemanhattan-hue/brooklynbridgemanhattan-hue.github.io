@@ -55,7 +55,7 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .row button.on{background:var(--ink);color:var(--paper)}
 .row button:not(.on){background:transparent;color:var(--ink);border:2px solid var(--line)}
 #result{display:none;margin-top:6px}
-#result img{width:100%;border:1px solid var(--line);display:block;margin-bottom:10px;cursor:zoom-in}
+#out{width:100%;height:auto;border:1px solid var(--line);display:block;margin-bottom:10px;cursor:zoom-in}
 /* full-screen photo viewer: tap to open, pinch / double-tap to zoom (like Google Photos) */
 .viewer{position:fixed;inset:0;background:#000;z-index:70;touch-action:none;overflow:hidden;user-select:none;-webkit-user-select:none}
 .viewer img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;-webkit-user-drag:none;pointer-events:none}
@@ -74,7 +74,6 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .opt .ic.v{grid-template-rows:10px 10px}.opt .ic.h{grid-template-columns:14px 14px}
 .chkrow{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:800;padding:14px 12px;border:2px solid var(--line);background:var(--sheet);cursor:pointer}
 .chkrow input{width:26px;height:26px;accent-color:var(--gas);margin:0;flex:none}
-#out.busy{opacity:.35}
 .msg{font-size:13px;color:var(--soft);margin:6px 0}
 .back{background:transparent;color:var(--ink);padding:6px 0;font-size:14px;margin-bottom:8px}
 .note{font-size:12px;color:var(--soft);margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
@@ -176,7 +175,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
  </div>
  <div id="result">
   <label class="f" style="margin-top:12px">比較写真(タップで拡大)</label>
-  <img id="out" alt="施工前と施工後の比較写真">
+  <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
   <button class="y full" id="bSave">比較写真を保存する</button>
   <div class="opts">
    <span class="ttl">並べ方</span>
@@ -366,7 +365,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(
 $("hNew").onclick=()=>openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:""});
 
 /* ---------- detail ---------- */
-let lastBlob=null, delArm=false;
+let delArm=false;
 // Remembered per phone: whether the comparison photo carries the 施工前/施工後 bands.
 let withLabels=true, layout="v";
 try{withLabels=localStorage.getItem("ba-labels")!=="0";layout=localStorage.getItem("ba-layout")==="h"?"h":"v";}catch(e){}
@@ -381,7 +380,7 @@ function setSlot(slot,blob,at){
 function openJob(j){
  job=j;$("home").hidden=true;$("detail").hidden=false;
  $("site").value=j.site||"";$("memo").value=j.memo||"";
- $("result").style.display="none";$("saveMsg").textContent="";lastBlob=null;delArm=false;$("bDel").textContent="この現場を削除";
+ $("result").style.display="none";$("saveMsg").textContent="";delArm=false;$("bDel").textContent="この現場を削除";
  refreshDetail();photoDiff();make();window.scrollTo(0,0);
 }
 function refreshDetail(){
@@ -482,7 +481,7 @@ async function gotPhoto(mode,blob,o){
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;}
  await saveJob();refreshDetail();
- $("result").style.display="none";lastBlob=null;
+ $("result").style.display="none";
  photoDiff();make();
  if(mode==="before")openMaskEditor();
 }
@@ -624,36 +623,58 @@ async function photoDiff(){
 
 /* ---------- compose & save ---------- */
 function loadImg(b){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=blobUrl(b);});}
-function drawCover(ctx,im,x,y,w,h){const r=Math.max(w/im.naturalWidth,h/im.naturalHeight),sw=w/r,sh=h/r;ctx.drawImage(im,(im.naturalWidth-sw)/2,(im.naturalHeight-sh)/2,sw,sh,x,y,w,h);}
+function drawCover(ctx,im,x,y,w,h){const iw=im.naturalWidth||im.width, ih=im.naturalHeight||im.height, r=Math.max(w/iw,h/ih),sw=w/r,sh=h/r;ctx.drawImage(im,(iw-sw)/2,(ih-sh)/2,sw,sh,x,y,w,h);}
 // Built automatically whenever both photos exist. makeDone resolves when the
 // newest build is finished, so saving never picks up an outdated photo.
 let makeSeq=0, makeDone=Promise.resolve();
 function make(){makeDone=build();return makeDone;}
 async function build(){
- if(!(job&&job.before&&job.after)){$("result").style.display="none";lastBlob=null;return;}
+ if(!(job&&job.before&&job.after)){$("result").style.display="none";return;}
  const seq=++makeSeq, forJob=job;
- lastBlob=null;$("out").classList.add("busy");
- const iB=await loadImg(job.before), iA=await loadImg(job.after);
+ const im=await getImgs();
  if(seq!==makeSeq||job!==forJob)return;
- const portrait=iB.naturalHeight>=iB.naturalWidth, pw=portrait?900:1200, ph=portrait?1200:900;
- const gap=12,pad=24,label=withLabels?64:0,foot=110;
- const W=layout==="h"?pad*2+pw*2+gap:pad*2+pw, H=layout==="h"?pad+label+ph+foot:pad+(label+ph)*2+gap+foot;
- const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+ // Preview: drawn straight onto the page at reduced size, so option changes show at once.
+ compose($("out"),0.5,im.b,im.a);
+ $("result").style.display="block";
+ // Full-size photo for saving / zooming, prepared in the background.
+ setTimeout(()=>{if(seq===makeSeq&&job===forJob)fullBlob();},250);
+}
+// Decoded photos are kept so a rebuild doesn't decode them again.
+let imgs={bsrc:null,asrc:null,b:null,a:null};
+const decode=async blob=>{try{return await createImageBitmap(blob);}catch(e){return await loadImg(blob);}};
+async function getImgs(){
+ if(imgs.bsrc!==job.before||imgs.asrc!==job.after){
+  const bsrc=job.before, asrc=job.after, [b,a]=await Promise.all([decode(bsrc),decode(asrc)]);
+  imgs={bsrc,asrc,b,a};
+ }
+ return imgs;
+}
+let full={seq:-1,p:null};
+function fullBlob(){
+ if(full.seq===makeSeq&&full.p)return full.p;
+ const c=document.createElement("canvas");compose(c,1,imgs.b,imgs.a);
+ full={seq:makeSeq,p:new Promise(res=>c.toBlob(res,"image/jpeg",0.9))};
+ return full.p;
+}
+// Draws the comparison photo onto canvas c; k scales every size (1 = full size).
+function compose(c,k,iB,iA){
+ const bw=iB.naturalWidth||iB.width, bh=iB.naturalHeight||iB.height;
+ const portrait=bh>=bw, pw=(portrait?900:1200)*k, ph=(portrait?1200:900)*k;
+ const gap=12*k,pad=24*k,label=withLabels?64*k:0,foot=110*k;
+ const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+label+ph+foot:pad+(label+ph)*2+gap+foot);
+ c.width=W;c.height=H;const x=c.getContext("2d");
  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
- const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif';
+ const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif', px=n=>Math.round(n*k)+"px ";
  const cells=[{im:iB,t:"施工前",d:job.beforeAt,x:pad,y:pad,bg:"#1C2B3A",fg:"#FFFFFF"},
   {im:iA,t:"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+label+ph+gap,bg:"#E5AE00",fg:"#1C2B3A"}];
- cells.forEach(k=>{
-  if(label){x.fillStyle=k.bg;x.fillRect(k.x,k.y,pw,label);x.fillStyle=k.fg;x.textBaseline="middle";
-   x.font="800 38px "+font;x.textAlign="left";x.fillText(k.t,k.x+22,k.y+label/2+1);
-   x.font="600 28px "+font;x.textAlign="right";x.fillText(fmtFull(k.d),k.x+pw-22,k.y+label/2+1);x.textAlign="left";}
-  drawCover(x,k.im,k.x,k.y+label,pw,ph);});
- const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12,foot);
- x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 36px "+font;x.fillText(job.site||"現場名未入力",pad+14,fy+48,W-pad*2-20);
- x.font="500 28px "+font;x.fillStyle="#C9D2DA";x.fillText(job.memo||"",pad+14,fy+88,W-pad*2-20);
- const b=await new Promise(res=>c.toBlob(res,"image/jpeg",0.9));
- if(seq!==makeSeq||job!==forJob)return;
- lastBlob=b;$("out").src=blobUrl(b);$("out").classList.remove("busy");$("result").style.display="block";
+ cells.forEach(q=>{
+  if(label){x.fillStyle=q.bg;x.fillRect(q.x,q.y,pw,label);x.fillStyle=q.fg;x.textBaseline="middle";
+   x.font="800 "+px(38)+font;x.textAlign="left";x.fillText(q.t,q.x+22*k,q.y+label/2+k);
+   x.font="600 "+px(28)+font;x.textAlign="right";x.fillText(fmtFull(q.d),q.x+pw-22*k,q.y+label/2+k);x.textAlign="left";}
+  drawCover(x,q.im,q.x,q.y+label,pw,ph);});
+ const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12*k,foot);
+ x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 "+px(36)+font;x.fillText(job.site||"現場名未入力",pad+14*k,fy+48*k,W-pad*2-20*k);
+ x.font="500 "+px(28)+font;x.fillStyle="#C9D2DA";x.fillText(job.memo||"",pad+14*k,fy+88*k,W-pad*2-20*k);
 }
 $("cLabel").checked=withLabels;
 $("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}make();};
@@ -724,7 +745,7 @@ $("viewer").addEventListener("pointerup",vUp);$("viewer").addEventListener("poin
 $("viewer").addEventListener("wheel",e=>{e.preventDefault();vZoomAt(Math.min(vMax(),Math.max(vw.fit,vw.s*(e.deltaY<0?1.15:1/1.15))),e.clientX,e.clientY,false);},{passive:false});
 $("vClose").onclick=closeViewer;
 window.addEventListener("resize",()=>{if(!$("viewer").hidden)vFit(false);});
-$("out").onclick=()=>{if($("out").src)openViewer($("out").src);};
+$("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(await fullBlob()));};
 
 function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
 async function saveBlob(blob,kind,t){
@@ -742,7 +763,7 @@ async function saveBlob(blob,kind,t){
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
  saved(true,"保存しました");
 }
-$("bSave").onclick=async()=>{await makeDone;if(lastBlob)saveBlob(lastBlob,"施工前後",Date.now());};
+$("bSave").onclick=async()=>{await makeDone;if(!imgs.b)return;saveBlob(await fullBlob(),"施工前後",Date.now());};
 $("svB").onclick=()=>{if(job.before)saveBlob(job.before,"施工前",job.beforeAt);};
 $("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);};
 
