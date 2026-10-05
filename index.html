@@ -157,8 +157,10 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 /* box editor */
 .med{position:fixed;inset:0;z-index:60;background:#111;color:#fff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 0 calc(10px + env(safe-area-inset-bottom,0px))}
 .med .mt{margin:0 16px 10px;font-size:22px;font-weight:800;line-height:1.4}
-.med .mt ul{margin:8px 0 0;padding:0;list-style:none;font-size:17px;font-weight:700;line-height:1.55;color:#e6ebef}
-.med .mt li{padding-left:1.1em;text-indent:-1.1em}
+/* points flow side by side when there is room (phone sideways), one per line otherwise */
+.med .mt ul{margin:6px 0 0;padding:0;list-style:none;font-size:17px;font-weight:700;line-height:1.5;color:#e6ebef;display:flex;flex-wrap:wrap;column-gap:1.4em}
+.med .mt li{padding-left:1.1em;text-indent:-1.1em;white-space:nowrap;max-width:100%}
+@media (max-width:480px){.med .mt li{white-space:normal}}
 .med .mt li::before{content:"・"}
 .med .mt b{color:#FACC15}
 .mstage{position:relative;flex:1;min-height:0}
