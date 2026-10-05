@@ -248,7 +248,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <div class="frame" id="frame"><span class="fl" id="fLabel"></span></div>
  </div></div>
  <div class="bar">
-  <div class="r zr" id="zoomRow"><span>ズーム</span><input type="range" id="zm" min="1" max="4" step="0.1" value="1" aria-label="ズーム"><b id="zmV">1.0x</b><button class="fl" id="tFlash" aria-label="フラッシュ">⚡ オフ</button></div>
+  <div class="r zr" id="zoomRow"><span>ズーム</span><input type="range" id="zm" min="1.6" max="6.4" step="0.1" value="1.6" aria-label="ズーム"><b id="zmV">標準</b><button class="fl" id="tFlash" aria-label="フラッシュ">⚡ オフ</button></div>
   <div class="r" id="opRow"><span>重ね具合</span><input type="range" id="op" min="0" max="80" value="35"></div>
   <div class="tools">
    <button id="tGrid">グリッド</button>
@@ -551,7 +551,7 @@ async function mainBackCamera(){
  }catch(e){return null;}
 }
 async function openStream(){
- const size={width:{ideal:1920},height:{ideal:1440},zoom:true}; // zoom:true lets Chrome expose the camera zoom
+ const size={width:{ideal:2560},height:{ideal:1920},zoom:true}; // zoom:true lets Chrome expose the camera zoom
  let id=null;try{id=localStorage.getItem("ba-cam2");}catch(e){}
  if(id){try{return await navigator.mediaDevices.getUserMedia({video:{...size,deviceId:{exact:id}},audio:false});}catch(e){}}
  let s=await navigator.mediaDevices.getUserMedia({video:{...size,facingMode:{ideal:"environment"}},audio:false});
@@ -560,16 +560,21 @@ async function openStream(){
  try{localStorage.setItem("ba-cam2",s.getVideoTracks()[0].getSettings().deviceId||"");}catch(e){}
  return s;
 }
+// 1.6x of the raw camera matches the phone's own camera; it is shown as 標準 and the
+// slider zooms in from there (labels are relative to it).
+const ZOOM_BASE=1.6;
+function zoomLabel(z){const k=z/ZOOM_BASE;return k<1.05?"標準":k.toFixed(1)+"x";}
 function setupTrack(){
  track=stream.getVideoTracks()[0];
- trackCaps={};try{trackCaps=track.getCapabilities?track.getCapabilities():{};}catch(e){}
+ trackCaps={};try{trackCaps={...(track.getCapabilities?track.getCapabilities():{})};}catch(e){}
  const zm=$("zm");digitalZoom=1;$("vid").style.transform="";
  if(trackCaps.zoom&&trackCaps.zoom.max>trackCaps.zoom.min){
-  // Camera zoom: start at 1x (standard), even if the camera can go wider.
-  zm.min=Math.max(1,trackCaps.zoom.min);zm.max=Math.min(trackCaps.zoom.max,10);zm.step=trackCaps.zoom.step||0.1;
-  zm.value=Math.max(+zm.min,1);applyZoom(+zm.value);
- }else{zm.min=1;zm.max=4;zm.step=0.1;zm.value=1;}
- $("zmV").textContent=(+zm.value).toFixed(1)+"x";
+  // Camera zoom, starting at the standard 1.6x.
+  zm.min=Math.max(trackCaps.zoom.min,Math.min(ZOOM_BASE,trackCaps.zoom.max));zm.max=Math.min(trackCaps.zoom.max,ZOOM_BASE*4);zm.step=trackCaps.zoom.step||0.1;
+ }
+ if(!(trackCaps.zoom&&trackCaps.zoom.max>=ZOOM_BASE)){trackCaps.zoom=null;zm.min=ZOOM_BASE;zm.max=ZOOM_BASE*4;zm.step=0.1;}
+ zm.value=zm.min;applyZoom(+zm.value);
+ $("zmV").textContent=zoomLabel(+zm.value);
  imgCap=null;photoCaps=null;
  try{if(window.ImageCapture){imgCap=new ImageCapture(track);imgCap.getPhotoCapabilities().then(c=>{photoCaps=c;showFlash();}).catch(()=>{});}}catch(e){imgCap=null;}
  showFlash();
@@ -578,7 +583,7 @@ function applyZoom(z){
  if(trackCaps.zoom){zoomPend=z;track.applyConstraints({advanced:[{zoom:z}]}).catch(()=>{});return;}
  digitalZoom=z;$("vid").style.transform=z>1?"scale("+z+")":"";
 }
-$("zm").oninput=e=>{const z=+e.target.value;$("zmV").textContent=z.toFixed(1)+"x";applyZoom(z);};
+$("zm").oninput=e=>{const z=+e.target.value;$("zmV").textContent=zoomLabel(z);applyZoom(z);};
 const hasFlash=()=>!!(trackCaps.torch||(photoCaps&&photoCaps.fillLightMode&&photoCaps.fillLightMode.indexOf("flash")>=0));
 function showFlash(){
  const b=$("tFlash");b.hidden=!hasFlash();
