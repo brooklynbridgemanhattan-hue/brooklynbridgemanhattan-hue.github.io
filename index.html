@@ -517,15 +517,20 @@ function showPlace(){
  const t=job&&job.place&&job.place.text;
  $("placeTxt").textContent=t||"まだ取得していません";$("placeBox").classList.toggle("none",!t);
 }
-// "横浜市青葉区" / "杉並区": city, plus the ward inside a designated city.
+// "横浜市青葉区" / "杉並区" / "北佐久郡軽井沢町": city (+ ward for the 20 designated cities).
+const SEIREI=["札幌市","仙台市","さいたま市","千葉市","横浜市","川崎市","相模原市","新潟市","静岡市","浜松市","名古屋市","京都市","大阪市","堺市","神戸市","岡山市","広島市","北九州市","福岡市","熊本市"];
 function placeText(a){
- let city=a.city||"";
- if(city&&/市$/.test(city)&&a.ward&&/区$/.test(a.ward)&&city.indexOf(a.ward)<0)city+=a.ward;
- if(!city&&a.line){
-  const t=a.line.replace(/^日本、?\s*/,"").replace(/〒?\d{3}-?\d{4}\s*/,"").replace(/^(東京都|北海道|(京都|大阪)府|[^\s]{2,3}県)/,"");
-  const m=t.match(/^([^\s]+?郡[^\s]+?[町村]|[^\s]+?市[^\s]+?区|[^\s]+?[市区町村])/);if(m)city=m[1];
- }
- return city;
+ const t=(a.line||"").replace(/^日本、?\s*/,"").replace(/〒?\d{3}-?\d{4}\s*/,"").replace(/^(東京都|北海道|(京都|大阪)府|[^\s]{2,3}県)/,"").trim();
+ // 1) the full address line names the designated city and its ward
+ for(const d of SEIREI)if(t.startsWith(d)){const m=t.slice(d.length).match(/^([^\s\d０-９]+?区)/);if(m)return d+m[1];}
+ // 2) separate fields: a ward alone gets its city from another field
+ const city=a.city||"", ward=a.ward||"", sub=a.sub||"";
+ if(/市$/.test(city)&&/区$/.test(ward)&&city.indexOf(ward)<0)return city+ward;
+ if(/区$/.test(city)){const c=[sub,a.pref].find(x=>x&&/市$/.test(x));if(c)return c+city;}
+ if(city)return city;
+ // 3) last resort: read it off the address line
+ const m=t.match(/^([^\s]+?郡[^\s]+?[町村]|[^\s]+?[市区町村])/);
+ return m?m[1]:"";
 }
 let placeFor=null;
 function setPlace(a,err){
