@@ -445,7 +445,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="nextbar" id="nextBar"><button class="next m-before" id="nextBtn"><span id="nextI"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="tx2"><b id="nextT">施工前を撮る</b><small id="nextS"></small></span></button></div>
 </div>
 
-<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>保存</button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
+<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
@@ -1218,9 +1218,12 @@ function openGallery(i,kind){
  tagShow();noteUI();
 }
 function galNav(d){if(gal&&galItems(gal.kind)[gal.i+d])openGallery(gal.i+d,gal.kind);}
-$("vSave").onclick=async()=>{if(!gal)return;const x=galItems(gal.kind)[gal.i];if(!x)return;
+let vSaving=false;
+$("vSave").onclick=async()=>{if(!gal||vSaving)return;const x=galItems(gal.kind)[gal.i];if(!x)return;
  const e=gal.kind==="extra"&&job.extras[gal.i];
- saveBlob(e&&notesOf(e).length?await withTags(e):x.blob,x.name,x.at);};
+ vSaving=true;$("vSave").disabled=true;setTx("vSave","保存中…");
+ try{await saveBlob(e&&notesOf(e).length?await burned(e):x.blob,x.name,x.at);}
+ finally{vSaving=false;$("vSave").disabled=false;setTx("vSave","保存");}};
 // Tapping the 施工前 / 施工後 photo opens it full screen.
 $("sB").addEventListener("click",()=>{if(job&&job.before)openGallery(0,"pair");});
 $("sA").addEventListener("click",()=>{if(job&&job.after)openGallery(job.before?1:0,"pair");});
@@ -1272,7 +1275,7 @@ function noteEnd(cancel){
   saveJob().then(renderThumbs);
  }
  if(document.activeElement===$("vNoteT"))$("vNoteT").blur();
- tagsDraw();noteUI();
+ tagsDraw();noteUI();preburn();
 }
 $("vNoteOk").onclick=()=>noteEnd(false);
 // コメント追加: start a new comment while one is picked.
@@ -1325,6 +1328,7 @@ function tagShow(){
  $("vTags").innerHTML="";if(!galX())return;
  const im=$("vImg");
  if(im.complete&&im.naturalWidth&&vw.nw===im.naturalWidth)tagsDraw();else im.addEventListener("load",()=>setTimeout(tagsDraw,0),{once:true});
+ preburn();
 }
 function tagPick(n){cur=n;noteUI();}
 // Finger on a comment: tap picks it, double tap edits it, drag moves, pinch / corner resizes, red x removes.
@@ -1334,7 +1338,7 @@ $("vTags").addEventListener("pointerdown",e=>{
  e.stopPropagation();e.preventDefault();
  if(editing)noteEnd(false);
  const n=+el.dataset.n, ns=notesOf(galX()), t=ns[n]&&ns[n].tag;if(!t)return;
- if(e.target.closest(".rm")){ns.splice(n,1);cur=-1;tagsDraw();noteUI();noteMsg("消しました");saveJob().then(renderThumbs);return;}
+ if(e.target.closest(".rm")){ns.splice(n,1);cur=-1;tagsDraw();preburn();noteUI();noteMsg("消しました");saveJob().then(renderThumbs);return;}
  if(cur!==n)tagPick(n);
  el.setPointerCapture(e.pointerId);tp.set(e.pointerId,{x:e.clientX,y:e.clientY});
  const L=tagLs[n];
@@ -1354,13 +1358,22 @@ $("vTags").addEventListener("pointermove",e=>{
 const tagUp=e=>{if(!tp.has(e.pointerId))return;e.stopPropagation();tp.delete(e.pointerId);
  const was=tg;
  if(tp.size===1&&was){const p=[...tp.values()][0], t=notesOf(galX())[was.n].tag;tg={n:was.n,mode:"move",x0:p.x,y0:p.y,tx:t.x,ty:t.y,s:t.s,w:tagLs[was.n].w,moved:true};return;}
- if(tp.size)return;tg=null;saveJob();
+ if(tp.size)return;tg=null;saveJob();preburn();
  // double tap on a comment: edit its text
  if(was&&was.mode==="move"&&!was.moved){const now=performance.now();
   if(lastTagTap.n===was.n&&now-lastTagTap.t<400){lastTagTap={n:-1,t:0};tagPick(was.n);const t=$("vNoteT");t.focus();t.setSelectionRange(t.value.length,t.value.length);}
   else lastTagTap={n:was.n,t:now};}
 };
 $("vTags").addEventListener("pointerup",tagUp);$("vTags").addEventListener("pointercancel",tagUp);
+// The photo with comments written in is made in the background as soon as the comments
+// change, so 保存 only has to hand it over.
+let burnCache={key:"",p:null}, burnT=0;
+function burned(x){
+ const k=x.at+"|"+x.blob.size+"|"+JSON.stringify(notesOf(x));
+ if(burnCache.key!==k)burnCache={key:k,p:withTags(x)};
+ return burnCache.p;
+}
+function preburn(){clearTimeout(burnT);burnT=setTimeout(()=>{const x=galX();if(x&&notesOf(x).length&&!tg)burned(x).then(b=>{if(window.AndroidApp)b64Of(b);});},350);}
 // The photo with its comments written in, full size, for saving.
 async function withTags(x){
  const im=await createImageBitmap(x.blob), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
@@ -1368,7 +1381,7 @@ async function withTags(x){
  notesOf(x).forEach(n=>{const L=tagLayout(ctx,n.t,im.width,n.tag.s);
   const tx=Math.min(Math.max(0,n.tag.x),Math.max(0,1-L.w/im.width)), ty=Math.min(Math.max(0,n.tag.y),Math.max(0,1-L.h/im.height));
   tagPaint(ctx,L,tx*im.width,ty*im.height);});
- return await new Promise(r=>c.toBlob(r,"image/jpeg",0.95));
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));
 }
 $("vDel").onclick=async()=>{
  if(!gal||gal.kind!=="extra")return;
@@ -1665,8 +1678,13 @@ $("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(a
 function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
 function photoName(kind,t){const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);return kind+"_"+(site?site+"_":"")+stamp(t)+".jpg";}
 // App only: writes the photo into the phone's DCIM/Camera. Returns true when saved.
+const b64s=new WeakMap();
+function b64Of(blob){
+ if(!b64s.has(blob))b64s.set(blob,new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(",")[1]);fr.onerror=rej;fr.readAsDataURL(blob);}));
+ return b64s.get(blob);
+}
 async function toPhone(blob,kind,t){
- try{const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(",")[1]);fr.onerror=rej;fr.readAsDataURL(blob);});
+ try{const b64=await b64Of(blob);
   return window.AndroidApp.savePhoto(b64,photoName(kind,t))==="ok";}catch(e){return false;}
 }
 async function saveBlob(blob,kind,t){
