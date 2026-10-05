@@ -108,11 +108,6 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .back{background:transparent;color:var(--ink);padding:6px 0;font-size:14px;margin-bottom:8px}
 .note{font-size:12px;color:var(--soft);margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
 /* overlay check */
-.ov{position:relative;border:1px solid var(--line);background:var(--sheet);margin:0 auto 6px;width:62%;max-width:100%;cursor:zoom-in}
-.ov img{display:block;width:100%}
-.ov img.top{position:absolute;inset:0;height:100%;object-fit:cover}
-.ovr{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;margin:0 auto 12px;width:80%}
-.ovr input{flex:1;accent-color:var(--gas)}
 /* in-page camera (kept for when the viewer allows it) */
 .cam{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column;color:#fff}
 .cam .view{position:relative;flex:1;overflow:hidden}
@@ -132,7 +127,6 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .cmask{position:absolute;border:2px dashed rgba(255,255,255,.9);background:rgba(0,0,0,.28);z-index:2;pointer-events:none}
 .cmask span,.tmask span{position:absolute;left:4px;top:2px;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
 .tmask{position:absolute;border:2px dashed #FACC15;background:rgba(250,204,21,.12);z-index:1;pointer-events:none}
-.diffbox .big.near{color:#FACC15}.diffbox .big.far{color:#FF8A7A}
 /* box editor */
 .med{position:fixed;inset:0;z-index:60;background:#111;color:#fff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 0 calc(10px + env(safe-area-inset-bottom,0px))}
 .med .mt{margin:0 16px 8px;font-size:16px;font-weight:800;line-height:1.4}
@@ -155,9 +149,6 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .cam .shoot button{flex:1}
 .cam .shoot .cancel{background:transparent;color:#eee;border:2px solid #666}
 .cam .shoot .shot{flex:2}
-.diffbox{background:#1C2B3A;color:#fff;padding:10px 12px;margin:4px 0 12px;font-size:13.5px}
-.diffbox .big{font-size:16px;font-weight:800;margin-bottom:4px}
-.diffbox .big.ok{color:#6CE59E}.diffbox .big.ng{color:#FFD24A}.diffbox .big.na{color:#ddd}
 
 input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
 </style>
@@ -219,12 +210,6 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <p class="none" id="thumbsNone">まだありません。撮った写真はここに並びます(タップで拡大)。</p>
  </section>
  <p class="msg" id="camNote" hidden></p>
- <div class="diffbox" id="diffBox" hidden></div>
- <div id="ovBox" hidden>
-  <label class="f" for="ovOp">重ねて確認(タップで拡大)</label>
-  <div class="ov" id="ovWrap"><img id="ovA" alt="施工後の写真"><img class="top" id="ovB" alt="施工前の写真(重ね)"></div>
-  <div class="ovr"><span>施工後</span><input type="range" id="ovOp" min="0" max="100" value="50"><span>施工前</span></div>
- </div>
  <p class="msg" id="saveMsg"></p>
  <button class="rep" id="bReport"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 1.5V9h5.5L13 3.5ZM8 13h8v1.6H8V13Zm0 3.4h8V18H8v-1.6Z"/></svg>施工完了報告書に添付する</button>
  <button class="w full" id="bDel" style="margin-top:24px">この現場を削除</button>
@@ -422,7 +407,7 @@ function openJob(j){
  job=j;$("home").hidden=true;$("detail").hidden=false;
  $("site").value=j.site||"";$("memo").value=j.memo||"";
  $("result").style.display="none";$("saveMsg").textContent="";delArm=false;$("bDel").textContent="この現場を削除";
- refreshDetail();photoDiff();make();window.scrollTo(0,0);
+ refreshDetail();make();window.scrollTo(0,0);
 }
 function refreshDetail(){
  setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);
@@ -434,11 +419,7 @@ function refreshDetail(){
  const n=$("camNote");
  if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中の色の判定は出ません)。";n.hidden=false;}
  else n.hidden=true;
- const both=!!(job.before&&job.after);
- $("ovBox").hidden=!both;
- if(both){$("ovA").src=blobUrl(job.after);$("ovB").src=blobUrl(job.before);$("ovB").style.opacity=$("ovOp").value/100;}
 }
-$("ovOp").oninput=e=>{$("ovB").style.opacity=e.target.value/100;};
 async function saveJob(){job.site=$("site").value.trim();job.memo=$("memo").value.trim();await putJob(job);}
 $("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
 $("dBack").onclick=async()=>{if(job&&(job.before||job.site))await saveJob();showHome();};
@@ -527,7 +508,7 @@ async function gotPhoto(mode,blob,o){
  else{job.after=blob;job.afterAt=now;job.afterOri=o;}
  await saveJob();refreshDetail();
  $("result").style.display="none";
- photoDiff();make();
+ make();
  if(mode==="before")openMaskEditor();
 }
 
@@ -638,7 +619,7 @@ $("mWrap").addEventListener("pointermove",e=>{
 });
 const endDrag=()=>{mDrag=null;};
 $("mWrap").addEventListener("pointerup",endDrag);$("mWrap").addEventListener("pointercancel",endDrag);
-async function closeMask(m){job.mask=m;$("med").hidden=true;await saveJob();refreshDetail();photoDiff();}
+async function closeMask(m){job.mask=m;$("med").hidden=true;await saveJob();refreshDetail();make();}
 $("mOk").onclick=()=>closeMask({...mEdit});
 $("mNone").onclick=()=>closeMask(null);
 $("bMask").onclick=openMaskEditor;
@@ -710,26 +691,6 @@ function showDiff(){
   if(l==="ok"&&lvlShown!==null)vib(60);
   lvlShown=l;setFrame(l,LIVE_LABEL[l]);
  }
-}
-function diffHtml(l){
- const t={ok:"● 施工前とほぼ同じ位置です",near:"● おしい(少しずれています)",far:"● 施工前とずれています",na:"比べられませんでした(写っている範囲が違いすぎる可能性があります)"}[l];
- return '<div class="big '+l+'">'+t+'</div>';
-}
-async function photoDiff(){
- const box=$("diffBox");
- if(!(job.before&&job.after)){box.hidden=true;return;}
- box.hidden=false;box.innerHTML='<div class="big na">施工前と比べています…</div>';
- const iB=await loadImg(job.before), iA=await loadImg(job.after);
- const W=AW, H=Math.round(W*iB.naturalHeight/iB.naturalWidth);
- const saveH=AH; AH=H;
- const B=grayOf(ctx=>drawCoverTo(ctx,iB,iB.naturalWidth,iB.naturalHeight,W,H));
- const C=grayOf(ctx=>drawCoverTo(ctx,iA,iA.naturalWidth,iA.naturalHeight,W,H));
- AH=saveH;
- const forJob=job, res=await align({B,C,W,H,M:maskPx(job.mask,iB.naturalWidth,iB.naturalHeight,W,H)});
- if(job!==forJob)return;
- const p={...res.p,W,H};
- const dBeta=(job.beforeOri&&job.afterOri)?job.afterOri.beta-job.beforeOri.beta:null;
- box.innerHTML=diffHtml(levelOf(p,W,H,res.score,res.idScore,dBeta));
 }
 
 /* ---------- compose & save ---------- */
@@ -807,12 +768,11 @@ function openViewer(src,topSrc){
  const im=$("vImg"), top=$("vImg2"), st=$("vStage");
  if(!gal)$("vBar").hidden=true;
  $("viewer").hidden=false;top.hidden=!topSrc;$("vOp").hidden=!topSrc;
- if(topSrc){top.src=topSrc;$("vOpR").value=$("ovOp").value;top.style.opacity=$("ovOp").value/100;}
+ if(topSrc){top.src=topSrc;$("vOpR").value=50;top.style.opacity=0.5;}
  im.onload=()=>{vw.nw=im.naturalWidth;vw.nh=im.naturalHeight;st.style.width=vw.nw+"px";st.style.height=vw.nh+"px";vFit(false);};
  im.src=src;if(im.complete&&im.naturalWidth)im.onload();
 }
-$("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;$("ovOp").value=e.target.value;$("ovB").style.opacity=e.target.value/100;};
-$("ovWrap").onclick=()=>{if(job&&job.before&&job.after)openViewer($("ovA").src,$("ovB").src);};
+$("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
 function closeViewer(){gal=null;$("vBar").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
