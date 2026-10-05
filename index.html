@@ -156,8 +156,11 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .tmask{position:absolute;border:2px dashed #FACC15;background:rgba(250,204,21,.12);z-index:1;pointer-events:none}
 /* box editor */
 .med{position:fixed;inset:0;z-index:60;background:#111;color:#fff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 0 calc(10px + env(safe-area-inset-bottom,0px))}
-.med .mt{margin:0 16px 8px;font-size:16px;font-weight:800;line-height:1.4}
-.med .mt small{display:block;font-size:12.5px;font-weight:400;color:#c9d2da}
+.med .mt{margin:0 16px 10px;font-size:22px;font-weight:800;line-height:1.4}
+.med .mt ul{margin:8px 0 0;padding:0;list-style:none;font-size:17px;font-weight:700;line-height:1.55;color:#e6ebef}
+.med .mt li{padding-left:1.1em;text-indent:-1.1em}
+.med .mt li::before{content:"・"}
+.med .mt b{color:#FACC15}
 .mstage{position:relative;flex:1;min-height:0}
 #mImg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .mwrap{position:absolute;overflow:hidden;touch-action:none}
@@ -267,7 +270,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
 <div class="toast" id="toast" hidden role="status"></div>
 
 <div class="med" id="med" hidden>
- <p class="mt">交換する機器を枠で囲んでください<small>枠の中は施工前後で比べません。新しい機器が大きくなる場合は、少し大きめに囲んでください。枠の中を引っぱると移動、角の丸で大きさを変えられます。</small></p>
+ <div class="mt">交換する機器を枠で囲んでください<ul><li>枠の中は、施工前と施工後で<b>比べません</b></li><li>新しい機器が大きくなる場合は、<b>少し大きめ</b>に囲む</li><li>枠の中を引っぱると<b>移動</b>、角の丸で<b>大きさ</b>を変更</li></ul></div>
  <div class="mstage" id="mStage"><img id="mImg" alt="施工前の写真"><div class="mwrap" id="mWrap"><div class="mrect" id="mRect"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div></div></div>
  <div class="mbtns"><button class="o2" id="mNone">枠なし(全体で比べる)</button><button class="y" id="mOk">決定</button></div>
 </div>
