@@ -106,6 +106,7 @@ input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgb
 .slot{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:14px;overflow:hidden;background:var(--fill);border:2px dashed #CBD3DF;display:flex;align-items:center;justify-content:center}
 .col.before .slot.has{border:2px solid var(--before)}
 .col.after .slot.has{border:2px solid var(--after)}
+.slot.has{cursor:zoom-in}
 .slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0F172A}
 .tag{position:absolute;top:8px;left:8px;z-index:2;font-size:14px;font-weight:800;padding:3px 11px;border-radius:999px;background:var(--before);color:#fff}
 .col.after .tag{background:var(--after);color:var(--after-ink)}
@@ -241,6 +242,7 @@ label.btn{cursor:pointer}
 .cam .cancel{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:62px;border-radius:16px;background:rgba(255,255,255,.1);color:#fff;font-size:18px;font-weight:700;border:1px solid rgba(255,255,255,.16)}
 .cam .shot{flex:2.2;display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;border-radius:16px;background:var(--mode);color:var(--mode-ink);font-size:23px;font-weight:800;box-shadow:0 0 0 3px #0C0E14,0 0 0 5px rgba(255,255,255,.85)}
 .cam .shot svg.i{width:26px;height:26px}
+.cam .shot.busy{filter:brightness(.75)}
 /* phone held sideways: labels and controls turn to face the user, laid over the picture */
 .camhud{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none}
 .cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(12,14,20,.62);gap:8px;padding:8px 12px;border:0}
@@ -486,6 +488,7 @@ function align(m){
 
 const $=id=>document.getElementById(id);
 // Sets a button's label without removing its icon (label lives in .tx when present).
+function setTx2(id,t){const el=$(id).querySelector("span");if(el)el.textContent=t;}
 function setTx(id,t){const el=$(id), x=el.querySelector(".tx");(x||el).textContent=t;}
 const pad2=n=>String(n).padStart(2,"0");
 const fmtD=t=>{const d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate();};
@@ -659,11 +662,12 @@ $("cShot").onclick=async()=>{
  const v=$("vid");if(!v.videoWidth||shooting)return;
  shooting=true;
  const mode=camMode, o=oriOK?{...ori}:null;
- let b=null;try{b=await grab();}finally{shooting=false;}
+ const fl=$("flash");fl.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));
+ $("cShot").classList.add("busy");setTx2("cShot","撮影中…");
+ let b=null;try{b=await grab();}finally{shooting=false;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
  if(!b)return;
  if(mode==="extra"){
   // Other photos: stay in the camera so several can be taken in a row.
-  const f=$("flash");f.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>f.classList.remove("on")));
   shotCount++;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
   gotPhoto("extra",b,o);
   return;
@@ -831,22 +835,82 @@ async function rotateBlob(blob,deg){
  x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);x.drawImage(im,-im.width/2,-im.height/2);
  return await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));
 }
+// Waits (max 0.6 s) for the phone to settle after the shutter tap, so the shot isn't shaken.
+let spin=0;
+window.addEventListener("devicemotion",e=>{const q=e.rotationRate;if(q&&q.alpha!=null)spin=Math.abs(q.alpha)+Math.abs(q.beta)+Math.abs(q.gamma);});
+async function steady(){const t0=performance.now();await sleep(120);while(spin>25&&performance.now()-t0<600)await sleep(40);}
+// Small grey thumbnail of what is on screen now (used to line the still photo up with the preview).
+function viewThumb(W,H){const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d",{willReadFrequently:true});drawVideo(x,W,H);return grayData(x,W,H);}
+function grayData(x,W,H){const d=x.getImageData(0,0,W,H).data,g=new Float32Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.299*d[j]+0.587*d[j+1]+0.114*d[j+2];return g;}
+function nccFlat(a,b){let n=a.length,sa=0,sb=0,saa=0,sbb=0,sab=0;for(let i=0;i<n;i++){sa+=a[i];sb+=b[i];saa+=a[i]*a[i];sbb+=b[i]*b[i];sab+=a[i]*b[i];}
+ const va=saa-sa*sa/n,vb=sbb-sb*sb/n;return va>0&&vb>0?(sab-sa*sb/n)/Math.sqrt(va*vb):0;}
+// Draws the still photo turned by deg, cut to the preview's shape and zoom, into W x H.
+function drawPhoto(ctx,im,W,H,deg,sc){
+ const iw=im.width, ih=im.height, rw=deg%180?ih:iw, rh=deg%180?iw:ih, k=Math.max(W/rw,H/rh)*digitalZoom*(sc||1);
+ ctx.save();ctx.translate(W/2,H/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(im,-iw*k/2,-ih*k/2,iw*k,ih*k);ctx.restore();
+}
+// Still photo -> same framing and orientation as the preview (the phone may hand it over turned).
+async function fitPhoto(blob,ref,RW,RH){
+ const im=await createImageBitmap(blob), v=$("vid");
+ const portraitView=v.videoHeight>=v.videoWidth, portraitPhoto=im.height>=im.width;
+ const cands=portraitView===portraitPhoto?[0,180]:[90,-90];
+ // Also find how much tighter the still is framed than the preview, so it shows the same area.
+ let best=cands[0],bsc=1,bs=-2;
+ const c0=document.createElement("canvas");c0.width=RW;c0.height=RH;const x0=c0.getContext("2d",{willReadFrequently:true});
+ for(const deg of cands)for(const sc of [1,1.04,1.08,1.12,1.17,1.22,1.28,1.35]){
+  x0.clearRect(0,0,RW,RH);drawPhoto(x0,im,RW,RH,deg,sc);const v2=nccFlat(grayData(x0,RW,RH),ref);if(v2>bs){bs=v2;best=deg;bsc=sc;}
+ }
+ const ar=v.videoWidth/v.videoHeight, rw=best%180?im.height:im.width, rh=best%180?im.width:im.height, z=digitalZoom*bsc;
+ let W=rw/z, H=W/ar;if(H>rh/z){H=rh/z;W=H*ar;}
+ const c=document.createElement("canvas");c.width=Math.round(W);c.height=Math.round(H);drawPhoto(c.getContext("2d"),im,c.width,c.height,best,bsc);
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.93));
+}
+// Preview frames can come out flat (washed out); stretch the brightness range when it is narrow.
+function fixLevels(c){
+ const x=c.getContext("2d",{willReadFrequently:true}), img=x.getImageData(0,0,c.width,c.height), d=img.data, h=new Uint32Array(256);
+ let n=0;for(let i=0;i<d.length;i+=16){h[(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])|0]++;n++;}
+ let lo=0,hi=255,acc=0;for(;lo<255;lo++){acc+=h[lo];if(acc>n*0.005)break;}acc=0;for(;hi>0;hi--){acc+=h[hi];if(acc>n*0.005)break;}
+ if(hi-lo>=225||hi<=lo)return;
+ const k=255/(hi-lo), lut=new Uint8ClampedArray(256);for(let i=0;i<256;i++)lut[i]=(i-lo)*k;
+ for(let i=0;i<d.length;i+=4){d[i]=lut[d[i]];d[i+1]=lut[d[i+1]];d[i+2]=lut[d[i+2]];}
+ x.putImageData(img,0,0);
+}
+function sharpness(c){
+ const W=160,H=Math.round(160*c.height/c.width), t=document.createElement("canvas");t.width=W;t.height=H;const x=t.getContext("2d",{willReadFrequently:true});x.drawImage(c,0,0,W,H);
+ const g=grayData(x,W,H);let s=0,s2=0,n=0;for(let y=1;y<H-1;y++)for(let i=y*W+1;i<y*W+W-1;i++){const l=4*g[i]-g[i-1]-g[i+1]-g[i-W]-g[i+W];s+=l;s2+=l*l;n++;}return s2/n-(s/n)*(s/n);
+}
 async function grabRaw(){
  const v=$("vid");
- if(flashMode!=="off"&&imgCap&&photoCaps&&photoCaps.fillLightMode){
-  const want=flashMode==="on"?"flash":"auto";
-  if(photoCaps.fillLightMode.indexOf(want)>=0){
-   try{const b=await imgCap.takePhoto({fillLightMode:want});return digitalZoom>1?await cropBlob(b,digitalZoom):b;}catch(e){}
-  }
+ await steady();
+ const wantFlash=flashMode==="on"||(flashMode==="auto"&&isDark());
+ // 1) the camera's own still photo: sharper and with proper colours
+ if(imgCap){
+  try{
+   const opts={}, fl=photoCaps&&photoCaps.fillLightMode;
+   // ask for a still with the preview's 4:3 shape, at the largest size
+   if(photoCaps&&photoCaps.imageWidth&&photoCaps.imageHeight){const ar=Math.max(v.videoWidth,v.videoHeight)/Math.min(v.videoWidth,v.videoHeight);
+    let w=photoCaps.imageWidth.max, h=Math.round(w/ar);if(h>photoCaps.imageHeight.max){h=photoCaps.imageHeight.max;w=Math.round(h*ar);}opts.imageWidth=w;opts.imageHeight=h;}
+   if(fl){const w=flashMode==="on"?"flash":flashMode==="auto"?"auto":"off";if(fl.indexOf(w)>=0)opts.fillLightMode=w;}
+   let torch=false;
+   if(wantFlash&&!opts.fillLightMode&&trackCaps.torch){try{await track.applyConstraints({advanced:[{torch:true}]});torch=true;await sleep(400);}catch(e){}}
+   const RW=96, RH=Math.max(8,Math.round(96*v.videoHeight/v.videoWidth)), ref=viewThumb(RW,RH);
+   const b=await imgCap.takePhoto(opts);
+   if(torch)track.applyConstraints({advanced:[{torch:false}]}).catch(()=>{});
+   return await fitPhoto(b,ref,RW,RH);
+  }catch(e){}
  }
+ // 2) no still photo: take a few preview frames and keep the sharpest
  let torch=false;
- if(trackCaps.torch&&(flashMode==="on"||(flashMode==="auto"&&isDark()))){
-  try{await track.applyConstraints({advanced:[{torch:true}]});torch=true;await sleep(400);}catch(e){}
+ if(trackCaps.torch&&wantFlash){try{await track.applyConstraints({advanced:[{torch:true}]});torch=true;await sleep(400);}catch(e){}}
+ const z=digitalZoom;let best=null,bs=-1;
+ for(let k=0;k<4;k++){
+  const c=document.createElement("canvas");c.width=Math.round(v.videoWidth/z);c.height=Math.round(v.videoHeight/z);drawVideo(c.getContext("2d"),c.width,c.height);
+  const sc=sharpness(c);if(sc>bs){bs=sc;best=c;}
+  if(k<3)await sleep(70);
  }
- const z=digitalZoom, c=document.createElement("canvas");
- c.width=Math.round(v.videoWidth/z);c.height=Math.round(v.videoHeight/z);drawVideo(c.getContext("2d"),c.width,c.height);
  if(torch)track.applyConstraints({advanced:[{torch:false}]}).catch(()=>{});
- return await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));
+ fixLevels(best);
+ return await new Promise(r=>best.toBlob(r,"image/jpeg",0.93));
 }
 $("fBefore").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("before",f,null);};
 $("fExtra").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("extra",f,null);};
@@ -914,17 +978,26 @@ function renderThumbs(){
  $("thumbsNone").hidden=xs.length>0;
 }
 $("thumbs").onclick=e=>{const b=e.target.closest("[data-x]");if(b)openGallery(+b.dataset.x);};
+// Full-screen gallery: kind "extra" = other photos (save / delete), "pair" = 施工前 / 施工後 (save).
 let gal=null, galDelArm=false;
-function openGallery(i){
- const xs=job.extras||[];if(!xs.length){closeViewer();return;}
- i=Math.max(0,Math.min(xs.length-1,i));gal={i};galDelArm=false;setTx("vDel","削除");
- $("vBar").hidden=false;$("vCnt").textContent=(i+1)+" / "+xs.length;
+function galItems(kind){
+ if(kind==="pair")return [job.before&&{blob:job.before,at:job.beforeAt,name:"施工前"},job.after&&{blob:job.after,at:job.afterAt,name:"施工後"}].filter(Boolean);
+ return (job.extras||[]).map((x,i)=>({blob:x.blob,at:x.at,name:"写真"+(i+1)}));
+}
+function openGallery(i,kind){
+ kind=kind||"extra";const xs=galItems(kind);if(!xs.length){closeViewer();return;}
+ i=Math.max(0,Math.min(xs.length-1,i));gal={i,kind};galDelArm=false;setTx("vDel","削除");
+ $("vDel").hidden=kind!=="extra";
+ $("vBar").hidden=false;$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
  openViewer(blobUrl(xs[i].blob));
 }
-function galNav(d){if(gal&&job.extras&&job.extras[gal.i+d])openGallery(gal.i+d);}
-$("vSave").onclick=()=>{if(gal){const x=job.extras[gal.i];saveBlob(x.blob,"写真"+(gal.i+1),x.at);}};
+function galNav(d){if(gal&&galItems(gal.kind)[gal.i+d])openGallery(gal.i+d,gal.kind);}
+$("vSave").onclick=()=>{if(gal){const x=galItems(gal.kind)[gal.i];if(x)saveBlob(x.blob,x.name,x.at);}};
+// Tapping the 施工前 / 施工後 photo opens it full screen.
+$("sB").addEventListener("click",()=>{if(job&&job.before)openGallery(0,"pair");});
+$("sA").addEventListener("click",()=>{if(job&&job.after)openGallery(job.before?1:0,"pair");});
 $("vDel").onclick=async()=>{
- if(!gal)return;
+ if(!gal||gal.kind!=="extra")return;
  if(!galDelArm){galDelArm=true;setTx("vDel","もう一度押すと削除");return;}
  job.extras.splice(gal.i,1);await saveJob();renderThumbs();toast("削除しました");
  if(job.extras.length)openGallery(Math.min(gal.i,job.extras.length-1));else closeViewer();
