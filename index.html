@@ -294,6 +294,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <div class="r" id="opRow"><span>重ね具合</span><input type="range" id="op" min="0" max="80" value="35"></div>
   <div class="tools">
    <button id="tGrid">グリッド</button>
+   <button id="tMask" class="on"><span class="lg">交換する機器を枠で囲む</span><span class="sh">枠で囲む</span></button>
    <button id="tGhost" class="on"><span class="lg">施工前を重ねる</span><span class="sh">重ねる</span></button>
    <button id="tLine"><span class="lg">線で重ねる</span><span class="sh">線表示</span></button>
    <button id="tDiff" class="on"><span class="lg">色で判定</span><span class="sh">色判定</span></button>
@@ -507,6 +508,7 @@ async function startCam(mode){
  const after=mode==="after";
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
  $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff","tAllOff"].forEach(id=>$(id).style.display=after?"":"none");
+ $("tMask").style.display=mode==="before"?"":"none";$("tMask").classList.toggle("on",maskAfterShot);
  savedLook=null;$("tAllOff").textContent="表示オフ";$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");
  $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
  $("cam").classList.toggle("judging",after&&$("tDiff").classList.contains("on"));
@@ -543,6 +545,10 @@ $("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").st
 // Outlines don't hide the live view, so they show at full strength without the slider.
 function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost").classList.contains("on");
  $("ghost").style.opacity=line?1:$("op").value/100;$("opRow").style.display=g&&!line&&camMode==="after"?"flex":"none";}
+// 交換する機器を枠で囲む (before camera): open the box editor right after the shot or not.
+let maskAfterShot=true;try{maskAfterShot=localStorage.getItem("ba-maskshot")!=="0";}catch(e){}
+$("tMask").onclick=()=>{maskAfterShot=$("tMask").classList.toggle("on");try{localStorage.setItem("ba-maskshot",maskAfterShot?"1":"0");}catch(e){}
+ toast(maskAfterShot?"撮影後に枠で囲む画面を出します":"撮影後に枠で囲む画面を出しません");};
 // 表示オフ: turn every overlay off for a clean view; 元に戻す brings back what was on.
 let savedLook=null;
 const LOOK=["tGrid","tGhost","tLine","tDiff"];
@@ -775,7 +781,7 @@ async function gotPhoto(mode,blob,o){
  await saveJob();refreshDetail();
  $("result").style.display="none";
  make();
- if(mode==="before")openMaskEditor();
+ if(mode==="before"&&maskAfterShot)openMaskEditor();
 }
 
 /* ---------- place (city / ward of the current position) ---------- */
