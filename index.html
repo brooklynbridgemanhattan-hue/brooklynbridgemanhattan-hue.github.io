@@ -110,7 +110,9 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 /* overlay check */
 /* in-page camera (kept for when the viewer allows it) */
 .cam{position:fixed;inset:0;background:#000;z-index:50;display:none;flex-direction:column;color:#fff}
-.cam .view{position:relative;flex:1;overflow:hidden}
+.cam .view{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0}
+/* the stage has the camera picture's own shape, so the preview shows exactly what is saved */
+.cam .stage{position:relative;overflow:hidden;width:100%;height:100%}
 .cam video,.cam .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cam .ghost{pointer-events:none}
 .grid{position:absolute;inset:0;pointer-events:none;display:none;
@@ -236,7 +238,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
 </div>
 
 <div class="cam" id="cam">
- <div class="view">
+ <div class="view"><div class="stage" id="stage">
   <video id="vid" playsinline muted autoplay></video>
   <img class="ghost" id="ghost" alt="">
   <div class="grid" id="grid"></div>
@@ -244,7 +246,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <div class="flash" id="flash"></div>
   <div class="shotn" id="shotN" hidden></div>
   <div class="frame" id="frame"><span class="fl" id="fLabel"></span></div>
- </div>
+ </div></div>
  <div class="bar">
   <div class="r zr" id="zoomRow"><span>ズーム</span><input type="range" id="zm" min="1" max="4" step="0.1" value="1" aria-label="ズーム"><b id="zmV">1.0x</b><button class="fl" id="tFlash" aria-label="フラッシュ">⚡ オフ</button></div>
   <div class="r" id="opRow"><span>重ね具合</span><input type="range" id="op" min="0" max="80" value="35"></div>
@@ -468,8 +470,19 @@ async function startCam(mode){
  shotCount=0;$("shotN").hidden=true;$("cCancel").textContent=mode==="extra"?"戻る":"やめる";
  if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();}
  $("cam").style.display="flex";
- if(after){await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});startAlign();}
+ await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});
+ fitStage();
+ if(after)startAlign();
 }
+// Size the stage to the camera picture's aspect (no cropping), centred in the view.
+function fitStage(){
+ const v=$("vid"), st=$("stage"), box=st.parentElement;
+ if(!v.videoWidth)return;
+ const ar=v.videoWidth/v.videoHeight;let w=box.clientWidth, h=w/ar;
+ if(h>box.clientHeight){h=box.clientHeight;w=h*ar;}
+ st.style.width=w+"px";st.style.height=h+"px";
+}
+window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
 function stopCam(){
  camGen++;track=null;imgCap=null;photoCaps=null;
  if(loop){clearTimeout(loop);loop=null;}
@@ -777,7 +790,7 @@ async function startAlign(){
  Bgray=grayOf(ctx=>drawCoverTo(ctx,im,im.naturalWidth,im.naturalHeight,AW,AH));
  Bmask=maskPx(job.mask,im.naturalWidth,im.naturalHeight,AW,AH);
  est={tx:0,ty:0,s:1,r:0};estScore=-1;estId=-1;
- if(job.mask){const vw=$("cam").querySelector(".view");placeBox($("camMask"),job.mask,im.naturalWidth,im.naturalHeight,vw.clientWidth,vw.clientHeight);$("camMask").hidden=false;}
+ if(job.mask){const vw=$("stage");placeBox($("camMask"),job.mask,im.naturalWidth,im.naturalHeight,vw.clientWidth,vw.clientHeight);$("camMask").hidden=false;}
  tick(++camGen);
 }
 async function tick(gen){
