@@ -48,6 +48,24 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .slot .ph{font-size:13px;color:var(--soft);text-align:center;padding:0 8px}
 .slot .dt{position:absolute;bottom:0;right:0;z-index:2;font-size:11.5px;background:rgba(0,0,0,.6);color:#fff;padding:1px 6px}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.place{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.place .pv{flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid var(--line);background:var(--sheet);font-size:16px;font-weight:700}
+.place .pv svg{color:var(--warn);flex:none}
+.place .pv span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.place .pv.none{color:var(--soft);font-weight:400}
+.place button{font-size:14px;padding:11px 12px;background:transparent;color:var(--ink);border:2px solid var(--ink);white-space:nowrap}
+.extra{margin:4px 0 14px;padding:12px;border:2px solid var(--line);background:var(--sheet)}
+.extra h3{margin:0 0 10px;font-size:16px}
+.camBtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;font-size:18px;background:#2563EB;color:#fff;border-radius:12px}
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.thumbs button{padding:0;border:0;background:var(--line);aspect-ratio:1;overflow:hidden;position:relative}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.thumbs .n{position:absolute;right:3px;bottom:2px;font-size:11px;color:#fff;text-shadow:0 1px 2px #000;font-weight:800}
+.extra .none{margin:8px 0 0;font-size:13px;color:var(--soft)}
+.rep{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:22px;padding:18px 12px;font-size:19px;background:#2F7A55;color:#fff;border-radius:12px;box-shadow:0 3px 0 #1d4f37}
+.vbar{position:absolute;left:12px;top:calc(10px + env(safe-area-inset-top,0px));z-index:2;display:flex;gap:8px;align-items:center}
+.vbar button{font-size:14px;padding:10px 14px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:999px}
+.vbar .cnt{color:#fff;font-size:14px;font-weight:800;text-shadow:0 1px 2px #000;padding:0 4px}
 .links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
 .links button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:16px;font-weight:800;padding:12px 6px;line-height:1.25;border:3px solid}
 .links button b{font-size:22px}
@@ -155,8 +173,10 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
 
 <div class="wrap" id="detail" hidden>
  <button class="back" id="dBack">← 現場の一覧へ</button>
- <label class="f" for="site">現場名</label>
- <input class="t" id="site" type="text" placeholder="例:杉並区 ○○様邸 給湯器交換">
+ <label class="f">場所</label>
+ <div class="place"><div class="pv none" id="placeBox"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg><span id="placeTxt">まだ取得していません</span></div><button id="bPlace">現在地を取得</button></div>
+ <label class="f" for="site">お客様名</label>
+ <input class="t" id="site" type="text" placeholder="例:山田様">
  <label class="f" for="memo">メモ(任意)</label>
  <input class="t" id="memo" type="text" placeholder="例:旧機種 → 新機種">
  <div class="pair">
@@ -172,6 +192,13 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <label class="btn y off" id="nAfter" for="fAfter">スマホのカメラで施工後</label>
  </div>
  <button class="o full" id="bMask" disabled style="margin-bottom:8px">交換する機器を枠で囲む(任意)</button>
+ <section class="extra">
+  <h3>他の写真も撮影する</h3>
+  <button class="camBtn" id="bExtra"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9Zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>カメラを起動</button>
+  <label class="btn" id="nExtra" for="fExtra" hidden style="margin-top:8px">スマホのカメラで撮る</label>
+  <div class="thumbs" id="thumbs"></div>
+  <p class="none" id="thumbsNone">まだありません。撮った写真はここに並びます(タップで拡大)。</p>
+ </section>
  <p class="msg" id="camNote" hidden></p>
  <div class="diffbox" id="diffBox" hidden></div>
  <div id="ovBox" hidden>
@@ -197,12 +224,14 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
   <button class="y full" id="bSave">比較写真を保存する<small class="bsub" id="bSaveSub">横並びで保存されます</small></button>
  </div>
  <p class="msg" id="saveMsg"></p>
+ <button class="rep" id="bReport"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 1.5V9h5.5L13 3.5ZM8 13h8v1.6H8V13Zm0 3.4h8V18H8v-1.6Z"/></svg>施工完了報告書に添付する</button>
  <button class="w full" id="bDel" style="margin-top:24px">この現場を削除</button>
  <input type="file" class="vh" id="fBefore" accept="image/*" capture="environment" tabindex="-1">
  <input type="file" class="vh" id="fAfter" accept="image/*" capture="environment" tabindex="-1" disabled>
+ <input type="file" class="vh" id="fExtra" accept="image/*" capture="environment" tabindex="-1">
 </div>
 
-<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden></div><button class="vclose" id="vClose" aria-label="閉じる">✕</button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
+<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden></div><div class="vbar" id="vBar" hidden><span class="cnt" id="vCnt"></span><button id="vSave">保存</button><button id="vDel">削除</button></div><button class="vclose" id="vClose" aria-label="閉じる">✕</button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 
 <div class="med" id="med" hidden>
@@ -365,14 +394,14 @@ async function showHome(){
  $("detail").hidden=true;$("home").hidden=false;job=null;
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
  const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<img alt="">')+
-  '<div><div class="jt">'+esc(j.site||"現場名なし")+'<span class="st">'+(j.after?"完了":"施工後待ち")+'</span></div><div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・施工後 '+fmtD(j.afterAt):'')+'</div></div></button>';
+  '<div><div class="jt">'+esc(j.site||"お客様名なし")+'<span class="st">'+(j.after?"完了":"施工後待ち")+'</span></div><div class="jd">'+(j.place&&j.place.text?esc(j.place.text)+' ・ ':'')+'施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・施工後 '+fmtD(j.afterAt):'')+'</div></div></button>';
  const w=js.filter(j=>!j.after), d=js.filter(j=>j.after);
  $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">ありません</p>';
  $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">ありません</p>';
  window.scrollTo(0,0);
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(!b)return;allJobs().then(js=>{const j=js.find(x=>x.id===b.dataset.job);if(j)openJob(j);});});
-$("hNew").onclick=()=>openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:""});
+$("hNew").onclick=()=>{openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:"",extras:[]});getPlace();};
 
 /* ---------- detail ---------- */
 let delArm=false;
@@ -398,6 +427,7 @@ function refreshDetail(){
  $("bBefore").textContent=job.before?"施工前を撮り直す":"施工前を撮る";
  $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);$("bAfter").textContent=job.after?"施工後を撮り直す":"施工後を撮る";
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
+ showPlace();renderThumbs();
  $("bMask").disabled=!job.before;$("bMask").textContent=job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)";
  const n=$("camNote");
  if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中の色の判定は出ません)。";n.hidden=false;}
@@ -419,9 +449,10 @@ $("bDel").onclick=async()=>{
 // Live camera with the before-photo overlay. If the browser refuses the camera,
 // show <label> buttons that open the phone's own camera through the file inputs.
 let camFail=false;
-function noCam(){camFail=true;$("nativeBtns").hidden=false;refreshDetail();}
+function noCam(){camFail=true;$("nativeBtns").hidden=false;$("nExtra").hidden=false;refreshDetail();}
 $("bBefore").onclick=()=>startCam("before");
 $("bAfter").onclick=()=>startCam("after");
+$("bExtra").onclick=()=>startCam("extra");
 let stream=null, camMode=null, ori={beta:null,gamma:null}, oriOK=false, loop=null;
 window.addEventListener("deviceorientation",e=>{if(e.beta!=null){ori={beta:e.beta,gamma:e.gamma};oriOK=true;}});
 async function askOri(){try{if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission();}catch(e){}}
@@ -485,9 +516,11 @@ $("cShot").onclick=()=>{
  c.toBlob(async b=>{stopCam();await gotPhoto(mode,b,o);},"image/jpeg",0.92);
 };
 $("fBefore").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("before",f,null);};
+$("fExtra").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("extra",f,null);};
 $("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
 async function gotPhoto(mode,blob,o){
  const now=Date.now();
+ if(mode==="extra"){(job.extras=job.extras||[]).push({blob,at:now});await saveJob();renderThumbs();toast("写真を追加しました");return;}
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;}
  await saveJob();refreshDetail();
@@ -495,6 +528,71 @@ async function gotPhoto(mode,blob,o){
  photoDiff();make();
  if(mode==="before")openMaskEditor();
 }
+
+/* ---------- place (city / ward of the current position) ---------- */
+function showPlace(){
+ const t=job&&job.place&&job.place.text;
+ $("placeTxt").textContent=t||"まだ取得していません";$("placeBox").classList.toggle("none",!t);
+}
+// "横浜市青葉区" / "杉並区": city, plus the ward inside a designated city.
+function placeText(a){
+ let city=a.city||"";
+ if(city&&/市$/.test(city)&&a.ward&&/区$/.test(a.ward)&&city.indexOf(a.ward)<0)city+=a.ward;
+ if(!city&&a.line){
+  const t=a.line.replace(/^日本、?\s*/,"").replace(/〒?\d{3}-?\d{4}\s*/,"").replace(/^(東京都|北海道|(京都|大阪)府|[^\s]{2,3}県)/,"");
+  const m=t.match(/^([^\s]+?郡[^\s]+?[町村]|[^\s]+?市[^\s]+?区|[^\s]+?[市区町村])/);if(m)city=m[1];
+ }
+ return city;
+}
+let placeFor=null;
+function setPlace(a,err){
+ const j=placeFor;placeFor=null;$("bPlace").disabled=false;$("bPlace").textContent="現在地を取得";
+ if(!j)return;
+ const text=a?placeText(a):"";
+ if(!text){if(j===job)toast(err==="denied"?"位置情報が許可されていません":"場所を取得できませんでした",true);return;}
+ j.place={text,at:Date.now()};putJob(j);if(j===job)showPlace();
+}
+window.onAppPlace=json=>{let a=null,err="";try{const o=JSON.parse(json);if(o.error)err=o.error;else a=o;}catch(e){}setPlace(a,err);};
+function getPlace(){
+ if(!job||placeFor)return;
+ placeFor=job;$("bPlace").disabled=true;$("bPlace").textContent="取得中…";
+ if(window.AndroidApp&&window.AndroidApp.requestPlace){window.AndroidApp.requestPlace();return;}
+ if(!navigator.geolocation){setPlace(null);return;}
+ navigator.geolocation.getCurrentPosition(async pos=>{
+  try{
+   const u="https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=ja&lat="+pos.coords.latitude+"&lon="+pos.coords.longitude;
+   const d=(await (await fetch(u)).json()).address||{};
+   setPlace({city:d.city||d.town||d.village||d.county||"",ward:d.city_district||d.suburb||""});
+  }catch(e){setPlace(null);}
+ },e=>setPlace(null,e&&e.code===1?"denied":""),{enableHighAccuracy:false,timeout:15000,maximumAge:300000});
+}
+$("bPlace").onclick=getPlace;
+
+/* ---------- other photos ---------- */
+function renderThumbs(){
+ const xs=(job&&job.extras)||[];
+ $("thumbs").innerHTML=xs.map((x,i)=>'<button data-x="'+i+'" aria-label="写真 '+(i+1)+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="n">'+(i+1)+'</span></button>').join("");
+ $("thumbsNone").hidden=xs.length>0;
+}
+$("thumbs").onclick=e=>{const b=e.target.closest("[data-x]");if(b)openGallery(+b.dataset.x);};
+let gal=null, galDelArm=false;
+function openGallery(i){
+ const xs=job.extras||[];if(!xs.length){closeViewer();return;}
+ i=Math.max(0,Math.min(xs.length-1,i));gal={i};galDelArm=false;$("vDel").textContent="削除";
+ $("vBar").hidden=false;$("vCnt").textContent=(i+1)+" / "+xs.length;
+ openViewer(blobUrl(xs[i].blob));
+}
+function galNav(d){if(gal&&job.extras&&job.extras[gal.i+d])openGallery(gal.i+d);}
+$("vSave").onclick=()=>{if(gal){const x=job.extras[gal.i];saveBlob(x.blob,"写真"+(gal.i+1),x.at);}};
+$("vDel").onclick=async()=>{
+ if(!gal)return;
+ if(!galDelArm){galDelArm=true;$("vDel").textContent="もう一度押すと削除";return;}
+ job.extras.splice(gal.i,1);await saveJob();renderThumbs();toast("削除しました");
+ if(job.extras.length)openGallery(Math.min(gal.i,job.extras.length-1));else closeViewer();
+};
+
+/* ---------- completion report (link added later) ---------- */
+$("bReport").onclick=()=>toast("報告書への添付は準備中です");
 
 /* ---------- "don't compare" box editor ---------- */
 let mEdit=null, mDrag=null;
@@ -702,6 +800,7 @@ const vw={s:1,fit:1,x:0,y:0,nw:1,nh:1,pts:new Map(),pinch:null,pan:null,lastTap:
 // src = the photo; topSrc (optional) = the before photo laid over it, with a see-through slider.
 function openViewer(src,topSrc){
  const im=$("vImg"), top=$("vImg2"), st=$("vStage");
+ if(!gal)$("vBar").hidden=true;
  $("viewer").hidden=false;top.hidden=!topSrc;$("vOp").hidden=!topSrc;
  if(topSrc){top.src=topSrc;$("vOpR").value=$("ovOp").value;top.style.opacity=$("ovOp").value/100;}
  im.onload=()=>{vw.nw=im.naturalWidth;vw.nh=im.naturalHeight;st.style.width=vw.nw+"px";st.style.height=vw.nh+"px";vFit(false);};
@@ -709,7 +808,7 @@ function openViewer(src,topSrc){
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;$("ovOp").value=e.target.value;$("ovB").style.opacity=e.target.value/100;};
 $("ovWrap").onclick=()=>{if(job&&job.before&&job.after)openViewer($("ovA").src,$("ovB").src);};
-function closeViewer(){$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function closeViewer(){gal=null;$("vBar").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
 function vApply(anim){
@@ -723,7 +822,7 @@ function vApply(anim){
 function vZoomAt(s,px,py,anim){const cx=(px-vw.x)/vw.s, cy=(py-vw.y)/vw.s;vw.s=s;vw.x=px-cx*s;vw.y=py-cy*s;vApply(anim);}
 const vMax=()=>Math.max(vw.fit*6,1.5);
 $("viewer").addEventListener("pointerdown",e=>{
- if(e.target.closest("#vClose,#vOp"))return;
+ if(e.target.closest("#vClose,#vOp,#vBar"))return;
  $("viewer").setPointerCapture(e.pointerId);
  vw.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(vw.pts.size===2){
@@ -753,6 +852,8 @@ function vUp(e){
  if(vw.pts.size===0){
   vw.pan=null;
   const d=vw.down;vw.down=null;
+  // Swipe sideways at normal size: next / previous photo.
+  if(gal&&d&&vw.s<=vw.fit*1.02&&Math.abs(e.clientX-d.x)>60&&Math.abs(e.clientX-d.x)>Math.abs(e.clientY-d.y)*1.5){galNav(e.clientX<d.x?1:-1);return;}
   if(d&&Math.hypot(e.clientX-d.x,e.clientY-d.y)<12&&performance.now()-d.t<300){
    const now=performance.now();
    if(now-vw.lastTap<320&&Math.hypot(e.clientX-vw.tapX,e.clientY-vw.tapY)<40){
