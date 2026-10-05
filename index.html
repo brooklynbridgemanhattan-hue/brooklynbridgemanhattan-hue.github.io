@@ -65,6 +65,8 @@ input.t{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px soli
 .toast.ng{background:#B8432C;box-shadow:0 0 0 3px #B8432C,0 10px 30px rgba(0,0,0,.4)}
 .opts{margin:12px 0 4px;display:flex;flex-direction:column;gap:10px}
 .opts .ttl{font-size:14px;font-weight:800;color:var(--soft)}
+.savenote{margin:0;text-align:center;font-size:15px;font-weight:800;color:var(--ink)}
+.opts+#bSave{margin-top:8px}
 .lay{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .opt{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 8px;border:2px solid var(--line);background:var(--sheet);font-size:17px;white-space:nowrap;font-weight:800;cursor:pointer;touch-action:manipulation}
 .opt:has(input:checked){border-color:var(--gas);background:color-mix(in srgb,var(--gas) 16%,var(--sheet))}
@@ -176,15 +178,16 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--gas);outline-of
  <div id="result">
   <label class="f" style="margin-top:12px">比較写真(タップで拡大)</label>
   <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
-  <button class="y full" id="bSave">比較写真を保存する</button>
   <div class="opts">
    <span class="ttl">並べ方</span>
    <div class="lay" role="radiogroup" aria-label="並べ方">
-    <label class="opt"><input type="radio" name="lay" id="lyV" value="v" checked><span class="ic v"><i></i><i></i></span>縦に並べる</label>
-    <label class="opt"><input type="radio" name="lay" id="lyH" value="h"><span class="ic h"><i></i><i></i></span>横に並べる</label>
+    <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><span class="ic v"><i></i><i></i></span>縦に並べる</label>
+    <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><span class="ic h"><i></i><i></i></span>横に並べる</label>
    </div>
    <label class="chkrow" for="cLabel"><input type="checkbox" id="cLabel" checked>「施工前」「施工後」の文字を入れる</label>
+   <p class="savenote">この状態で保存されます</p>
   </div>
+  <button class="y full" id="bSave">比較写真を保存する</button>
  </div>
  <p class="msg" id="saveMsg"></p>
  <button class="w full" id="bDel" style="margin-top:24px">この現場を削除</button>
@@ -367,8 +370,8 @@ $("hNew").onclick=()=>openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo
 /* ---------- detail ---------- */
 let delArm=false;
 // Remembered per phone: whether the comparison photo carries the 施工前/施工後 bands.
-let withLabels=true, layout="v";
-try{withLabels=localStorage.getItem("ba-labels")!=="0";layout=localStorage.getItem("ba-layout")==="h"?"h":"v";}catch(e){}
+let withLabels=true, layout="h";
+try{withLabels=localStorage.getItem("ba-labels")!=="0";layout=localStorage.getItem("ba-lay")==="v"?"v":"h";}catch(e){}
 function setSlot(slot,blob,at){
  const s=$(slot);s.querySelectorAll("img,.ph,.dt").forEach(x=>x.remove());
  s.querySelectorAll(".tmask").forEach(x=>x.remove());
@@ -660,7 +663,7 @@ function fullBlob(){
 function compose(c,k,iB,iA){
  const bw=iB.naturalWidth||iB.width, bh=iB.naturalHeight||iB.height;
  const portrait=bh>=bw, pw=(portrait?900:1200)*k, ph=(portrait?1200:900)*k;
- const gap=12*k,pad=24*k,label=withLabels?64*k:0,foot=110*k;
+ const gap=12*k,pad=24*k,label=withLabels?64*k:0,foot=(job.site||job.memo)?110*k:pad;
  const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+label+ph+foot:pad+(label+ph)*2+gap+foot);
  c.width=W;c.height=H;const x=c.getContext("2d");
  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
@@ -672,14 +675,15 @@ function compose(c,k,iB,iA){
    x.font="800 "+px(38)+font;x.textAlign="left";x.fillText(q.t,q.x+22*k,q.y+label/2+k);
    x.font="600 "+px(28)+font;x.textAlign="right";x.fillText(fmtFull(q.d),q.x+pw-22*k,q.y+label/2+k);x.textAlign="left";}
   drawCover(x,q.im,q.x,q.y+label,pw,ph);});
+ if(!(job.site||job.memo))return;
  const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12*k,foot);
- x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 "+px(36)+font;x.fillText(job.site||"現場名未入力",pad+14*k,fy+48*k,W-pad*2-20*k);
- x.font="500 "+px(28)+font;x.fillStyle="#C9D2DA";x.fillText(job.memo||"",pad+14*k,fy+88*k,W-pad*2-20*k);
+ x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 "+px(36)+font;x.fillText(job.site||job.memo,pad+14*k,fy+48*k,W-pad*2-20*k);
+ if(job.site&&job.memo){x.font="500 "+px(28)+font;x.fillStyle="#C9D2DA";x.fillText(job.memo,pad+14*k,fy+88*k,W-pad*2-20*k);}
 }
 $("cLabel").checked=withLabels;
 $("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}make();};
 $("lyV").checked=layout==="v";$("lyH").checked=layout==="h";
-document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-layout",layout);}catch(err){}make();});
+document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-lay",layout);}catch(err){}make();});
 let toastT=null;
 function toast(t,ng){const e=$("toast");e.textContent=t;e.classList.toggle("ng",!!ng);e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{e.hidden=true;},2200);}
 function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
