@@ -311,8 +311,8 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .adj{position:fixed;inset:0;z-index:65;background:#0B1020;color:#fff;display:flex;flex-direction:column;overflow-y:auto;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));gap:10px}
 .adjhd b{display:block;font-size:20px;font-weight:800}
 .adjhd span{font-size:14px;color:#CBD5E1;font-weight:600}
-.adjstage{flex:1;min-height:34vh;display:flex;align-items:center;justify-content:center}
-#adjC{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
+.adjstage{flex:none;display:flex;align-items:flex-start;justify-content:center}
+#adjC{max-width:100%;max-height:54vh;border-radius:8px;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
 .tgt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.08)}
 .tgt button{min-height:48px;border-radius:10px;font-size:17px;font-weight:800;color:#CBD5E1}
 .tgt button.on{background:linear-gradient(90deg,#5C7CFA,#F59F00);color:#fff}
@@ -332,10 +332,12 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .trimrow .mtrim.on{background:#fff;color:#101828}
 .trimrow .auto{background:#FACC15;color:#1A1400}
 /* which photo is being adjusted: tap the photos in the preview */
-.selst{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px 14px;border-radius:14px;background:rgba(255,255,255,.08);font-size:16px;font-weight:800;color:#E2E8F0;text-align:center;line-height:1.35}
+.selst{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:8px 14px;border-radius:14px;background:rgba(255,255,255,.1);font-size:20px;font-weight:800;color:#E2E8F0;text-align:center;line-height:1.35}
 .selst.none{background:transparent;box-shadow:inset 0 0 0 2px rgba(255,255,255,.3);border-style:dashed;color:#FDE68A;animation:selpulse 1.6s ease-in-out infinite}
 @keyframes selpulse{50%{box-shadow:inset 0 0 0 2px rgba(253,230,138,.85)}}
-.selst .chip{padding:3px 12px;border-radius:999px;font-weight:800}
+.selst .chip{padding:4px 14px;border-radius:999px;font-weight:800;font-size:20px;white-space:nowrap}
+.selst{white-space:nowrap}
+.selst.none{white-space:normal}
 .selst .chip.b{background:#5C7CFA;color:#fff}.selst .chip.a{background:#F59F00;color:#2B1D00}
 .pad1.off,.trimrow.off{opacity:.4}
 .scell{position:absolute;pointer-events:none;border-radius:2px}
@@ -344,7 +346,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .scell .stag{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;background:rgba(5,8,15,.65);color:#fff;box-shadow:0 0 0 1.5px rgba(255,255,255,.5)}
 .scell.on .stag{background:var(--sc);color:#101828;box-shadow:none}
 /* manual trimming: dashed box per photo, drag edges / corners, drag inside to move */
-.adjwrap{position:relative;max-width:100%;max-height:100%;display:flex}
+.adjwrap{position:relative;max-width:100%;display:flex}
 .trimov{position:absolute;inset:0;touch-action:none}
 .tcell{position:absolute;overflow:hidden}
 .tbox{position:absolute;border:2px dashed #fff;box-shadow:0 0 0 2000px rgba(5,8,15,.6);touch-action:none;outline:1px dashed rgba(255,255,255,.6);outline-offset:-1px}
@@ -361,7 +363,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .tbox .lab{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:#fff;text-shadow:0 1px 3px #000;white-space:nowrap;pointer-events:none}
 .pad1 .zv small{font-size:13px;color:#CBD5E1}
 .pad1 .zv{display:grid;place-items:center;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;text-align:center;line-height:1.2}
-.adjbtns{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;position:sticky;bottom:calc(-14px - env(safe-area-inset-bottom,0px));margin:0 -14px calc(-14px - env(safe-area-inset-bottom,0px));padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));background:#0B1020;box-shadow:0 -8px 16px #0B1020;z-index:2}
+.adjbtns{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;position:sticky;bottom:calc(-14px - env(safe-area-inset-bottom,0px));margin:auto -14px calc(-14px - env(safe-area-inset-bottom,0px));padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));background:#0B1020;box-shadow:0 -8px 16px #0B1020;z-index:2}
 .adjbtns button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border-radius:999px;font-size:18px;font-weight:800}
 .adjbtns .o2{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3);font-size:16px}
 .adjbtns .ok{background:linear-gradient(135deg,#7048E8,#9C36B5);color:#fff}
@@ -1638,7 +1640,7 @@ function adjSelShow(){
  const t=adjTgt(), el=$("adjSel");
  el.classList.toggle("none",!t);
  el.innerHTML=!t?"画像をタップして選択してください<br>両方選択も可能です":
-  t==="both"?'<span class="chip b">施工前</span><span class="chip a">施工後</span>を選択中(両方)':
+  t==="both"?'<span class="chip b">施工前</span><span class="chip a">施工後</span>を選択中':
   '<span class="chip '+t+'">'+(t==="b"?"施工前":"施工後")+'</span>を選択中';
  $("adjPad").classList.toggle("off",!t);
  $("adjPad").style.setProperty("--pc",{b:"#5C7CFA",a:"#F59F00",both:"#7048E8"}[t]||"#7048E8");
