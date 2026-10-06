@@ -311,58 +311,22 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .adjhd span{font-size:14px;color:#CBD5E1;font-weight:600}
 .adjstage{flex:1;min-height:34vh;display:flex;align-items:center;justify-content:center}
 #adjC{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
-.pads{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.pad{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;border-radius:16px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1.5px var(--pc)}
-.pad.b{--pc:#5C7CFA}.pad.a{--pc:#F59F00}
-.padt{font-size:15px;font-weight:800;padding:3px 12px;border-radius:999px;background:var(--pc);color:#fff}
-.pad.a .padt{color:#2B1D00}
-.pg{display:grid;grid-template-columns:repeat(3,48px);grid-auto-rows:48px;gap:6px}
-.pg button{display:grid;place-items:center;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;touch-action:none}
-.pg button:active{background:var(--pc);color:#101828}
-.pg button svg.i{width:24px;height:24px;stroke-width:2.6}
-.pg .rs{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
-.pg .rs svg.i{width:20px;height:20px}
-.padv{font-size:13px;color:#CBD5E1;font-weight:700;font-variant-numeric:tabular-nums}
-.adjtabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.08)}
-.adjtabs button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border-radius:10px;font-size:16px;font-weight:800;color:#CBD5E1}
-.adjtabs button svg.i{width:20px;height:20px}
-.adjtabs button.on{background:#fff;color:#101828}
-.trim{display:flex;flex-direction:column;gap:10px;padding:10px;border-radius:16px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1.5px #9C36B5}
-.trim[hidden]{display:none}
-.trimhd{display:flex;align-items:center;gap:10px}
-.trimhd .both{white-space:nowrap;font-size:14px;font-weight:700;color:#CBD5E1}
-.tgt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:12px;background:rgba(255,255,255,.08)}
-.tgt button{min-height:44px;border-radius:9px;font-size:16px;font-weight:800;color:#CBD5E1}
+.tgt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.08)}
+.tgt button{min-height:48px;border-radius:10px;font-size:17px;font-weight:800;color:#CBD5E1}
 .tgt button.on{background:linear-gradient(90deg,#5C7CFA,#F59F00);color:#fff}
 .tgt .tb.on{background:#5C7CFA;color:#fff}
 .tgt .ta.on{background:#F59F00;color:#2B1D00}
-.tzoom .auto{flex-basis:100%;justify-content:center;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 12px;border-radius:999px;background:#FACC15;color:#1A1400;font-size:15px;font-weight:800}
-.tzoom .auto svg.i{width:18px;height:18px}
-.tzoom .auto:active{background:#FDE047}
-.trimnote{margin:0;font-size:13px;color:#CBD5E1}
-/* trim: a little picture of the photo; dark = cut off; 切る / 戻す beside each edge */
-.tbox{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:". t ." "l f r" ". b .";gap:6px;align-items:center;justify-items:center}
-.tc{display:flex;gap:6px}
-.tc.t{grid-area:t}.tc.b{grid-area:b}.tc.l{grid-area:l;flex-direction:column}.tc.r{grid-area:r;flex-direction:column}
-.eb{display:flex;align-items:center;justify-content:center;gap:4px;min-width:78px;height:38px;padding:0 8px;border-radius:10px;font-size:15px;font-weight:800;touch-action:none}
-.eb svg.i{width:18px;height:18px;stroke-width:2.8}
-.eb.cut{background:#E8590C;color:#fff}
-.eb.back{background:rgba(255,255,255,.12);color:#E2E8F0}
-.eb:active{filter:brightness(1.2)}
-.tframe{grid-area:f;position:relative;width:96px;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:linear-gradient(135deg,#6B7A99,#A9B4C9);box-shadow:0 0 0 2px rgba(255,255,255,.5)}
-.tframe i{position:absolute;background:rgba(8,10,16,.72)}
-.tframe .keep{position:absolute;box-shadow:0 0 0 2px #FACC15;border-radius:2px}
-.tframe b{position:absolute;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000;font-variant-numeric:tabular-nums}
-.tframe .vt{top:2px;left:50%;transform:translateX(-50%)}.tframe .vb{bottom:2px;left:50%;transform:translateX(-50%)}
-.tframe .vl{left:3px;top:50%;transform:translateY(-50%)}.tframe .vr{right:3px;top:50%;transform:translateY(-50%)}
-.tzoom{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px}
-.tzoom button{display:flex;align-items:center;gap:4px;height:44px;padding:0 16px;white-space:nowrap;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;font-size:16px;font-weight:800;touch-action:none}
-.tzoom button:active{background:#9C36B5}
-.tzoom button svg.i{width:20px;height:20px;stroke-width:2.6}
-.tzoom b{min-width:3.2em;text-align:center;font-size:15px;font-variant-numeric:tabular-nums}
-/* captions under the + / − of the position pads */
-.pg button{flex-direction:column;gap:0;font-size:11px;font-weight:800;line-height:1.1}
-.pg button small{font-size:11px}
+/* one pad: 拡大 上へ 縮小 / 左へ (value) 右へ / 元に戻す 下へ 自動カット */
+.pad1{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:420px;width:100%;margin:0 auto}
+.pad1 button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:64px;border-radius:14px;background:rgba(255,255,255,.12);color:#fff;font-size:14px;font-weight:800;line-height:1.15;touch-action:none}
+.pad1 button svg.i{width:26px;height:26px;stroke-width:2.6}
+.pad1 button:active{background:var(--pc,#7048E8);color:#fff}
+.pad1 .z{background:rgba(112,72,232,.35)}
+.pad1 .rs{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3);color:#CBD5E1}
+.pad1 .auto{background:#FACC15;color:#1A1400;font-size:13px}
+.pad1 .auto:active{background:#FDE047;color:#1A1400}
+.pad1 .zv small{font-size:13px;color:#CBD5E1}
+.pad1 .zv{display:grid;place-items:center;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;text-align:center;line-height:1.2}
 .adjbtns{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;position:sticky;bottom:calc(-14px - env(safe-area-inset-bottom,0px));margin:0 -14px calc(-14px - env(safe-area-inset-bottom,0px));padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));background:#0B1020;box-shadow:0 -8px 16px #0B1020;z-index:2}
 .adjbtns button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border-radius:999px;font-size:18px;font-weight:800}
 .adjbtns .o2{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3);font-size:16px}
@@ -584,25 +548,17 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="adj" id="adjEd" hidden>
- <div class="adjhd"><b>写真の位置・大きさを調整</b><span id="adjHint">＋拡大 −縮小 ↑↓←→ 移動 ・ 長押しで連続</span></div>
+ <div class="adjhd"><b>写真の位置・大きさを調整</b><span>動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
  <div class="adjstage"><canvas id="adjC"></canvas></div>
- <div class="adjtabs" id="adjTabs"><button data-t="pos" class="on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>位置・大きさ</button><button data-t="trim"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg>トリミング</button></div>
- <div class="trim" id="trimPad" hidden>
-  <div class="tgt" id="trimTgt" role="radiogroup" aria-label="トリミングする写真"><button data-g="both" class="on">両方</button><button data-g="b" class="tb">施工前</button><button data-g="a" class="ta">施工後</button></div>
-
-  <div class="tbox">
-   <div class="tc t"><button class="eb cut" data-e="t" data-d="1" aria-label="上を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span>切る</span></button><button class="eb back" data-e="t" data-d="-1" aria-label="上を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>戻す</span></button></div>
-   <div class="tc l"><button class="eb cut" data-e="l" data-d="1" aria-label="左を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>切る</span></button><button class="eb back" data-e="l" data-d="-1" aria-label="左を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg><span>戻す</span></button></div>
-   <div class="tframe" id="tFrame" aria-hidden="true"><i class="ct"></i><i class="cb"></i><i class="cl"></i><i class="cr"></i><div class="keep" id="tKeep"></div>
-    <b class="vt" id="tvt">0%</b><b class="vb" id="tvb">0%</b><b class="vl" id="tvl">0%</b><b class="vr" id="tvr">0%</b></div>
-   <div class="tc r"><button class="eb cut" data-e="r" data-d="1" aria-label="右を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg><span>切る</span></button><button class="eb back" data-e="r" data-d="-1" aria-label="右を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>戻す</span></button></div>
-   <div class="tc b"><button class="eb cut" data-e="b" data-d="1" aria-label="下を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>切る</span></button><button class="eb back" data-e="b" data-d="-1" aria-label="下を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span>戻す</span></button></div>
-  </div>
-  <div class="tzoom" id="tZoom"><button data-z="-1"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><span>縮小</span></button><b id="tzv">100%</b><button data-z="1"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>拡大</span></button><button class="auto" id="trimAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg>余白を自動でカット</button></div>
+ <div class="tgt" id="adjTgt" role="radiogroup" aria-label="動かす写真"><button data-g="b" class="tb on">施工前</button><button data-g="a" class="ta">施工後</button><button data-g="both">両方</button></div>
+ <div class="pad1" id="adjPad">
+  <button data-a="in" class="z"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>拡大</span></button><button data-a="up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>上へ</span></button><button data-a="out" class="z"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><span>縮小</span></button>
+  <button data-a="left"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg><span>左へ</span></button><div class="zv" id="adjVal">100%</div><button data-a="right"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>右へ</span></button>
+  <button data-a="reset" class="rs"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg><span>元に戻す</span></button><button data-a="down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span>下へ</span></button><button class="auto" id="adjAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg><span>余白を<br>自動カット</span></button>
  </div>
- <div class="pads" id="posPads"><div class="pad b"><span class="padt">施工前</span><div class="pg"><button data-p="b" data-a="in" aria-label="施工前を拡大"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><small>拡大</small></button><button data-p="b" data-a="up" aria-label="施工前を上へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button data-p="b" data-a="out" aria-label="施工前を縮小"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><small>縮小</small></button><button data-p="b" data-a="left" aria-label="施工前を左へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button data-p="b" data-a="reset" class="rs" aria-label="施工前を元に戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button><button data-p="b" data-a="right" aria-label="施工前を右へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span></span><button data-p="b" data-a="down" aria-label="施工前を下へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><span></span></div><span class="padv" id="padvb">100%</span></div><div class="pad a"><span class="padt">施工後</span><div class="pg"><button data-p="a" data-a="in" aria-label="施工後を拡大"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><small>拡大</small></button><button data-p="a" data-a="up" aria-label="施工後を上へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button data-p="a" data-a="out" aria-label="施工後を縮小"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><small>縮小</small></button><button data-p="a" data-a="left" aria-label="施工後を左へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button data-p="a" data-a="reset" class="rs" aria-label="施工後を元に戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button><button data-p="a" data-a="right" aria-label="施工後を右へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span></span><button data-p="a" data-a="down" aria-label="施工後を下へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><span></span></div><span class="padv" id="padva">100%</span></div></div>
- <div class="adjbtns"><button class="o2" id="adjReset">両方元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
+ <div class="adjbtns"><button class="o2" id="adjReset">すべて元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
 </div>
+
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
@@ -1636,96 +1592,60 @@ $("vDel").onclick=async()=>{
 };
 
 /* ---------- comparison: position / size of each photo ---------- */
-const ADJ0=()=>({s:1,x:0,y:0});
-let adjOld=null;
-const CROP0=()=>({t:0,b:0,l:0,r:0});
-let trimTgt="both";
-const trimObj=()=>trimTgt==="both"?job.crop:job.crops[trimTgt];
+// job.adj.b / .a = zoom (s) and move (x, y) of each photo; job.crop / job.crops = white edges cut by 余白を自動カット.
+const ADJ0=()=>({s:1,x:0,y:0}), CROP0=()=>({t:0,b:0,l:0,r:0});
+let adjOld=null, adjTgt="b", adjRep=0;
+const adjKeys=()=>adjTgt==="both"?["b","a"]:[adjTgt];
+function adjSnap(){return JSON.stringify({adj:job.adj,crop:job.crop,crops:job.crops});}
 function adjDraw(){
- const a=job.adj, c=trimObj();["t","b","l","r"].forEach(e=>$("tv"+e).textContent=Math.round(c[e]*100)+"%");
- // the little frame: dark bands = what is cut (for the chosen photo, shared cut included)
- const e=trimTgt==="both"?job.crop:effCrop(trimTgt), f=$("tFrame"), P=v=>(v*100).toFixed(1)+"%";
- f.querySelector(".ct").style.cssText="left:0;right:0;top:0;height:"+P(e.t);
- f.querySelector(".cb").style.cssText="left:0;right:0;bottom:0;height:"+P(e.b);
- f.querySelector(".cl").style.cssText="left:0;top:"+P(e.t)+";bottom:"+P(e.b)+";width:"+P(e.l);
- f.querySelector(".cr").style.cssText="right:0;top:"+P(e.t)+";bottom:"+P(e.b)+";width:"+P(e.r);
- $("tKeep").style.cssText="left:"+P(e.l)+";right:"+P(e.r)+";top:"+P(e.t)+";bottom:"+P(e.b);
- const zs=trimTgt==="both"?[a.b.s,a.a.s]:[a[trimTgt].s];$("tzv").textContent=zs.map(v=>Math.round(v*100)+"%").join(" / ");["b","a"].forEach(k=>$("padv"+k).textContent=Math.round(a[k].s*100)+"%");
+ const a=job.adj;$("adjVal").innerHTML=adjTgt==="both"?"<small>前</small> "+Math.round(a.b.s*100)+"%<br><small>後</small> "+Math.round(a.a.s*100)+"%":Math.round(a[adjTgt].s*100)+"%";
  if(imgs.b&&imgs.a)compose($("adjC"),0.5,imgs.b,imgs.a);
+}
+function adjTgtShow(){
+ $("adjTgt").querySelectorAll("button").forEach(b=>{const on=b.dataset.g===adjTgt;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});
+ $("adjPad").style.setProperty("--pc",{b:"#5C7CFA",a:"#F59F00",both:"#7048E8"}[adjTgt]);
+ adjDraw();
 }
 $("bAdj").onclick=async()=>{
  if(!job||!job.before||!job.after)return;await getImgs();
- job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};adjOld=JSON.stringify({adj:job.adj,crop:job.crop,crops:job.crops});trimTgt="both";trimTgtShow();adjTab("pos");
- $("adjEd").hidden=false;adjDraw();
+ job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};
+ adjOld=adjSnap();adjTgt="b";$("adjEd").hidden=false;adjTgtShow();
 };
-function adjStep(k,act){
- const a=job.adj[k], st=0.02;
- if(act==="in")a.s=Math.min(4,a.s*1.05);else if(act==="out")a.s=Math.max(0.5,a.s/1.05);
- else if(act==="up")a.y-=st;else if(act==="down")a.y+=st;else if(act==="left")a.x-=st;else if(act==="right")a.x+=st;
- else if(act==="reset")job.adj[k]=ADJ0();
+$("adjTgt").onclick=e=>{const b=e.target.closest("[data-g]");if(!b)return;adjTgt=b.dataset.g;adjTgtShow();};
+// ＋拡大 −縮小 ↑上へ ↓下へ ←左へ →右へ (moves the picture itself), 元に戻す
+function adjStep(act){
+ adjKeys().forEach(k=>{const a=job.adj[k], st=0.02;
+  if(act==="in")a.s=Math.min(4,a.s*1.05);else if(act==="out")a.s=Math.max(0.5,a.s/1.05);
+  else if(act==="up")a.y-=st;else if(act==="down")a.y+=st;else if(act==="left")a.x-=st;else if(act==="right")a.x+=st;
+  else if(act==="reset"){job.adj[k]=ADJ0();job.crops[k]=CROP0();}});
+ if(act==="reset"&&adjTgt==="both")job.crop=CROP0();
  adjDraw();
 }
-// press = one step, hold = keeps going
-let adjRep=0;
-$("adjEd").querySelectorAll(".pg button").forEach(b=>{
+$("adjPad").querySelectorAll("button[data-a]").forEach(b=>{
  const stop=()=>{clearTimeout(adjRep);clearInterval(adjRep);};
- b.addEventListener("pointerdown",e=>{e.preventDefault();stop();adjStep(b.dataset.p,b.dataset.a);
-  if(b.dataset.a!=="reset")adjRep=setTimeout(()=>{adjRep=setInterval(()=>adjStep(b.dataset.p,b.dataset.a),70);},380);});
+ b.addEventListener("pointerdown",e=>{e.preventDefault();stop();adjStep(b.dataset.a);
+  if(b.dataset.a!=="reset")adjRep=setTimeout(()=>{adjRep=setInterval(()=>adjStep(b.dataset.a),70);},380);});
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
  b.addEventListener("contextmenu",e=>e.preventDefault());
 });
-$("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
-$("adjOk").onclick=async()=>{$("adjEd").hidden=true;if(JSON.stringify({adj:job.adj,crop:job.crop,crops:job.crops})!==adjOld){await saveJob();make();}};
-function adjClose(){if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
-// which photo the trim buttons work on: 両方 / 施工前 / 施工後
-function trimTgtShow(){
- $("trimTgt").querySelectorAll("button").forEach(b=>{const on=b.dataset.g===trimTgt;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});
-}
-$("trimTgt").onclick=e=>{const b=e.target.closest("[data-g]");if(!b)return;trimTgt=b.dataset.g;trimTgtShow();adjDraw();};
-// tabs: 位置・大きさ / トリミング
-function adjTab(t){
- $("adjTabs").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
- $("posPads").hidden=t!=="pos";$("trimPad").hidden=t!=="trim";
- $("adjHint").textContent=t==="pos"?"＋拡大 −縮小 ↑↓←→ 移動 ・ 長押しで連続":"写真を選んで切ります。暗い部分が切り取られます";
-}
-$("adjTabs").onclick=e=>{const b=e.target.closest("[data-t]");if(b)adjTab(b.dataset.t);};
-// cut an edge (d=1) or give it back (d=-1); at least 30% of each side stays
-function trimStep(e,d){
- const c=trimObj(), o={t:"b",b:"t",l:"r",r:"l"}[e];
- c[e]=Math.max(0,Math.min(0.7-c[o],c[e]+d*0.01));adjDraw();
-}
-// 拡大 / 縮小 here works on the chosen photo (両方 = both)
-function trimZoom(d){(trimTgt==="both"?["b","a"]:[trimTgt]).forEach(k=>{const a=job.adj[k];a.s=d>0?Math.min(4,a.s*1.05):Math.max(0.5,a.s/1.05);});adjDraw();}
-$("tZoom").querySelectorAll("button").forEach(b=>{
- const stop=()=>{clearTimeout(adjRep);clearInterval(adjRep);};
- b.addEventListener("pointerdown",e=>{e.preventDefault();stop();trimZoom(+b.dataset.z);adjRep=setTimeout(()=>{adjRep=setInterval(()=>trimZoom(+b.dataset.z),70);},380);});
- ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
- b.addEventListener("contextmenu",e=>e.preventDefault());
-});
-$("trimPad").querySelectorAll(".eb").forEach(b=>{
- const stop=()=>{clearTimeout(adjRep);clearInterval(adjRep);};
- b.addEventListener("pointerdown",e=>{e.preventDefault();stop();trimStep(b.dataset.e,+b.dataset.d);
-  adjRep=setTimeout(()=>{adjRep=setInterval(()=>trimStep(b.dataset.e,+b.dataset.d),70);},380);});
- ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
- b.addEventListener("contextmenu",e=>e.preventDefault());
-});
-// 余白を自動でカット: keep only the part where both photos have picture (no white edges)
-$("trimAuto").onclick=()=>{
+// 余白を自動カット: 両方 = keep only where both photos have picture; one photo = cut that photo's own white edges.
+// The two photos are then shown at the same height (side by side) / width (stacked), so neither is cut off.
+$("adjAuto").onclick=()=>{
  const bw=imgs.b.width||imgs.b.naturalWidth, bh=imgs.b.height||imgs.b.naturalHeight, portrait=bh>=bw, W=portrait?900:1200, H=portrait?1200:900;
  let L=0,T=0,R=W,B=H;
- // 両方: where both photos have picture; one photo: that photo's own white edges (on top of the shared cut)
- [["b",imgs.b],["a",imgs.a]].filter(([k])=>trimTgt==="both"||trimTgt===k).forEach(([k,im])=>{const a=job.adj[k], iw=im.width||im.naturalWidth, ih=im.height||im.naturalHeight;
+ adjKeys().forEach(k=>{const im=imgs[k], a=job.adj[k], iw=im.width||im.naturalWidth, ih=im.height||im.naturalHeight;
   const r=Math.max(W/iw,H/ih)*a.s, dw=iw*r, dh=ih*r, x0=(W-dw)/2+a.x*W, y0=(H-dh)/2+a.y*H;
   L=Math.max(L,x0);T=Math.max(T,y0);R=Math.min(R,x0+dw);B=Math.min(B,y0+dh);});
  const c={l:Math.max(0,L/W),t:Math.max(0,T/H),r:Math.max(0,(W-R)/W),b:Math.max(0,(H-B)/H)};
  if(c.l+c.r>0.7||c.t+c.b>0.7){toast("自動では切れません(余白が大きすぎます)",true);return;}
- // a hair more so no white line is left
  ["l","t","r","b"].forEach(e=>{if(c[e]>0)c[e]=Math.min(0.7,c[e]+0.002);});
- if(trimTgt==="both")job.crop=c;
- else{const sh=job.crop;["l","t","r","b"].forEach(e=>c[e]=Math.max(0,c[e]-sh[e]));job.crops[trimTgt]=c;}
- adjDraw();
- toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");
+ if(adjTgt==="both"){job.crop=c;job.crops={b:CROP0(),a:CROP0()};}
+ else job.crops[adjTgt]=c;
+ adjDraw();toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");
 };
+$("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
+$("adjOk").onclick=async()=>{$("adjEd").hidden=true;if(adjSnap()!==adjOld){await saveJob();make();}};
+function adjClose(){if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
 
 /* ---------- すべての写真を保存 ---------- */
 // Every other photo (comments written in) to the phone. 施工前・施工後 are not included.
