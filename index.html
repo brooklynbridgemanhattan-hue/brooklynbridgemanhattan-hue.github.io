@@ -103,6 +103,13 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .sh2 .cdot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex:none}
 .sh2 small{margin-left:auto;font-size:14px;font-weight:600;color:var(--sub)}
 .c-info{--accent:var(--brand)}
+/* each section framed in its own light colour */
+.card{border:2px solid var(--frame,var(--line))}
+.c-info{--frame:#C9DAFF}
+.c-shot{--frame:#D3DCFB;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(90deg,#C9D4FA 50%,#FFE2A3 50%) border-box;border-color:transparent}
+.c-cmp{--frame:#DDD2FB}
+.c-extra{--frame:#BDE9EF}
+.linkrow{border:2px solid #C3EBCB}
 .c-cmp{--accent:var(--cmp)}
 .c-extra{--accent:var(--extra)}
 .field{display:block;margin-bottom:12px}
@@ -717,7 +724,8 @@ function showNext(){
  $("nextT").textContent={b:"施工前を撮る",a:"施工後を撮る",c:"比較写真を保存する"}[step];
  $("nextS").textContent={b:"同じ角度で撮るための基準の写真です",a:"施工前の写真を重ねて合わせられます",c:(savedCmp?"保存済み ・ ":"")+$("bSaveSub").textContent}[step];
  $("nextI").innerHTML=step==="c"?'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>':CAM_SVG;
- $("nextBar").hidden=camFail&&step!=="c";
+ // the comparison card has its own save button, so nothing floats once both photos are taken
+ $("nextBar").hidden=step==="c"||camFail;
 }
 $("nextBtn").onclick=()=>{if(!job)return;if(!job.before)$("bBefore").click();else if(!job.after)$("bAfter").click();else $("bSave").click();};
 // Tapping an empty photo tile opens the camera.
@@ -1704,8 +1712,13 @@ function openViewer(src,topSrc){
  if(!gal){$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").classList.remove("gal");}
  $("viewer").hidden=false;top.hidden=!topSrc;$("vOp").hidden=!topSrc;
  if(topSrc){top.src=topSrc;$("vOpR").value=50;top.style.opacity=0.5;}
- im.onload=()=>{vw.nw=im.naturalWidth;vw.nh=im.naturalHeight;st.style.width=vw.nw+"px";st.style.height=vw.nh+"px";vFit(false);};
- im.src=src;if(im.complete&&im.naturalWidth)im.onload();
+ // hide the stage until the new photo is ready, so the previous one never flashes
+ const show=()=>{if(im.dataset.want===src)st.style.visibility="";};
+ im.onload=()=>{vw.nw=im.naturalWidth;vw.nh=im.naturalHeight;st.style.width=vw.nw+"px";st.style.height=vw.nh+"px";vFit(false);
+  (im.decode?im.decode():Promise.resolve()).then(show,show);};
+ im.dataset.want=src;
+ if(im.getAttribute("src")===src&&im.complete&&im.naturalWidth){st.style.visibility="";im.onload();return;}
+ st.style.visibility="hidden";im.src=src;
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
 function closeViewer(){$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
