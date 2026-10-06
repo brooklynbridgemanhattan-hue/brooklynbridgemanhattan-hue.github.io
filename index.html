@@ -1486,7 +1486,7 @@ $("vSave").onclick=async()=>{if(!gal||vSaving)return;const x=galItems(gal.kind)[
   if(e&&e.nid&&canNative()){
    // App: the phone writes the comments in and saves (no big data through the page)
    const sp=notesOf(e).length?tagSpec(e):null, r=await nativeSave(e.nid,sp?sp.json:"",sp?sp.key:"",photoName(x.name,x.at));
-   saved(r==="ok",r==="ok"?"保存しました":"保存できませんでした。もう一度お試しください。");
+   saved(r==="ok",r==="ok"?"保存しました":"保存できませんでした("+String(r).replace(/^error:/,"")+")。もう一度お試しください。");
   }else await saveBlob(e&&notesOf(e).length?await burned(e):x.blob,x.name,x.at);}
  finally{vSaving=false;$("vSave").disabled=false;setTx("vSave","保存");}};
 // Tapping the 施工前 / 施工後 photo opens it full screen.
