@@ -796,6 +796,17 @@ function allJobs(){return new Promise(res=>{if(!IDB)return res(MEM);const r=tx("
 function putJob(j){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==j.id).concat([j]);return res();}const r=tx("readwrite").put(j);r.onsuccess=()=>res();r.onerror=()=>res();});}
 function delJob(id){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==id);return res();}const r=tx("readwrite").delete(id);r.onsuccess=()=>res();r.onerror=()=>res();});}
 let MEM=[];
+/* App: the phone keeps its own copy of each photo (for fast saving). Copies no site uses any
+   more are removed: at once when a photo / site is deleted or retaken, and on start-up for
+   anything left over that is over a day old. Unsure what is in use = remove nothing. */
+const nidsOf=j=>{if(!j)return [];const r=j.rawNid||{};return [j.beforeNid,j.afterNid,r.b,r.a,...(j.extras||[]).map(x=>x.nid)].filter(Boolean);};
+function allJobsSafe(){return new Promise(res=>{if(!IDB)return res(null);try{const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);}catch(e){res(null);}});}
+async function photoGC(drop){
+ if(!window.AndroidApp||!window.AndroidApp.cleanPhotos)return;
+ try{const js=await allJobsSafe();if(!js)return;
+  const keep=new Set();js.forEach(j=>nidsOf(j).forEach(id=>keep.add(id)));nidsOf(job).forEach(id=>keep.add(id));
+  window.AndroidApp.cleanPhotos(JSON.stringify([...keep]),JSON.stringify((drop||[]).filter(id=>id&&!keep.has(id))));}catch(e){}
+}
 
 /* ---------- home ---------- */
 let job=null, urls=[];
@@ -845,8 +856,8 @@ $("hSelX").onclick=hSelClear;
 $("hSelDel").onclick=async()=>{
  if(!hSel.size)return;
  if(!hDelArm){hDelArm=true;setTx("hSelDel","もう一度押すと削除");return;}
- const n=hSel.size;for(const id of hSel)await delJob(id);
- hSel.clear();await showHome();toast(n+"件 削除しました");
+ const n=hSel.size, gone=[];for(const id of hSel){const j=(await allJobsSafe()||[]).find(x=>x.id===id);gone.push(...nidsOf(j));await delJob(id);}
+ hSel.clear();await showHome();toast(n+"件 削除しました");photoGC(gone);
 };
 $("hNew").onclick=()=>{openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:"",extras:[]});getPlace();};
 
@@ -908,7 +919,7 @@ $("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
 $("dBack").onclick=async()=>{if(job&&(job.before||job.site))await saveJob();showHome();};
 $("bDel").onclick=async()=>{
  if(!delArm){delArm=true;setTx("bDel","もう一度押すと削除します(元に戻せません)");return;}
- await delJob(job.id);showHome();
+ const gone=nidsOf(job);await delJob(job.id);job=null;showHome();photoGC(gone);
 };
 
 /* ---------- camera ---------- */
@@ -1362,7 +1373,7 @@ async function gotPhoto(mode,blob,o,shot,g){
  if(job.adj)job.adj[mode==="before"?"b":"a"]={s:1,x:0,y:0}; // a new photo starts unadjusted
  job.crop=null;job.crops=null;
  // 施工前・施工後 are levelled right away: the shot as taken is kept in job.raw, the turn in job.rot
- const lk=mode==="before"?"b":"a";job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
+ const lk=mode==="before"?"b":"a", oldNids=[mode==="before"?job.beforeNid:job.afterNid,job.rawNid&&job.rawNid[lk]];job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
  job.rawNid=job.rawNid||{};
  job.grav[lk]=g||null;job.rot[lk]=0;
  if(blob.lvRaw){
@@ -1380,6 +1391,7 @@ async function gotPhoto(mode,blob,o,shot,g){
  $("result").style.display="none";
  if(job.rot[lk])toast("傾きを自動で補正しました("+fmtDeg(job.rot[lk])+")");
  await saveJob();
+ photoGC(oldNids);
  make();
  if(mode==="before"&&maskAfterShot)openMaskEditor();
 }
@@ -1459,8 +1471,8 @@ $("selX").onclick=selClear;
 $("selDel").onclick=async()=>{
  if(!sel.size)return;
  if(!selDelArm){selDelArm=true;setTx("selDel","もう一度押すと削除");return;}
- const n=sel.size;job.extras=(job.extras||[]).filter((x,i)=>!sel.has(i));
- await saveJob();renderThumbs();toast(n+"枚 削除しました");
+ const n=sel.size, gone=(job.extras||[]).filter((x,i)=>sel.has(i)).map(x=>x.nid);job.extras=(job.extras||[]).filter((x,i)=>!sel.has(i));
+ await saveJob();renderThumbs();toast(n+"枚 削除しました");photoGC(gone);
 };
 // Full-screen gallery: kind "extra" = other photos (save / delete), "pair" = 施工前 / 施工後 (save).
 let gal=null, galDelArm=false;
@@ -1483,6 +1495,7 @@ $("vSave").onclick=async()=>{if(!gal||vSaving)return;const x=galItems(gal.kind)[
  const e=gal.kind==="extra"&&job.extras[gal.i];
  vSaving=true;$("vSave").disabled=true;setTx("vSave","保存中…");
  try{
+  if(e&&e.nid&&canNative()&&!window.AndroidApp.hasPhoto(e.nid)){e.nid=null;ensureNid(e);} // copy gone: save from the photo itself, make a new copy
   if(e&&e.nid&&canNative()){
    // App: the phone writes the comments in and saves (no big data through the page)
    const sp=notesOf(e).length?tagSpec(e):null, r=await nativeSave(e.nid,sp?sp.json:"",sp?sp.key:"",photoName(x.name,x.at));
@@ -1679,7 +1692,7 @@ async function withTags(x){
 $("vDel").onclick=async()=>{
  if(!gal||gal.kind!=="extra")return;
  if(!galDelArm){galDelArm=true;setTx("vDel","もう一度押すと削除");return;}
- job.extras.splice(gal.i,1);await saveJob();renderThumbs();toast("削除しました");
+ const gone=job.extras.splice(gal.i,1).map(x=>x.nid);await saveJob();renderThumbs();toast("削除しました");photoGC(gone);
  if(job.extras.length)openGallery(Math.min(gal.i,job.extras.length-1));else closeViewer();
 };
 
@@ -1915,12 +1928,12 @@ $("lvOk").onclick=async()=>{
  const ok=$("lvOk");ok.disabled=true;setTx2("lvOk","補正中…");
  try{
   job.rawNid=job.rawNid||{};
-  const rn=job.raw[k]?job.rawNid[k]:(k==="b"?job.beforeNid:job.afterNid);
+  const was=k==="b"?job.beforeNid:job.afterNid, rn=job.raw[k]?job.rawNid[k]:was;
   const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null);
   job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;
   const bn=b.nid||(b===raw?rn:null)||null;
   if(k==="b"){job.before=b;job.beforeNid=bn;}else{job.after=b;job.afterNid=bn;}
-  refreshDetail();lvClose();toast(deg?"傾きを補正しました("+fmtDeg(deg)+")":"撮ったままに戻しました");await saveJob();make();
+  refreshDetail();lvClose();toast(deg?"傾きを補正しました("+fmtDeg(deg)+")":"撮ったままに戻しました");await saveJob();photoGC([was]);make();
  }catch(e){toast("補正できませんでした",true);}
  ok.disabled=false;setTx2("lvOk","完了");lvClose();
 };
@@ -1948,6 +1961,7 @@ async function saveOne(it){
  const name=photoName(it.kind,it.at);
  if(it.cmp){await makeDone;return await saveQuiet(await fullBlob(),it.kind,it.at);}
  const notes=it.x?notesOf(it.x):[];
+ if(it.nid&&canNative()&&!window.AndroidApp.hasPhoto(it.nid)){if(it.x){it.x.nid=null;ensureNid(it.x);}it.nid=null;}
  if(it.nid&&canNative()){
   let sp=null;
   if(notes.length){const bm=await createImageBitmap(it.blob);sp=tagSpec(it.x,bm.width,bm.height);bm.close&&bm.close();}
@@ -2358,7 +2372,7 @@ window.appBack=()=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&stream)stopCam();});
 
 /* ---------- start ---------- */
-(async()=>{IDB=await openDB();showHome();})();
+(async()=>{IDB=await openDB();showHome();setTimeout(()=>photoGC([]),5000);})();
 </script>
 </body>
 </html>
