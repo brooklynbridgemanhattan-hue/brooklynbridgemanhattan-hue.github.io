@@ -323,6 +323,24 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .pg .rs{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
 .pg .rs svg.i{width:20px;height:20px}
 .padv{font-size:13px;color:#CBD5E1;font-weight:700;font-variant-numeric:tabular-nums}
+.adjtabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.08)}
+.adjtabs button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border-radius:10px;font-size:16px;font-weight:800;color:#CBD5E1}
+.adjtabs button svg.i{width:20px;height:20px}
+.adjtabs button.on{background:#fff;color:#101828}
+.trim{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:16px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1.5px #9C36B5}
+.trim[hidden]{display:none}
+.trimhd{display:flex;align-items:center;gap:10px}
+.trimhd .both{white-space:nowrap;font-size:14px;font-weight:800;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,#5C7CFA,#F59F00);color:#fff}
+.trimhd .auto{margin-left:auto;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 14px;border-radius:999px;background:#FACC15;color:#1A1400;font-size:15px;font-weight:800}
+.trimhd .auto svg.i{width:18px;height:18px}
+.trows{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.tr{display:flex;align-items:center;gap:4px;min-width:0}
+.tr .tl{width:1.3em;flex:none;font-size:16px;font-weight:800}
+.tr button{flex:none;width:42px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.12);color:#fff;touch-action:none}
+.tr button:active{background:#9C36B5}
+.tr button svg.i{width:22px;height:22px;stroke-width:2.6}
+.tr b{flex:1;min-width:2.6em;text-align:center;font-size:14px;font-variant-numeric:tabular-nums}
+.trimnote{margin:0;font-size:13px;color:#CBD5E1}
 .adjbtns{display:grid;grid-template-columns:1fr 1.4fr;gap:12px}
 .adjbtns button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border-radius:999px;font-size:18px;font-weight:800}
 .adjbtns .o2{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3);font-size:16px}
@@ -544,9 +562,15 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="adj" id="adjEd" hidden>
- <div class="adjhd"><b>写真の位置・大きさを調整</b><span>＋拡大 −縮小 ↑↓←→ 移動 ・ 長押しで連続</span></div>
+ <div class="adjhd"><b>写真の位置・大きさを調整</b><span id="adjHint">＋拡大 −縮小 ↑↓←→ 移動 ・ 長押しで連続</span></div>
  <div class="adjstage"><canvas id="adjC"></canvas></div>
- <div class="pads"><div class="pad b"><span class="padt">施工前</span><div class="pg"><button data-p="b" data-a="in" aria-label="施工前を拡大"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button data-p="b" data-a="up" aria-label="施工前を上へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button data-p="b" data-a="out" aria-label="施工前を縮小"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><button data-p="b" data-a="left" aria-label="施工前を左へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button data-p="b" data-a="reset" class="rs" aria-label="施工前を元に戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button><button data-p="b" data-a="right" aria-label="施工前を右へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span></span><button data-p="b" data-a="down" aria-label="施工前を下へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><span></span></div><span class="padv" id="padvb">100%</span></div><div class="pad a"><span class="padt">施工後</span><div class="pg"><button data-p="a" data-a="in" aria-label="施工後を拡大"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button data-p="a" data-a="up" aria-label="施工後を上へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button data-p="a" data-a="out" aria-label="施工後を縮小"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><button data-p="a" data-a="left" aria-label="施工後を左へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button data-p="a" data-a="reset" class="rs" aria-label="施工後を元に戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button><button data-p="a" data-a="right" aria-label="施工後を右へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span></span><button data-p="a" data-a="down" aria-label="施工後を下へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><span></span></div><span class="padv" id="padva">100%</span></div></div>
+ <div class="adjtabs" id="adjTabs"><button data-t="pos" class="on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>位置・大きさ</button><button data-t="trim"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg>トリミング</button></div>
+ <div class="trim" id="trimPad" hidden>
+  <div class="trimhd"><span class="both">両方同時</span><button class="auto" id="trimAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg>余白を自動でカット</button></div>
+  <div class="trows"><div class="tr"><span class="tl">上</span><button data-e="t" data-d="-1" aria-label="上を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="tvt">0%</b><button data-e="t" data-d="1" aria-label="上を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="tr"><span class="tl">下</span><button data-e="b" data-d="-1" aria-label="下を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="tvb">0%</b><button data-e="b" data-d="1" aria-label="下を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="tr"><span class="tl">左</span><button data-e="l" data-d="-1" aria-label="左を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="tvl">0%</b><button data-e="l" data-d="1" aria-label="左を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="tr"><span class="tl">右</span><button data-e="r" data-d="-1" aria-label="右を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="tvr">0%</b><button data-e="r" data-d="1" aria-label="右を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+  <p class="trimnote">＋で多く切る、−で戻す(長押しで連続)</p>
+ </div>
+ <div class="pads" id="posPads"><div class="pad b"><span class="padt">施工前</span><div class="pg"><button data-p="b" data-a="in" aria-label="施工前を拡大"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button data-p="b" data-a="up" aria-label="施工前を上へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button data-p="b" data-a="out" aria-label="施工前を縮小"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><button data-p="b" data-a="left" aria-label="施工前を左へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button data-p="b" data-a="reset" class="rs" aria-label="施工前を元に戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button><button data-p="b" data-a="right" aria-label="施工前を右へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span></span><button data-p="b" data-a="down" aria-label="施工前を下へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><span></span></div><span class="padv" id="padvb">100%</span></div><div class="pad a"><span class="padt">施工後</span><div class="pg"><button data-p="a" data-a="in" aria-label="施工後を拡大"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button data-p="a" data-a="up" aria-label="施工後を上へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button data-p="a" data-a="out" aria-label="施工後を縮小"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><button data-p="a" data-a="left" aria-label="施工後を左へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button data-p="a" data-a="reset" class="rs" aria-label="施工後を元に戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button><button data-p="a" data-a="right" aria-label="施工後を右へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span></span><button data-p="a" data-a="down" aria-label="施工後を下へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><span></span></div><span class="padv" id="padva">100%</span></div></div>
  <div class="adjbtns"><button class="o2" id="adjReset">両方元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
 </div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
@@ -1273,6 +1297,7 @@ async function gotPhoto(mode,blob,o,shot){
   else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
   return;}
  if(job.adj)job.adj[mode==="before"?"b":"a"]={s:1,x:0,y:0}; // a new photo starts unadjusted
+ job.crop=null;
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
  await saveJob();refreshDetail();
@@ -1583,13 +1608,14 @@ $("vDel").onclick=async()=>{
 /* ---------- comparison: position / size of each photo ---------- */
 const ADJ0=()=>({s:1,x:0,y:0});
 let adjOld=null;
+const CROP0=()=>({t:0,b:0,l:0,r:0});
 function adjDraw(){
- const a=job.adj;["b","a"].forEach(k=>$("padv"+k).textContent=Math.round(a[k].s*100)+"%");
+ const a=job.adj, c=job.crop;["t","b","l","r"].forEach(e=>$("tv"+e).textContent=Math.round(c[e]*100)+"%");["b","a"].forEach(k=>$("padv"+k).textContent=Math.round(a[k].s*100)+"%");
  if(imgs.b&&imgs.a)compose($("adjC"),0.5,imgs.b,imgs.a);
 }
 $("bAdj").onclick=async()=>{
  if(!job||!job.before||!job.after)return;await getImgs();
- job.adj=job.adj||{b:ADJ0(),a:ADJ0()};adjOld=JSON.stringify(job.adj);
+ job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();adjOld=JSON.stringify({adj:job.adj,crop:job.crop});adjTab("pos");
  $("adjEd").hidden=false;adjDraw();
 };
 function adjStep(k,act){
@@ -1608,9 +1634,42 @@ $("adjEd").querySelectorAll(".pg button").forEach(b=>{
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
  b.addEventListener("contextmenu",e=>e.preventDefault());
 });
-$("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};adjDraw();};
-$("adjOk").onclick=async()=>{$("adjEd").hidden=true;if(JSON.stringify(job.adj)!==adjOld){await saveJob();make();}};
-function adjClose(){if(adjOld!=null)job.adj=JSON.parse(adjOld);$("adjEd").hidden=true;}
+$("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();adjDraw();};
+$("adjOk").onclick=async()=>{$("adjEd").hidden=true;if(JSON.stringify({adj:job.adj,crop:job.crop})!==adjOld){await saveJob();make();}};
+function adjClose(){if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;}$("adjEd").hidden=true;}
+// tabs: 位置・大きさ / トリミング
+function adjTab(t){
+ $("adjTabs").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+ $("posPads").hidden=t!=="pos";$("trimPad").hidden=t!=="trim";
+ $("adjHint").textContent=t==="pos"?"＋拡大 −縮小 ↑↓←→ 移動 ・ 長押しで連続":"施工前・施工後の同じところを一緒に切り取ります";
+}
+$("adjTabs").onclick=e=>{const b=e.target.closest("[data-t]");if(b)adjTab(b.dataset.t);};
+// cut an edge (d=1) or give it back (d=-1); at least 30% of each side stays
+function trimStep(e,d){
+ const c=job.crop, o={t:"b",b:"t",l:"r",r:"l"}[e];
+ c[e]=Math.max(0,Math.min(0.7-c[o],c[e]+d*0.01));adjDraw();
+}
+$("trimPad").querySelectorAll(".tr button").forEach(b=>{
+ const stop=()=>{clearTimeout(adjRep);clearInterval(adjRep);};
+ b.addEventListener("pointerdown",e=>{e.preventDefault();stop();trimStep(b.dataset.e,+b.dataset.d);
+  adjRep=setTimeout(()=>{adjRep=setInterval(()=>trimStep(b.dataset.e,+b.dataset.d),70);},380);});
+ ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
+ b.addEventListener("contextmenu",e=>e.preventDefault());
+});
+// 余白を自動でカット: keep only the part where both photos have picture (no white edges)
+$("trimAuto").onclick=()=>{
+ const bw=imgs.b.width||imgs.b.naturalWidth, bh=imgs.b.height||imgs.b.naturalHeight, portrait=bh>=bw, W=portrait?900:1200, H=portrait?1200:900;
+ let L=0,T=0,R=W,B=H;
+ [["b",imgs.b],["a",imgs.a]].forEach(([k,im])=>{const a=job.adj[k], iw=im.width||im.naturalWidth, ih=im.height||im.naturalHeight;
+  const r=Math.max(W/iw,H/ih)*a.s, dw=iw*r, dh=ih*r, x0=(W-dw)/2+a.x*W, y0=(H-dh)/2+a.y*H;
+  L=Math.max(L,x0);T=Math.max(T,y0);R=Math.min(R,x0+dw);B=Math.min(B,y0+dh);});
+ const c={l:Math.max(0,L/W),t:Math.max(0,T/H),r:Math.max(0,(W-R)/W),b:Math.max(0,(H-B)/H)};
+ if(c.l+c.r>0.7||c.t+c.b>0.7){toast("自動では切れません(余白が大きすぎます)",true);return;}
+ // a hair more so no white line is left
+ ["l","t","r","b"].forEach(e=>{if(c[e]>0)c[e]=Math.min(0.7,c[e]+0.002);});
+ job.crop=c;adjDraw();
+ toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");
+};
 
 /* ---------- すべての写真を保存 ---------- */
 // Every other photo (comments written in) to the phone. 施工前・施工後 are not included.
@@ -1829,7 +1888,9 @@ function fullBlob(){
 // Draws the comparison photo onto canvas c; k scales every size (1 = full size).
 function compose(c,k,iB,iA){
  const bw=iB.naturalWidth||iB.width, bh=iB.naturalHeight||iB.height;
- const portrait=bh>=bw, pw=(portrait?900:1200)*k, ph=(portrait?1200:900)*k;
+ const portrait=bh>=bw, fw=(portrait?900:1200)*k, fh=(portrait?1200:900)*k;
+ // トリミング: the same edges are cut from both photos so they stay matched
+ const cr=job.crop||{t:0,b:0,l:0,r:0}, pw=fw*(1-cr.l-cr.r), ph=fh*(1-cr.t-cr.b);
  const gap=26*k,pad=34*k,foot=pad;
  const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+ph+foot:pad+ph*2+gap+foot);
  c.width=W;c.height=H;const x=c.getContext("2d");
@@ -1839,7 +1900,10 @@ function compose(c,k,iB,iA){
  const cells=[{im:iB,t:en?"BEFORE":"施工前",d:job.beforeAt,x:pad,y:pad,c1:"#5C7CFA",c2:"#3B5BDB",fg:"#FFFFFF"},
   {im:iA,t:en?"AFTER":"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+ph+gap,c1:"#FFC53D",c2:"#F59F00",fg:"#2B1D00"}];
  const adj=job.adj||{};
- cells.forEach((q,i)=>{drawAdj(x,q.im,q.x,q.y,pw,ph,adj[i?"a":"b"]);if(withLabels)badge(x,q,k,en,font);});
+ cells.forEach((q,i)=>{
+  x.save();x.beginPath();x.rect(q.x,q.y,pw,ph);x.clip();
+  drawAdj(x,q.im,q.x-cr.l*fw,q.y-cr.t*fh,fw,fh,adj[i?"a":"b"]);x.restore();
+  if(withLabels)badge(x,q,k,en,font);});
 
 }
 // A photo cover-fitted into its cell, then zoomed (s) and moved (x, y = parts of the cell size).
