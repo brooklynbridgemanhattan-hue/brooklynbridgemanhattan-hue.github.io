@@ -793,8 +793,49 @@ let IDB=null;
 function openDB(){return new Promise(res=>{try{const r=indexedDB.open("ba-camera",1);r.onupgradeneeded=()=>r.result.createObjectStore("jobs",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>res(null);}catch(e){res(null);}});}
 function tx(mode){return IDB.transaction("jobs",mode).objectStore("jobs");}
 function allJobs(){return new Promise(res=>{if(!IDB)return res(MEM);const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>res([]);});}
-function putJob(j){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==j.id).concat([j]);return res();}const r=tx("readwrite").put(j);r.onsuccess=()=>res();r.onerror=()=>res();});}
-function delJob(id){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==id);return res();}const r=tx("readwrite").delete(id);r.onsuccess=()=>res();r.onerror=()=>res();});}
+function putJobDB(j){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==j.id).concat([j]);return res();}try{const r=tx("readwrite").put(j);r.onsuccess=()=>res();r.onerror=()=>res();}catch(e){res();}});}
+function putJob(j){j.upd=Date.now();mirror(j);return putJobDB(j);}
+function delJob(id){try{if(NJ())window.AndroidApp.deleteJobData(id);}catch(e){}
+ return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==id);return res();}const r=tx("readwrite").delete(id);r.onsuccess=()=>res();r.onerror=()=>res();});}
+/* App: every site is also kept by the phone itself (details as a file, photos as the phone's
+   own copies), so nothing is lost even if the page's storage is cleared or not kept when the
+   app is closed. On start-up a site the page doesn't have (or has an older version of) is
+   put back from there. */
+const NJ=()=>!!(window.AndroidApp&&window.AndroidApp.saveJobData);
+let mirrorQ=Promise.resolve();
+function mirror(j){if(NJ()&&j)mirrorQ=mirrorQ.then(()=>mirrorJob(j)).catch(()=>{});}
+async function mirrorJob(j){
+ const put=async b=>{try{return b&&window.AndroidApp.putPhoto?(window.AndroidApp.putPhoto(await b64Of(b))||null):null;}catch(e){return null;}};
+ if(j.before&&!j.beforeNid)j.beforeNid=await put(j.before);
+ if(j.after&&!j.afterNid)j.afterNid=await put(j.after);
+ if(j.raw){j.rawNid=j.rawNid||{};for(const k of ["b","a"]){const r=j.raw[k];if(r&&!j.rawNid[k]){const cur=k==="b"?j.before:j.after;j.rawNid[k]=r===cur?(k==="b"?j.beforeNid:j.afterNid):await put(r);}}}
+ for(const x of j.extras||[])if(x.blob&&!x.nid)x.nid=await put(x.blob);
+ window.AndroidApp.saveJobData(j.id,JSON.stringify(j,(k,v)=>v instanceof Blob?undefined:v));
+}
+function phoneJobs(){if(!NJ())return [];try{const s=window.AndroidApp.listJobData();return s?JSON.parse(s):null;}catch(e){return null;}}
+async function restoreJobs(){
+ if(!NJ())return;
+ const list=phoneJobs();if(!list||!list.length)return;
+ const have=new Map(((await allJobsSafe())||(IDB?[]:MEM)).map(j=>[j.id,j]));
+ const file=async id=>{if(!id)return null;try{const r=await fetch("/cam/file/"+id,{cache:"no-store"});if(!r.ok)return null;const b=await r.blob();return b.size?b:null;}catch(e){return null;}};
+ for(const j of list){
+  const cur=have.get(j.id);
+  if(cur){if((cur.upd||0)>=(j.upd||0))continue;}
+  j.before=await file(j.beforeNid);j.after=await file(j.afterNid);
+  const rn=j.rawNid||{};j.raw={b:rn.b?(rn.b===j.beforeNid?j.before:await file(rn.b)):null,a:rn.a?(rn.a===j.afterNid?j.after:await file(rn.a)):null};
+  for(const x of j.extras||[])x.blob=await file(x.nid);
+  j.extras=(j.extras||[]).filter(x=>x.blob);
+  await putJobDB(j);
+ }
+}
+// Sites from before this version: hand them to the phone once.
+async function mirrorOld(){
+ if(!NJ())return;const list=phoneJobs();if(!list)return;const on=new Set(list.map(j=>j.id));
+ for(const j of (await allJobsSafe())||[])if(!on.has(j.id))mirror(j);
+}
+// The site that was open when the app was closed is opened again on start-up.
+function setPref(k,v){try{if(window.AndroidApp&&window.AndroidApp.setPref)window.AndroidApp.setPref(k,v);else localStorage.setItem(k,v);}catch(e){}}
+function getPref(k){try{return (window.AndroidApp&&window.AndroidApp.getPref?window.AndroidApp.getPref(k):localStorage.getItem(k))||"";}catch(e){return "";}}
 let MEM=[];
 /* App: the phone keeps its own copy of each photo (for fast saving). Copies no site uses any
    more are removed: at once when a photo / site is deleted or retaken, and on start-up for
@@ -803,8 +844,8 @@ const nidsOf=j=>{if(!j)return [];const r=j.rawNid||{};return [j.beforeNid,j.afte
 function allJobsSafe(){return new Promise(res=>{if(!IDB)return res(null);try{const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);}catch(e){res(null);}});}
 async function photoGC(drop){
  if(!window.AndroidApp||!window.AndroidApp.cleanPhotos)return;
- try{const js=await allJobsSafe();if(!js)return;
-  const keep=new Set();js.forEach(j=>nidsOf(j).forEach(id=>keep.add(id)));nidsOf(job).forEach(id=>keep.add(id));
+ try{await mirrorQ;const js=IDB?await allJobsSafe():MEM, pj=phoneJobs();if(!js||!pj)return;
+  const keep=new Set();js.concat(pj).forEach(j=>nidsOf(j).forEach(id=>keep.add(id)));nidsOf(job).forEach(id=>keep.add(id));
   window.AndroidApp.cleanPhotos(JSON.stringify([...keep]),JSON.stringify((drop||[]).filter(id=>id&&!keep.has(id))));}catch(e){}
 }
 
@@ -820,7 +861,7 @@ $("tabW").onclick=()=>{homeTab="w";hSelClear();showTab();};$("tabD").onclick=()=
 async function showHome(){
  try{selClear();}catch(e){}
  urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
- $("detail").hidden=true;$("home").hidden=false;job=null;
+ $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
  const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img src="'+blobUrl(j.after)+'" alt="">':'')+'</span>'+
   '<div class="jbody"><div class="jt">'+esc(j.site||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
@@ -876,7 +917,7 @@ function setSlot(slot,blob,at){
 }
 function openJob(j){
  hSelClear();
- job=j;$("home").hidden=true;$("detail").hidden=false;
+ job=j;setPref("ba-open",j.id);$("home").hidden=true;$("detail").hidden=false;
  $("site").value=j.site||"";$("memo").value=j.memo||"";
  $("result").style.display="none";$("saveMsg").textContent="";delArm=false;setTx("bDel","この現場を削除");
  refreshDetail();make();window.scrollTo(0,0);
@@ -916,6 +957,9 @@ $("sA").addEventListener("click",()=>{if(job&&job.before&&!job.after&&!camFail)$
 async function saveJob(){job.site=$("site").value.trim();job.memo=$("memo").value.trim();await putJob(job);}
 $("site").addEventListener("input",()=>{$("dTitle").textContent=$("site").value.trim()||"現場の詳細";});
 $("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
+const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||job.before||job.after||(job.extras||[]).length);
+let typeT=0;["site","memo"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(typeT);typeT=setTimeout(()=>{if(worthKeeping())saveJob();},500);}));
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("detail").hidden&&worthKeeping()){clearTimeout(typeT);saveJob();}});
 $("dBack").onclick=async()=>{if(job&&(job.before||job.site))await saveJob();showHome();};
 $("bDel").onclick=async()=>{
  if(!delArm){delArm=true;setTx("bDel","もう一度押すと削除します(元に戻せません)");return;}
@@ -2372,7 +2416,12 @@ window.appBack=()=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&stream)stopCam();});
 
 /* ---------- start ---------- */
-(async()=>{IDB=await openDB();showHome();setTimeout(()=>photoGC([]),5000);})();
+(async()=>{IDB=await openDB();
+ try{await restoreJobs();}catch(e){}
+ const last=getPref("ba-open"); // read before the list screen clears it
+ await showHome();
+ if(last){const j=((await allJobsSafe())||(IDB?[]:MEM)).find(x=>x.id===last);if(j)openJob(j);}
+ mirrorOld();setTimeout(()=>photoGC([]),5000);})();
 </script>
 </body>
 </html>
