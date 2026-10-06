@@ -1665,7 +1665,7 @@ function ovShow(){
  if(ov.dataset.sig!==sig){
   ov.dataset.sig=sig;
   ov.innerHTML=["b","a"].map(k=>{const on=adjSel.has(k);
-   return '<div class="scell '+k+(on?" on":"")+'" data-k="'+k+'">'+(trimOn?"":'<span class="stag">'+(k==="b"?"施工前":"施工後")+(on?" 選択中":"")+'</span>')+'</div>'+
+   return '<div class="scell '+k+(on?" on":"")+'" data-k="'+k+'">'+(trimOn?"":'<span class="stag">'+(on?"選択中":(k==="b"?"施工前":"施工後"))+'</span>')+'</div>'+
     (trimOn&&on?'<div class="tcell" data-k="'+k+'"><div class="tbox '+k+'" data-h="m">'+["tl","t","tr","r","br","b","bl","l"].map(h=>'<i data-h="'+h+'" class="'+(h.length===1?"e":"")+'"></i>').join("")+'</div></div>':"");}).join("");
  }
  ["b","a"].forEach((k,i)=>{const L=lay.cells[i], css="left:"+L.x*k0+"px;top:"+L.y*k0+"px;width:"+L.w*k0+"px;height:"+L.h*k0+"px";
