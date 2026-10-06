@@ -157,7 +157,17 @@ label.btn{cursor:pointer}
 .opt svg.i{width:20px;height:20px}
 .opt input{position:absolute;opacity:0;pointer-events:none}
 .opt:has(input:checked){background:var(--card);color:var(--cmp);box-shadow:0 1px 4px rgba(16,24,40,.14)}
-.switch{position:relative;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--fill);border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap}
+.labbox{margin-top:10px;padding:4px;background:var(--fill);border-radius:16px}
+.switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:50px;padding:0 10px 0 12px;font-size:16px;font-weight:700;cursor:pointer}
+.labseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:2px}
+.labseg[hidden]{display:none}
+.labseg button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:52px;padding:0 6px;border-radius:12px;box-shadow:inset 0 0 0 1.5px var(--line);background:rgba(255,255,255,.5)}
+.labseg button.on{background:var(--card);box-shadow:inset 0 0 0 2px var(--cmp),0 1px 4px rgba(16,24,40,.12)}
+/* little copies of the badges written on the photo */
+.bdg{display:inline-flex;align-items:center;height:26px;padding:0 9px;border-radius:999px;font-size:13px;font-weight:800;line-height:1;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.bdg.b{background:linear-gradient(135deg,#5C7CFA,#3B5BDB);color:#fff}
+.bdg.a{background:linear-gradient(135deg,#FFC53D,#F59F00);color:#2B1D00}
+.bdg.en{font-family:"Helvetica Neue",Arial,system-ui,sans-serif;letter-spacing:.1em;font-size:12px}
 .switch input{position:absolute;opacity:0;pointer-events:none}
 .switch i{flex:none;width:44px;height:26px;border-radius:999px;background:#D0D5DD;position:relative;transition:background .2s}
 .switch i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
@@ -220,6 +230,10 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 #vDel{background:rgba(220,38,38,.88)}
 #vDel[hidden]{display:none}
 .viewer.editing .vbar .btns,.viewer.editing .vtop .cnt{display:none}
+#vBack2{flex:none;padding:0 18px 0 12px;gap:4px;background:rgba(20,22,28,.7);font-size:18px}
+/* photo browsing: 戻る sits beside 保存 (the top one only comes back while typing a comment) */
+.viewer.gal .vtop .vback{display:none}
+.viewer.gal.editing .vtop .vback{display:inline-flex}
 /* comments on an other-photo */
 .vnote{display:flex;flex-direction:column;gap:8px;background:rgba(20,22,28,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:12px 14px}
 .vnote[hidden]{display:none}
@@ -384,6 +398,14 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div id="detail" hidden>
  <header class="topbar"><button class="iconbtn" id="dBack" aria-label="現場の一覧へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><div class="tb-title"><small>現場</small><span id="dTitle">現場の詳細</span></div></header>
  <main class="wrap dwrap">
+ <section class="card c-info">
+  <div class="sh2"><span class="cdot"></span><h2>現場の情報</h2></div>
+  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><input class="t" id="site" type="text" placeholder="例:山田様"></label>
+  <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
+   <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
+  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" placeholder="例:旧機種 → 新機種"></label>
+ </section>
+
  <ol class="steps" id="steps"><li data-s="b"><i>1</i>施工前</li><li data-s="a"><i>2</i>施工後</li><li data-s="c"><i>3</i>比較写真</li></ol>
 
  <section class="card c-shot">
@@ -415,7 +437,13 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>横</label>
    <label class="opt"><input type="radio" name="lay" id="lyV" value="v"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="8" rx="1.5"/><rect x="5" y="13" width="14" height="8" rx="1.5"/></svg>縦</label>
   </div>
-  <label class="switch" for="cLabel"><span>文字</span><input type="checkbox" id="cLabel" checked><i></i></label>
+  </div>
+  <div class="labbox">
+   <label class="switch" for="cLabel"><span>施工前・施工後の文字を入れる</span><input type="checkbox" id="cLabel" checked><i></i></label>
+   <div class="labseg" id="labSeg" role="radiogroup" aria-label="文字の種類">
+    <button data-l="ja" role="radio"><span class="bdg b">施工前</span><span class="bdg a">施工後</span></button>
+    <button data-l="en" role="radio"><span class="bdg b en">BEFORE</span><span class="bdg a en">AFTER</span></button>
+   </div>
   </div>
   <button id="bSave" hidden><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
  </section>
@@ -427,13 +455,6 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <p class="none" id="thumbsNone">まだありません。タップで拡大、長押しで選択できます。</p>
  </section>
 
- <section class="card c-info">
-  <div class="sh2"><span class="cdot"></span><h2>現場の情報</h2></div>
-  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><input class="t" id="site" type="text" placeholder="例:山田様"></label>
-  <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
-   <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
-  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" placeholder="例:旧機種 → 新機種"></label>
- </section>
 
  <button class="linkrow" id="bReport"><span class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span><span class="tx">施工完了報告書に添付する</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
  <p class="msg" id="saveMsg"></p>
@@ -445,7 +466,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="nextbar" id="nextBar"><button class="next m-before" id="nextBtn"><span id="nextI"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="tx2"><b id="nextT">施工前を撮る</b><small id="nextS"></small></span></button></div>
 </div>
 
-<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
+<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
@@ -1213,7 +1234,7 @@ function openGallery(i,kind){
  i=Math.max(0,Math.min(xs.length-1,i));gal={i,kind};galDelArm=false;setTx("vDel","削除");
  $("vDel").hidden=kind!=="extra";
  noteEnd(true);$("vNote").hidden=kind!=="extra";cur=-1;clearTimeout(noteMsgT);$("vNoteL").parentNode.classList.remove("msg");
- $("vBar").hidden=false;$("vCnt").hidden=false;$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
+ $("vBar").hidden=false;$("vCnt").hidden=false;$("viewer").classList.add("gal");$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
  openViewer(blobUrl(xs[i].blob));
  tagShow();noteUI();if(kind==="extra")ensureNid(job.extras[i]);
 }
@@ -1288,6 +1309,7 @@ $("vNoteAdd").onclick=()=>{cur=-1;noteUI();$("vNoteT").focus();};
 // 戻る: while typing it cancels the typing, otherwise it closes the viewer.
 let backWhileEdit=false;
 $("vBack").addEventListener("pointerdown",()=>{backWhileEdit=editing;if(editing)cancelEdit=true;});
+$("vBack2").onclick=()=>closeViewer();
 $("vBack").onclick=()=>{if(backWhileEdit||editing){backWhileEdit=false;noteEnd(true);return;}closeViewer();};
 // New text goes top left, under the comments already there.
 function newTagPos(ns){
@@ -1602,25 +1624,50 @@ function fullBlob(){
 function compose(c,k,iB,iA){
  const bw=iB.naturalWidth||iB.width, bh=iB.naturalHeight||iB.height;
  const portrait=bh>=bw, pw=(portrait?900:1200)*k, ph=(portrait?1200:900)*k;
- const gap=12*k,pad=24*k,label=withLabels?64*k:0,foot=(job.site||job.memo)?110*k:pad;
- const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+label+ph+foot:pad+(label+ph)*2+gap+foot);
+ const gap=12*k,pad=24*k,foot=(job.site||job.memo)?110*k:pad;
+ const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+ph+foot:pad+ph*2+gap+foot);
  c.width=W;c.height=H;const x=c.getContext("2d");
  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
  const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif', px=n=>Math.round(n*k)+"px ";
- const cells=[{im:iB,t:"施工前",d:job.beforeAt,x:pad,y:pad,bg:"#1C2B3A",fg:"#FFFFFF"},
-  {im:iA,t:"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+label+ph+gap,bg:"#E5AE00",fg:"#1C2B3A"}];
- cells.forEach(q=>{
-  if(label){x.fillStyle=q.bg;x.fillRect(q.x,q.y,pw,label);x.fillStyle=q.fg;x.textBaseline="middle";
-   x.font="800 "+px(38)+font;x.textAlign="left";x.fillText(q.t,q.x+22*k,q.y+label/2+k);
-   x.font="600 "+px(28)+font;x.textAlign="right";x.fillText(fmtFull(q.d),q.x+pw-22*k,q.y+label/2+k);x.textAlign="left";}
-  drawCover(x,q.im,q.x,q.y+label,pw,ph);});
+ const en=labType==="en";
+ const cells=[{im:iB,t:en?"BEFORE":"施工前",d:job.beforeAt,x:pad,y:pad,c1:"#5C7CFA",c2:"#3B5BDB",fg:"#FFFFFF"},
+  {im:iA,t:en?"AFTER":"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+ph+gap,c1:"#FFC53D",c2:"#F59F00",fg:"#2B1D00"}];
+ cells.forEach(q=>{drawCover(x,q.im,q.x,q.y,pw,ph);if(withLabels)badge(x,q,k,en,font);});
  if(!(job.site||job.memo))return;
  const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12*k,foot);
  x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 "+px(36)+font;x.fillText(job.site||job.memo,pad+14*k,fy+48*k,W-pad*2-20*k);
  if(job.site&&job.memo){x.font="500 "+px(28)+font;x.fillStyle="#C9D2DA";x.fillText(job.memo,pad+14*k,fy+88*k,W-pad*2-20*k);}
 }
+// The 施工前 / 施工後 (BEFORE / AFTER) badge: a glossy pill in the photo's corner with the date.
+function badge(x,q,k,en,font){
+ const H=74*k, m=22*k, r=H/2, fs=en?34*k:38*k, ds=23*k;
+ const tf=(en?'800 '+fs+'px "Helvetica Neue",Arial,':'800 '+fs+'px ')+font, df='700 '+ds+'px "Helvetica Neue",Arial,'+font;
+ const d=new Date(q.d||Date.now()), dt=d.getFullYear()+"."+pad2(d.getMonth()+1)+"."+pad2(d.getDate());
+ x.save();
+ const ls=en&&"letterSpacing" in x;
+ if(ls)x.letterSpacing=Math.round(4*k)+"px";x.font=tf;const tw=x.measureText(q.t).width;if(ls)x.letterSpacing="0px";
+ x.font=df;const dw=x.measureText(dt).width;
+ const w=26*k+tw+22*k+2*k+20*k+dw+28*k, bx=q.x+m, by=q.y+m;
+ x.shadowColor="rgba(0,0,0,.35)";x.shadowBlur=18*k;x.shadowOffsetY=4*k;
+ const g=x.createLinearGradient(bx,by,bx+w,by+H);g.addColorStop(0,q.c1);g.addColorStop(1,q.c2);
+ x.fillStyle=g;x.beginPath();x.roundRect?x.roundRect(bx,by,w,H,r):x.rect(bx,by,w,H);x.fill();
+ x.shadowColor="transparent";
+ // soft shine on the top half
+ const sh=x.createLinearGradient(0,by,0,by+H);sh.addColorStop(0,"rgba(255,255,255,.28)");sh.addColorStop(.55,"rgba(255,255,255,0)");
+ x.fillStyle=sh;x.beginPath();x.roundRect?x.roundRect(bx,by,w,H,r):x.rect(bx,by,w,H);x.fill();
+ x.fillStyle=q.fg;x.textBaseline="middle";x.textAlign="left";
+ if(ls)x.letterSpacing=Math.round(4*k)+"px";x.font=tf;x.fillText(q.t,bx+26*k,by+H/2+2*k);if(ls)x.letterSpacing="0px";
+ x.globalAlpha=.45;x.fillRect(bx+26*k+tw+22*k,by+18*k,2*k,H-36*k);x.globalAlpha=.9;
+ x.font=df;x.fillText(dt,bx+26*k+tw+22*k+2*k+20*k,by+H/2+2*k);
+ x.restore();
+}
 $("cLabel").checked=withLabels;
-$("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}make();};
+$("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}showLab();make();};
+// 施工前・施工後 or BEFORE・AFTER on the photo
+let labType="ja";try{labType=localStorage.getItem("ba-labtype")==="en"?"en":"ja";}catch(e){}
+function showLab(){$("labSeg").hidden=!withLabels;$("labSeg").querySelectorAll("button").forEach(b=>{const on=b.dataset.l===labType;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});}
+$("labSeg").onclick=e=>{const b=e.target.closest("[data-l]");if(!b||b.dataset.l===labType)return;labType=b.dataset.l;try{localStorage.setItem("ba-labtype",labType);}catch(err){}showLab();make();};
+showLab();
 // The save button says which layout will be saved.
 function showLayout(){$("lyV").checked=layout==="v";$("lyH").checked=layout==="h";$("bSaveSub").textContent=layout==="v"?"縦並びで保存されます":"横並びで保存されます";showNext();}
 showLayout();
@@ -1636,14 +1683,14 @@ const vw={s:1,fit:1,x:0,y:0,nw:1,nh:1,pts:new Map(),pinch:null,pan:null,lastTap:
 // src = the photo; topSrc (optional) = the before photo laid over it, with a see-through slider.
 function openViewer(src,topSrc){
  const im=$("vImg"), top=$("vImg2"), st=$("vStage");
- if(!gal){$("vBar").hidden=true;$("vCnt").hidden=true;}
+ if(!gal){$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").classList.remove("gal");}
  $("viewer").hidden=false;top.hidden=!topSrc;$("vOp").hidden=!topSrc;
  if(topSrc){top.src=topSrc;$("vOpR").value=50;top.style.opacity=0.5;}
  im.onload=()=>{vw.nw=im.naturalWidth;vw.nh=im.naturalHeight;st.style.width=vw.nw+"px";st.style.height=vw.nh+"px";vFit(false);};
  im.src=src;if(im.complete&&im.naturalWidth)im.onload();
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
-function closeViewer(){noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function closeViewer(){$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
 function vApply(anim){
