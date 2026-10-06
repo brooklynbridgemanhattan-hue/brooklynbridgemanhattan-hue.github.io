@@ -323,8 +323,21 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .pad1 button:active{background:var(--pc,#7048E8);color:#fff}
 .pad1 .z{background:rgba(112,72,232,.35)}
 .pad1 .rs{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3);color:#CBD5E1}
-.pad1 .auto{background:#FACC15;color:#1A1400;font-size:13px}
-.pad1 .auto:active{background:#FDE047;color:#1A1400}
+.trimrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:420px;width:100%;margin:0 auto}
+.trimrow button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:52px;border-radius:14px;font-size:15px;font-weight:800;touch-action:manipulation}
+.trimrow button svg.i{width:20px;height:20px}
+.trimrow .mtrim{background:rgba(255,255,255,.12);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
+.trimrow .mtrim.on{background:#fff;color:#101828}
+.trimrow .auto{background:#FACC15;color:#1A1400}
+/* manual trimming: dashed box per photo, drag edges / corners, drag inside to move */
+.adjwrap{position:relative;max-width:100%;max-height:100%;display:flex}
+.trimov{position:absolute;inset:0;touch-action:none}
+.tcell{position:absolute;overflow:hidden}
+.tbox{position:absolute;border:2px dashed #fff;box-shadow:0 0 0 2000px rgba(5,8,15,.6);touch-action:none}
+.tbox.b{border-color:#91A7FF}.tbox.a{border-color:#FFD43B}
+.tbox i{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.45)}
+.tbox i.e{width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:6px}
+.tbox .lab{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:#fff;text-shadow:0 1px 3px #000;white-space:nowrap;pointer-events:none}
 .pad1 .zv small{font-size:13px;color:#CBD5E1}
 .pad1 .zv{display:grid;place-items:center;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;text-align:center;line-height:1.2}
 .adjbtns{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;position:sticky;bottom:calc(-14px - env(safe-area-inset-bottom,0px));margin:0 -14px calc(-14px - env(safe-area-inset-bottom,0px));padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));background:#0B1020;box-shadow:0 -8px 16px #0B1020;z-index:2}
@@ -548,14 +561,15 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="adj" id="adjEd" hidden>
- <div class="adjhd"><b>写真の位置・大きさを調整</b><span>動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
- <div class="adjstage"><canvas id="adjC"></canvas></div>
+ <div class="adjhd"><b>写真の位置・大きさを調整</b><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
+ <div class="adjstage" id="adjStage"><div class="adjwrap"><canvas id="adjC"></canvas><div class="trimov" id="trimOv" hidden></div></div></div>
  <div class="tgt" id="adjTgt" role="radiogroup" aria-label="動かす写真"><button data-g="b" class="tb on">施工前</button><button data-g="a" class="ta">施工後</button><button data-g="both">両方</button></div>
  <div class="pad1" id="adjPad">
   <button data-a="in" class="z"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>拡大</span></button><button data-a="up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>上へ</span></button><button data-a="out" class="z"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><span>縮小</span></button>
   <button data-a="left"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg><span>左へ</span></button><div class="zv" id="adjVal">100%</div><button data-a="right"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>右へ</span></button>
-  <button data-a="reset" class="rs"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg><span>元に戻す</span></button><button data-a="down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span>下へ</span></button><button class="auto" id="adjAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg><span>余白を<br>自動カット</span></button>
+  <button data-a="reset" class="rs"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg><span>元に戻す</span></button><button data-a="down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span>下へ</span></button><span></span>
  </div>
+ <div class="trimrow"><button class="mtrim" id="adjTrim"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg><span class="tx">手動でトリミング</span></button><button class="auto" id="adjAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg><span>余白を自動カット</span></button></div>
  <div class="adjbtns"><button class="o2" id="adjReset">すべて元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
 </div>
 
@@ -1599,8 +1613,55 @@ const adjKeys=()=>adjTgt==="both"?["b","a"]:[adjTgt];
 function adjSnap(){return JSON.stringify({adj:job.adj,crop:job.crop,crops:job.crops});}
 function adjDraw(){
  const a=job.adj;$("adjVal").innerHTML=adjTgt==="both"?"<small>前</small> "+Math.round(a.b.s*100)+"%<br><small>後</small> "+Math.round(a.a.s*100)+"%":Math.round(a[adjTgt].s*100)+"%";
- if(imgs.b&&imgs.a)compose($("adjC"),0.5,imgs.b,imgs.a);
+ if(imgs.b&&imgs.a){noCropDraw=trimOn;compose($("adjC"),0.5,imgs.b,imgs.a);noCropDraw=false;}
+ trimShow();
 }
+// ---- manual trimming (点線の枠) ----
+let trimOn=false, tdrag=null;
+function trimSet(on){trimOn=on;$("adjHint").textContent=on?"点線の枠の角や辺を引っ張って残す範囲を決めます(枠の中を引っぱると移動)":"動かす写真を選んで、ボタンで調整します(長押しで連続)";$("adjTrim").classList.toggle("on",on);setTx("adjTrim",on?"トリミング完了":"手動でトリミング");$("trimOv").hidden=!on;adjDraw();}
+$("adjTrim").onclick=()=>trimSet(!trimOn);
+// the crop a box shows: 両方 = shared cut; one photo = shared + its own
+const tcrop=k=>adjTgt==="both"?job.crop:(()=>{const c=job.crop,o=job.crops[k];return {t:c.t+o.t,b:c.b+o.b,l:c.l+o.l,r:c.r+o.r};})();
+function trimShow(){
+ const ov=$("trimOv");if(!trimOn){ov.innerHTML="";return;}
+ const cv=$("adjC"), lay=cv._lay;if(!lay)return;const k0=cv.clientWidth/cv.width;
+ ov.style.width=cv.clientWidth+"px";ov.style.height=cv.clientHeight+"px";
+ const keys=adjKeys();
+ if(ov.children.length!==keys.length||ov.dataset.k!==keys.join()){
+  ov.dataset.k=keys.join();
+  ov.innerHTML=keys.map(k=>'<div class="tcell" data-k="'+k+'"><div class="tbox '+k+'" data-h="m">'+
+   ["tl","t","tr","r","br","b","bl","l"].map(h=>'<i data-h="'+h+'" class="'+(h.length===1?"e":"")+'"></i>').join("")+'<span class="lab">'+(k==="b"?"施工前":"施工後")+'</span></div></div>').join("");
+ }
+ keys.forEach(k=>{const L=lay.cells[k==="b"?0:1], el=ov.querySelector('.tcell[data-k="'+k+'"]'), bx=el.firstChild, c=tcrop(k);
+  el.style.cssText="left:"+L.x*k0+"px;top:"+L.y*k0+"px;width:"+L.w*k0+"px;height:"+L.h*k0+"px";
+  const W=L.w*k0, H=L.h*k0;
+  bx.style.cssText="left:"+c.l*W+"px;top:"+c.t*H+"px;width:"+(1-c.l-c.r)*W+"px;height:"+(1-c.t-c.b)*H+"px";
+  bx.querySelectorAll("i").forEach(i=>{const h=i.dataset.h;i.style.left=(h.includes("l")?0:h.includes("r")?100:50)+"%";i.style.top=(h.includes("t")?0:h.includes("b")?100:50)+"%";});
+ });
+}
+$("trimOv").addEventListener("pointerdown",e=>{
+ const t=e.target.closest("[data-h]");if(!t)return;e.preventDefault();
+ const cell=t.closest(".tcell"), k=cell.dataset.k, c=tcrop(k);
+ tdrag={h:t.dataset.h,k,x0:e.clientX,y0:e.clientY,c0:{...c},W:cell.clientWidth,H:cell.clientHeight};
+ $("trimOv").setPointerCapture(e.pointerId);
+});
+$("trimOv").addEventListener("pointermove",e=>{
+ if(!tdrag)return;const d=tdrag, dx=(e.clientX-d.x0)/d.W, dy=(e.clientY-d.y0)/d.H, c={...d.c0}, MIN=0.15;
+ const cl=v=>Math.max(0,v);
+ if(d.h==="m"){const w=1-c.l-c.r, h=1-c.t-c.b;c.l=Math.min(1-w,cl(c.l+dx));c.r=1-w-c.l;c.t=Math.min(1-h,cl(c.t+dy));c.b=1-h-c.t;}
+ else{
+  if(d.h.includes("l"))c.l=Math.min(1-c.r-MIN,cl(c.l+dx));
+  if(d.h.includes("r"))c.r=Math.min(1-c.l-MIN,cl(c.r-dx));
+  if(d.h.includes("t"))c.t=Math.min(1-c.b-MIN,cl(c.t+dy));
+  if(d.h.includes("b"))c.b=Math.min(1-c.t-MIN,cl(c.b-dy));
+ }
+ if(adjTgt==="both")job.crop=c;
+ else{const sh=job.crop;job.crops[d.k]={t:cl(c.t-sh.t),b:cl(c.b-sh.b),l:cl(c.l-sh.l),r:cl(c.r-sh.r)};}
+ trimShow();
+});
+const tend=()=>{if(tdrag){tdrag=null;}};
+$("trimOv").addEventListener("pointerup",tend);$("trimOv").addEventListener("pointercancel",tend);
+window.addEventListener("resize",()=>{if(!$("adjEd").hidden)trimShow();});
 function adjTgtShow(){
  $("adjTgt").querySelectorAll("button").forEach(b=>{const on=b.dataset.g===adjTgt;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});
  $("adjPad").style.setProperty("--pc",{b:"#5C7CFA",a:"#F59F00",both:"#7048E8"}[adjTgt]);
@@ -1609,7 +1670,7 @@ function adjTgtShow(){
 $("bAdj").onclick=async()=>{
  if(!job||!job.before||!job.after)return;await getImgs();
  job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};
- adjOld=adjSnap();adjTgt="b";$("adjEd").hidden=false;adjTgtShow();
+ adjOld=adjSnap();adjTgt="b";trimOn=false;$("adjEd").hidden=false;trimSet(false);adjTgtShow();
 };
 $("adjTgt").onclick=e=>{const b=e.target.closest("[data-g]");if(!b)return;adjTgt=b.dataset.g;adjTgtShow();};
 // ＋拡大 −縮小 ↑上へ ↓下へ ←左へ →右へ (moves the picture itself), 元に戻す
@@ -1644,8 +1705,8 @@ $("adjAuto").onclick=()=>{
  adjDraw();toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");
 };
 $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
-$("adjOk").onclick=async()=>{$("adjEd").hidden=true;if(adjSnap()!==adjOld){await saveJob();make();}};
-function adjClose(){if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
+$("adjOk").onclick=async()=>{if(trimOn)trimSet(false);$("adjEd").hidden=true;if(adjSnap()!==adjOld){await saveJob();make();}};
+function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
 
 /* ---------- すべての写真を保存 ---------- */
 // Every other photo (comments written in) to the phone. 施工前・施工後 are not included.
@@ -1879,6 +1940,7 @@ function compose(c,k,iB,iA){
  const cells=[{im:iB,t:en?"BEFORE":"施工前",d:job.beforeAt,x:pad,y:pad,c1:"#5C7CFA",c2:"#3B5BDB",fg:"#FFFFFF"},
   {im:iA,t:en?"AFTER":"施工後",d:job.afterAt,x:layout==="h"?pad+vis[0].cw+gap:pad,y:layout==="h"?pad:pad+vis[0].ch+gap,c1:"#FFC53D",c2:"#F59F00",fg:"#2B1D00"}];
  const adj=job.adj||{};
+ c._lay={cells:cells.map((q,i)=>({x:q.x,y:q.y,w:vis[i].cw,h:vis[i].ch}))};
  cells.forEach((q,i)=>{const v=vis[i];
   x.save();x.beginPath();x.rect(q.x,q.y,v.cw,v.ch);x.clip();
   x.translate(q.x,q.y);x.scale(v.s,v.s);x.translate(-v.e.l*fw,-v.e.t*fh);
@@ -1886,7 +1948,9 @@ function compose(c,k,iB,iA){
   if(withLabels)badge(x,q,k,en,font);});
 }
 // Both-photo cut plus this photo's own cut (at least 15% of each side stays).
+let noCropDraw=false;
 function effCrop(i){
+ if(noCropDraw)return {t:0,b:0,l:0,r:0};
  const c=job.crop||{}, o=(job.crops&&job.crops[i])||{}, e={};
  ["t","b","l","r"].forEach(k=>e[k]=(c[k]||0)+(o[k]||0));
  [["l","r"],["t","b"]].forEach(([p,q])=>{const sum=e[p]+e[q];if(sum>0.85){e[p]*=0.85/sum;e[q]*=0.85/sum;}});
