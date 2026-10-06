@@ -368,6 +368,26 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .adjbtns button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border-radius:999px;font-size:18px;font-weight:800}
 .adjbtns .o2{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3);font-size:16px}
 .adjbtns .ok{background:linear-gradient(135deg,#7048E8,#9C36B5);color:#fff}
+.col.before .mini.lv{background:#fff;color:var(--before);box-shadow:inset 0 0 0 2px #C5D0FA}
+.col.after .mini.lv{background:#fff;color:var(--after-text);box-shadow:inset 0 0 0 2px #FFE08A}
+.mini.lv{font-size:16px;min-height:44px}
+.lved .lvstage{flex:none;display:flex;justify-content:center;align-items:center;min-height:30vh}
+.lvbox{position:relative;overflow:hidden;background:#fff;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
+.lvbox img{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 50%}
+.lvgrid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.75) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.75) 1px,transparent 1px);background-size:100% 12.5%,12.5% 100%;background-position:0 -.5px,-.5px 0;mix-blend-mode:difference;opacity:.55}
+.lvval{display:flex;align-items:center;justify-content:center;gap:14px}
+.lvval b{min-width:96px;text-align:center;font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
+.lvval button{min-width:84px;min-height:46px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font-size:17px;font-weight:800;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
+.lvsl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#CBD5E1}
+.lvsl input{flex:1;-webkit-appearance:none;appearance:none;height:44px;background:transparent}
+.lvsl input::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,rgba(255,255,255,.25),rgba(255,255,255,.25)) center/2px 100% no-repeat,rgba(255,255,255,.18)}
+.lvsl input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:34px;height:34px;margin-top:-13px;border-radius:50%;background:#fff;border:5px solid #9C36B5;box-shadow:0 1px 6px rgba(0,0,0,.5)}
+.lvsl input::-moz-range-track{height:8px;border-radius:4px;background:rgba(255,255,255,.18)}
+.lvsl input::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:5px solid #9C36B5}
+.lvrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lvrow button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:52px;border-radius:14px;font-size:16px;font-weight:800;background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
+.lvrow #lvAuto{background:linear-gradient(135deg,#1C7ED6,#4263EB);box-shadow:none}
+.lvrow svg.i{width:20px;height:20px}
 
 /* ---------- box editor ---------- */
 .med{position:fixed;inset:0;z-index:60;background:#0B1020;color:#fff;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 0 calc(14px + env(safe-area-inset-bottom,0px))}
@@ -529,11 +549,13 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <div class="col before">
     <div class="slot" id="sB"><span class="tag">施工前</span><span class="ph"><span class="pi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span>タップして撮影</span></div>
     <button class="mini" id="bBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">撮り直す</span></button>
+    <button class="mini lv" id="lvB" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="10" rx="1.5" transform="rotate(-12 12 10)"/><path d="M2 20h20"/></svg><span class="tx">傾きを補正</span></button>
     <button id="svB" hidden disabled></button>
    </div>
    <div class="col after">
     <div class="slot after" id="sA"><span class="tag">施工後</span><span class="ph"><span class="pi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span id="sAph">施工前の<br>あとに撮れます</span></span></div>
     <button class="mini" id="bAfter" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">撮り直す</span></button>
+    <button class="mini lv" id="lvA" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="10" rx="1.5" transform="rotate(-12 12 10)"/><path d="M2 20h20"/></svg><span class="tx">傾きを補正</span></button>
     <button id="svA" hidden disabled></button>
    </div>
   </div>
@@ -600,6 +622,14 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="adjbtns"><button class="o2" id="adjReset">すべて元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
 </div>
 
+<div class="adj lved" id="lvEd" hidden>
+ <div class="adjhd"><b id="lvT">施工前の傾きを補正</b><span>スライドバーで傾きを調整します(画像は拡大しません)</span></div>
+ <div class="lvstage" id="lvStage"><div class="lvbox" id="lvBox"><img id="lvImg" alt=""><div class="lvgrid"></div></div></div>
+ <div class="lvval"><button id="lvM" aria-label="左に0.1度">−0.1°</button><b id="lvV">0.0°</b><button id="lvP" aria-label="右に0.1度">＋0.1°</button></div>
+ <div class="lvsl"><span>左に回す</span><input type="range" id="lvR" min="-15" max="15" step="0.1" value="0" aria-label="傾き"><span>右に回す</span></div>
+ <div class="lvrow"><button id="lvAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg>自動で水平にする</button><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
+ <div class="adjbtns"><button class="o2" id="lvX">キャンセル</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
+</div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
@@ -847,6 +877,7 @@ function refreshDetail(){
  $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);
  $("sA").parentNode.classList.toggle("off",!job.before);
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
+ $("lvB").hidden=!job.before;$("lvA").hidden=!job.after;
  showPlace();renderThumbs();$("dTitle").textContent=job.site||"現場の詳細";
  $("bMask").disabled=!job.before;$("bMask").hidden=!job.before;setTx("bMask",job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)");
  const n=$("camNote");
@@ -1016,7 +1047,7 @@ let shooting=false;
 $("cShot").onclick=async()=>{
  if(!camReady()||shooting)return;
  shooting=true;
- const mode=camMode, o=oriOK?{...ori}:null;
+ const mode=camMode, o=oriOK?{...ori}:null, g=gravOK?{...grav}:null;
  const fl=$("flash");fl.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));
  $("cShot").classList.add("busy");setTx2("cShot","撮影中…");
  let b=null;try{b=await grab();}finally{shooting=false;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
@@ -1027,14 +1058,14 @@ $("cShot").onclick=async()=>{
   gotPhoto("extra",b,o,true);
   return;
  }
- stopCam();await gotPhoto(mode,b,o);
+ stopCam();await gotPhoto(mode,b,o,false,g);
 };
 
 /* ---------- holding the phone sideways ---------- */
 // With the screen staying portrait, a phone held sideways gives sideways camera frames.
 // camRot() is the turn (degrees, canvas direction) that makes such a frame upright.
-let grav={x:0,y:9.8}, rotNow=0;
-window.addEventListener("devicemotion",e=>{const g=e.accelerationIncludingGravity;if(g&&g.x!=null&&g.y!=null)grav={x:g.x,y:g.y};});
+let grav={x:0,y:9.8}, rotNow=0, gravOK=false;
+window.addEventListener("devicemotion",e=>{const g=e.accelerationIncludingGravity;if(g&&g.x!=null&&g.y!=null){grav={x:g.x,y:g.y};gravOK=true;}});
 function camRot(){
  const portraitScreen=window.innerHeight>=window.innerWidth;
  if(!portraitScreen){rotNow=0;return 0;}
@@ -1315,7 +1346,7 @@ async function grabRaw(){
 $("fBefore").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("before",f,null);};
 $("fExtra").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("extra",f,null);};
 $("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
-async function gotPhoto(mode,blob,o,shot){
+async function gotPhoto(mode,blob,o,shot,g){
  const now=Date.now();
  if(mode==="extra"){(job.extras=job.extras||[]).push(blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now});await saveJob();renderThumbs();
   // App: other photos also go straight into the phone's photos (Google Photos), like a camera.
@@ -1325,11 +1356,17 @@ async function gotPhoto(mode,blob,o,shot){
   return;}
  if(job.adj)job.adj[mode==="before"?"b":"a"]={s:1,x:0,y:0}; // a new photo starts unadjusted
  job.crop=null;job.crops=null;
+ // 施工前・施工後 are levelled right away: the shot as taken is kept in job.raw, the turn in job.rot
+ const lk=mode==="before"?"b":"a";job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
+ job.raw[lk]=blob;job.grav[lk]=g||null;job.rot[lk]=0;
+ const deg=await autoTilt(blob,g);job.auto[lk]=deg;
+ if(deg){const lb=await levelBlob(blob,deg).catch(()=>null);if(lb){blob=lb;job.rot[lk]=deg;}}
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
  await saveJob();refreshDetail();
  $("result").style.display="none";
  make();
+ if(job.rot[lk])toast("傾きを自動で補正しました("+fmtDeg(job.rot[lk])+")");
  if(mode==="before"&&maskAfterShot)openMaskEditor();
 }
 
@@ -1756,6 +1793,101 @@ $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crop
 $("adjOk").onclick=async()=>{if(trimOn)trimSet(false);$("adjEd").hidden=true;if(adjSnap()!==adjOld){await saveJob();make();}};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
 
+/* ---------- 傾き補正 (施工前・施工後) ---------- */
+// Turned in place: the picture is not enlarged, the corners it leaves are white.
+const LV_MAX=15;
+const fmtDeg=d=>(d>0?"+":d<0?"−":"")+Math.abs(d).toFixed(1)+"°";
+// The phone's own tilt when the shutter was pressed (degrees, canvas direction), if it was held up.
+function gravTilt(g){
+ if(!g)return null;if(Math.hypot(g.x,g.y)<4.5)return null; // pointing at the floor / ceiling: no sideways tilt to read
+ let d=Math.atan2(-g.x,g.y)*180/Math.PI;d-=Math.round(d/90)*90;
+ return Math.abs(d)<=LV_MAX?d:null;
+}
+// Without the phone's tilt: the strongest nearly level / upright edges in the picture.
+async function imgTilt(blob){
+ const im=await createImageBitmap(blob), S=Math.min(1,400/Math.max(im.width,im.height)), w=Math.max(8,Math.round(im.width*S)), h=Math.max(8,Math.round(im.height*S));
+ const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");x.imageSmoothingQuality="high";x.drawImage(im,0,0,w,h);if(im.close)im.close();
+ const d=x.getImageData(0,0,w,h).data;let g=new Float32Array(w*h);for(let i=0;i<w*h;i++)g[i]=d[i*4]*.3+d[i*4+1]*.59+d[i*4+2]*.11;
+ // soften twice so stair-stepped edges don't read as level / upright
+ for(let n=0;n<2;n++){const o=new Float32Array(w*h);for(let y=0;y<h;y++)for(let q=0;q<w;q++){let v=0,c=0;for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){const yy=y+j,qq=q+k;if(yy>=0&&yy<h&&qq>=0&&qq<w){v+=g[yy*w+qq];c++;}}o[y*w+q]=v/c;}g=o;}
+ // edge direction per small block (structure tensor): steady, one-direction blocks are straight edges
+ const N=LV_MAX*4*2+1, bins=new Float64Array(N), B=12;let tot=0;
+ for(let by=1;by+B<h-1;by+=B)for(let bx=1;bx+B<w-1;bx+=B){let sxx=0,syy=0,sxy=0;
+  for(let y=by;y<by+B;y++)for(let q=bx;q<bx+B;q++){const i=y*w+q;
+   const gx=g[i-w+1]+2*g[i+1]+g[i+w+1]-g[i-w-1]-2*g[i-1]-g[i+w-1], gy=g[i+w-1]+2*g[i+w]+g[i+w+1]-g[i-w-1]-2*g[i-w]-g[i-w+1];
+   sxx+=gx*gx;syy+=gy*gy;sxy+=gx*gy;}
+  const e=sxx+syy;if(e<B*B*900)continue;
+  const coh=Math.hypot(sxx-syy,2*sxy)/e;if(coh<0.7)continue;
+  const m=Math.sqrt(e)*coh;tot+=m;
+  let a=0.5*Math.atan2(2*sxy,sxx-syy)*180/Math.PI+90;a=((a%90)+90+45)%90-45; // the edge line, folded onto level / upright
+  if(Math.abs(a)>LV_MAX)continue;bins[Math.round((a+LV_MAX)*4)]+=m;}
+ let best=-1,bv=0;const sm=i=>{let v=0;for(let j=-2;j<=2;j++){const k=i+j;if(k>=0&&k<N)v+=bins[k]*(3-Math.abs(j));}return v;};
+ for(let i=0;i<N;i++){const v=sm(i);if(v>bv){bv=v;best=i;}}
+ if(best<0||!tot||bv/9<tot*0.04)return null; // no clear straight edges: leave it as taken
+ return -(best/4-LV_MAX);
+}
+async function autoTilt(blob,g){
+ let d=gravTilt(g);
+ if(d==null)d=await imgTilt(blob).catch(()=>null);
+ d=d==null?0:Math.round(d*10)/10;
+ return Math.abs(d)<0.3?0:d;
+}
+async function levelBlob(raw,deg){
+ if(!deg)return raw;
+ const im=await createImageBitmap(raw), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
+ const x=c.getContext("2d");x.fillStyle="#FFFFFF";x.fillRect(0,0,c.width,c.height);
+ x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);x.imageSmoothingQuality="high";x.drawImage(im,-im.width/2,-im.height/2);if(im.close)im.close();
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.93));
+}
+// The editor: the photo as taken, turned live with the slider; 完了 makes the levelled photo.
+let lv=null;
+function lvOpen(k){
+ const cur=k==="b"?job.before:job.after;if(!cur)return;
+ job.raw=job.raw||{};job.rot=job.rot||{};
+ const raw=job.raw[k]||cur;
+ lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0};
+ $("lvT").textContent=(k==="b"?"施工前":"施工後")+"の傾きを補正";
+ $("lvEd").classList.toggle("a",k==="a");
+ const im=$("lvImg");im.onload=lvFit;im.src=blobUrl(raw);
+ $("lvEd").hidden=false;lvShow();
+}
+function lvFit(){
+ const im=$("lvImg"), iw=im.naturalWidth, ih=im.naturalHeight;if(!iw)return;
+ const W=Math.min($("lvEd").clientWidth-28,900), H=Math.max(180,window.innerHeight*0.5), r=Math.min(W/iw,H/ih);
+ $("lvBox").style.width=Math.round(iw*r)+"px";$("lvBox").style.height=Math.round(ih*r)+"px";
+}
+function lvShow(){
+ const d=Math.round(lv.deg*10)/10;lv.deg=d;
+ $("lvImg").style.transform="rotate("+d+"deg)";$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
+}
+function lvSet(d){if(!lv)return;lv.deg=Math.max(-LV_MAX,Math.min(LV_MAX,d));lvShow();}
+$("lvR").addEventListener("input",e=>lvSet(+e.target.value));
+$("lvB").onclick=()=>lvOpen("b");$("lvA").onclick=()=>lvOpen("a");
+[["lvM",-0.1],["lvP",0.1]].forEach(([id,st])=>{let rep=0;const b=$(id), stop=()=>{clearTimeout(rep);clearInterval(rep);};
+ b.addEventListener("pointerdown",e=>{e.preventDefault();stop();lvSet(lv.deg+st);rep=setTimeout(()=>{rep=setInterval(()=>lvSet(lv.deg+st),60);},380);});
+ ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
+$("lvZero").onclick=()=>lvSet(0);
+$("lvAuto").onclick=async()=>{
+ if(!lv)return;const k=lv.k;let d=job.auto&&job.auto[k];
+ if(d==null||!job.raw[k]){d=await autoTilt(lv.raw,job.grav&&job.grav[k]);}
+ lvSet(d);toast(d?"水平に合わせました("+fmtDeg(d)+")":"傾きは見つかりませんでした");
+};
+function lvClose(){lv=null;$("lvEd").hidden=true;}
+$("lvX").onclick=lvClose;
+$("lvOk").onclick=async()=>{
+ if(!lv)return;const {k,raw,deg}=lv;
+ if(deg===lv.old&&job.raw[k]){lvClose();return;}
+ const ok=$("lvOk");ok.disabled=true;setTx2("lvOk","補正中…");
+ try{
+  const b=await levelBlob(raw,deg);
+  job.raw[k]=raw;job.rot[k]=deg;
+  if(k==="b"){job.before=b;job.beforeNid=null;}else{job.after=b;job.afterNid=null;}
+  await saveJob();refreshDetail();make();
+ }catch(e){toast("補正できませんでした",true);}
+ ok.disabled=false;setTx2("lvOk","完了");lvClose();
+};
+window.addEventListener("resize",()=>{if(lv)lvFit();});
+
 /* ---------- すべての写真を保存 ---------- */
 // Every other photo (comments written in) to the phone. 施工前・施工後 are not included.
 function allList(){
@@ -2174,6 +2306,7 @@ $("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);}
 /* ---------- Android app hooks ---------- */
 // Back button: close the camera, then go back to the site list. Returns true when handled.
 window.appBack=()=>{
+ if(!$("lvEd").hidden){lvClose();return true;}
  if(!$("adjEd").hidden){adjClose();return true;}
  if(!$("home").hidden&&hSel.size){hSelClear();return true;}
  if(!$("viewer").hidden){if(editing)noteEnd(true);else closeViewer();return true;}
