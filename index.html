@@ -304,6 +304,30 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .toast.out{opacity:0}
 .toast.ng{background:var(--danger);box-shadow:0 0 0 3px var(--danger),0 14px 34px rgba(0,0,0,.35)}
 
+/* ---------- comparison position editor ---------- */
+.adjbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;margin-top:10px;border-radius:14px;background:var(--cmp-soft);color:var(--cmp);font-size:16px;font-weight:800;box-shadow:inset 0 0 0 1.5px #D9CCFB}
+.adj{position:fixed;inset:0;z-index:65;background:#0B1020;color:#fff;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));gap:10px}
+.adjhd b{display:block;font-size:20px;font-weight:800}
+.adjhd span{font-size:14px;color:#CBD5E1;font-weight:600}
+.adjstage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+#adjC{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
+.pads{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pad{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;border-radius:16px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1.5px var(--pc)}
+.pad.b{--pc:#5C7CFA}.pad.a{--pc:#F59F00}
+.padt{font-size:15px;font-weight:800;padding:3px 12px;border-radius:999px;background:var(--pc);color:#fff}
+.pad.a .padt{color:#2B1D00}
+.pg{display:grid;grid-template-columns:repeat(3,48px);grid-auto-rows:48px;gap:6px}
+.pg button{display:grid;place-items:center;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;touch-action:none}
+.pg button:active{background:var(--pc);color:#101828}
+.pg button svg.i{width:24px;height:24px;stroke-width:2.6}
+.pg .rs{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
+.pg .rs svg.i{width:20px;height:20px}
+.padv{font-size:13px;color:#CBD5E1;font-weight:700;font-variant-numeric:tabular-nums}
+.adjbtns{display:grid;grid-template-columns:1fr 1.4fr;gap:12px}
+.adjbtns button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border-radius:999px;font-size:18px;font-weight:800}
+.adjbtns .o2{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3);font-size:16px}
+.adjbtns .ok{background:linear-gradient(135deg,#7048E8,#9C36B5);color:#fff}
+
 /* ---------- box editor ---------- */
 .med{position:fixed;inset:0;z-index:60;background:#0B1020;color:#fff;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 0 calc(14px + env(safe-area-inset-bottom,0px))}
 .med .mt{margin:0 16px 10px;font-size:21px;font-weight:800;line-height:1.4}
@@ -360,6 +384,16 @@ html.natcam #vid{display:none}
 .frame.near{border-color:#FACC15}.flab.near{background:#FACC15;color:#2B2200}
 .frame.far{border-color:#EF4444}.flab.far{background:#EF4444;color:#fff}
 .cam:not(.judging) .flab{display:none}
+/* after camera: the before photo small in the bottom-left corner, for lining up */
+.pip{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:auto}
+.pipbox{position:relative;border-radius:10px;overflow:hidden;box-shadow:0 0 0 2px #fff,0 4px 14px rgba(0,0,0,.5);background:#000;line-height:0}
+.pipbox img{display:block;width:var(--pipw,130px);height:auto;max-width:none}
+.piptag{position:absolute;left:5px;top:5px;font-size:12px;font-weight:800;line-height:1;padding:4px 8px;border-radius:999px;background:var(--before);color:#fff}
+.piptg{display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:999px;background:rgba(20,22,28,.78);color:#fff;font-size:14px;font-weight:800;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
+.pip.off .pipbox{display:none}
+.pip.off .piptg{background:var(--before);box-shadow:none}
+/* keep the match label clear of the inset */
+.cam.pipon .stage .flab{left:auto;right:12px;transform:none}
 .cam .bar{background:#0B0D12;padding:10px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
 .cam .bar .r{display:flex;align-items:center;gap:12px;padding:0 4px}
 .rl{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#D0D5DD;white-space:nowrap}
@@ -416,6 +450,7 @@ html.natcam #vid{display:none}
 .camhud .cmode{top:10px;left:10px;transform:none}
 .camhud .sidew{top:56px;left:10px;transform:none}
 .camhud .shotn{top:102px;left:10px;right:auto}
+.camhud .pip{left:10px}
 
 input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 </style>
@@ -469,6 +504,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <section class="card c-cmp" id="result">
   <div class="sh2"><span class="cdot"></span><h2>比較写真</h2><small>タップで拡大</small></div>
   <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
+  <button class="adjbtn" id="bAdj"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg><span class="tx">写真の位置・大きさを調整</span></button>
   <div class="cmpopts">
   <div class="seg" role="radiogroup" aria-label="並べ方">
    <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>横</label>
@@ -507,6 +543,12 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
+<div class="adj" id="adjEd" hidden>
+ <div class="adjhd"><b>写真の位置・大きさを調整</b><span>＋拡大 −縮小 ↑↓←→ 移動 ・ 長押しで連続</span></div>
+ <div class="adjstage"><canvas id="adjC"></canvas></div>
+ <div class="pads"><div class="pad b"><span class="padt">施工前</span><div class="pg"><button data-p="b" data-a="in" aria-label="施工前を拡大"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button data-p="b" data-a="up" aria-label="施工前を上へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button data-p="b" data-a="out" aria-label="施工前を縮小"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><button data-p="b" data-a="left" aria-label="施工前を左へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button data-p="b" data-a="reset" class="rs" aria-label="施工前を元に戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button><button data-p="b" data-a="right" aria-label="施工前を右へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span></span><button data-p="b" data-a="down" aria-label="施工前を下へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><span></span></div><span class="padv" id="padvb">100%</span></div><div class="pad a"><span class="padt">施工後</span><div class="pg"><button data-p="a" data-a="in" aria-label="施工後を拡大"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button data-p="a" data-a="up" aria-label="施工後を上へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button data-p="a" data-a="out" aria-label="施工後を縮小"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><button data-p="a" data-a="left" aria-label="施工後を左へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button data-p="a" data-a="reset" class="rs" aria-label="施工後を元に戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button><button data-p="a" data-a="right" aria-label="施工後を右へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span></span><button data-p="a" data-a="down" aria-label="施工後を下へ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><span></span></div><span class="padv" id="padva">100%</span></div></div>
+ <div class="adjbtns"><button class="o2" id="adjReset">両方元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
+</div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
@@ -527,6 +569,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <div class="pill shotn" id="shotN" hidden></div>
   <div class="pill sidew" id="sideW" hidden>横向きで保存</div>
   <div class="frame" id="frame"><span class="flab" id="fLabel"></span></div>
+  <div class="pip" id="pip" hidden><div class="pipbox" id="pipBox"><img id="pipImg" alt="施工前の写真"><span class="piptag">施工前</span></div><button class="piptg" id="pipT"><span class="tx">非表示</span></button></div>
  </div></div>
  <div class="camhud" id="camHud" hidden></div>
  <div class="bar">
@@ -829,7 +872,8 @@ async function startCam(mode){
  setFrame("na","比べています…");lvlShown=null;
  $("camMask").hidden=true;
  shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");
- if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();}
+ if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();$("pipImg").src=photoSrc;}
+ pipShow();
  $("cam").style.display="flex";
  if(NATIVE){const t0=Date.now();while(!natFrame&&stream&&Date.now()-t0<4000)await sleep(50);}
  else await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});
@@ -895,6 +939,27 @@ async function outlineSrc(){
  outlineFor=job.before;outlineUrl=blobUrl(b);return outlineUrl;
 }
 
+/* ---------- before photo inset (after camera) ---------- */
+let pipOn=true;try{pipOn=localStorage.getItem("ba-pip")!=="0";}catch(e){}
+function pipShow(){
+ const after=camMode==="after"&&job&&job.before;$("pip").hidden=!after;
+ $("pip").classList.toggle("off",!pipOn);$("cam").classList.toggle("pipon",!!after&&pipOn);
+ setTx("pipT",pipOn?"非表示":"施工前を表示");pipFit();
+}
+// About a third of the picture's width upright, a quarter sideways (keeps clear of the controls).
+function pipFit(){
+ const pip=$("pip");if(pip.hidden)return;
+ const side=!!sideDeg, st=$("stage"), hud=$("camHud");
+ const im=$("pipImg"), ar=im.naturalWidth&&im.naturalHeight?im.naturalWidth/im.naturalHeight:0.75;
+ let w=side?Math.min(260,hud.clientWidth*0.24):Math.min(220,st.clientWidth*0.34);
+ // sideways the space above the controls is low: keep photo + button inside it
+ if(side){const room=hud.clientHeight-$("cam").querySelector(".bar").offsetHeight-10-12-34-6;w=Math.max(70,Math.min(w,room*ar));}
+ pip.style.setProperty("--pipw",Math.round(w)+"px");
+ pip.style.bottom=side?($("cam").querySelector(".bar").offsetHeight+10)+"px":"";
+}
+$("pipImg").addEventListener("load",()=>pipFit());
+$("pipT").onclick=e=>{e.stopPropagation();pipOn=!pipOn;try{localStorage.setItem("ba-pip",pipOn?"1":"0");}catch(err){}pipShow();};
+
 let shotCount=0;
 let shooting=false;
 $("cShot").onclick=async()=>{
@@ -934,7 +999,7 @@ function setSideUI(deg){
  if(deg===sideDeg)return;sideDeg=deg;
  const cam=$("cam"), hud=$("camHud"), tools=cam.querySelector(".tools");
  // [element, where it goes when sideways, put first?]
- const moves=[[$("camMode"),hud],[$("fLabel"),hud],[$("shotN"),hud],[$("sideW"),hud],[cam.querySelector(".bar"),hud],[tools,hud],[$("tFlash"),tools,true]];
+ const moves=[[$("camMode"),hud],[$("fLabel"),hud],[$("shotN"),hud],[$("sideW"),hud],[cam.querySelector(".bar"),hud],[tools,hud],[$("tFlash"),tools,true],[$("pip"),hud]];
  if(deg){
   moves.forEach(([e,to,first])=>{homes.set(e,{p:e.parentNode,n:e.nextSibling});first?to.insertBefore(e,to.firstChild):to.appendChild(e);});
   hud.hidden=false;hud.style.width=cam.clientHeight+"px";hud.style.height=cam.clientWidth+"px";hud.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";
@@ -958,7 +1023,8 @@ setInterval(()=>{
  const rot=camRot();
  if(stream){$("sideW").hidden=rot===0;setSideUI(-rot);natLayout();
   // keep the tool column clear of the bottom panel (it grows when 重ね具合 appears)
-  if(sideDeg){const tl=$("cam").querySelector(".tools"), bar=$("cam").querySelector(".bar");tl.style.bottom=(bar.offsetHeight+8)+"px";}}
+  if(sideDeg){const tl=$("cam").querySelector(".tools"), bar=$("cam").querySelector(".bar");tl.style.bottom=(bar.offsetHeight+8)+"px";}
+  pipFit();}
  if(!$("med").hidden&&-rot!==medDeg){medDeg=-rot;turnFixed($("med"),medDeg);layoutMask();}
 },300);
 
@@ -1206,6 +1272,7 @@ async function gotPhoto(mode,blob,o,shot){
   if(stream){if(ok!=null)$("shotN").textContent=shotCount+"枚 "+(ok?"保存しました":"保存できませんでした");}
   else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
   return;}
+ if(job.adj)job.adj[mode==="before"?"b":"a"]={s:1,x:0,y:0}; // a new photo starts unadjusted
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
  await saveJob();refreshDetail();
@@ -1513,6 +1580,38 @@ $("vDel").onclick=async()=>{
  if(job.extras.length)openGallery(Math.min(gal.i,job.extras.length-1));else closeViewer();
 };
 
+/* ---------- comparison: position / size of each photo ---------- */
+const ADJ0=()=>({s:1,x:0,y:0});
+let adjOld=null;
+function adjDraw(){
+ const a=job.adj;["b","a"].forEach(k=>$("padv"+k).textContent=Math.round(a[k].s*100)+"%");
+ if(imgs.b&&imgs.a)compose($("adjC"),0.5,imgs.b,imgs.a);
+}
+$("bAdj").onclick=async()=>{
+ if(!job||!job.before||!job.after)return;await getImgs();
+ job.adj=job.adj||{b:ADJ0(),a:ADJ0()};adjOld=JSON.stringify(job.adj);
+ $("adjEd").hidden=false;adjDraw();
+};
+function adjStep(k,act){
+ const a=job.adj[k], st=0.02;
+ if(act==="in")a.s=Math.min(4,a.s*1.05);else if(act==="out")a.s=Math.max(0.5,a.s/1.05);
+ else if(act==="up")a.y-=st;else if(act==="down")a.y+=st;else if(act==="left")a.x-=st;else if(act==="right")a.x+=st;
+ else if(act==="reset")job.adj[k]=ADJ0();
+ adjDraw();
+}
+// press = one step, hold = keeps going
+let adjRep=0;
+$("adjEd").querySelectorAll(".pg button").forEach(b=>{
+ const stop=()=>{clearTimeout(adjRep);clearInterval(adjRep);};
+ b.addEventListener("pointerdown",e=>{e.preventDefault();stop();adjStep(b.dataset.p,b.dataset.a);
+  if(b.dataset.a!=="reset")adjRep=setTimeout(()=>{adjRep=setInterval(()=>adjStep(b.dataset.p,b.dataset.a),70);},380);});
+ ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
+ b.addEventListener("contextmenu",e=>e.preventDefault());
+});
+$("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};adjDraw();};
+$("adjOk").onclick=async()=>{$("adjEd").hidden=true;if(JSON.stringify(job.adj)!==adjOld){await saveJob();make();}};
+function adjClose(){if(adjOld!=null)job.adj=JSON.parse(adjOld);$("adjEd").hidden=true;}
+
 /* ---------- すべての写真を保存 ---------- */
 // Every other photo (comments written in) to the phone. 施工前・施工後 are not included.
 function allList(){
@@ -1731,7 +1830,7 @@ function fullBlob(){
 function compose(c,k,iB,iA){
  const bw=iB.naturalWidth||iB.width, bh=iB.naturalHeight||iB.height;
  const portrait=bh>=bw, pw=(portrait?900:1200)*k, ph=(portrait?1200:900)*k;
- const gap=26*k,pad=34*k,foot=(job.site||job.memo)?110*k:pad;
+ const gap=26*k,pad=34*k,foot=pad;
  const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+ph+foot:pad+ph*2+gap+foot);
  c.width=W;c.height=H;const x=c.getContext("2d");
  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
@@ -1739,11 +1838,16 @@ function compose(c,k,iB,iA){
  const en=labType==="en";
  const cells=[{im:iB,t:en?"BEFORE":"施工前",d:job.beforeAt,x:pad,y:pad,c1:"#5C7CFA",c2:"#3B5BDB",fg:"#FFFFFF"},
   {im:iA,t:en?"AFTER":"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+ph+gap,c1:"#FFC53D",c2:"#F59F00",fg:"#2B1D00"}];
- cells.forEach(q=>{drawCover(x,q.im,q.x,q.y,pw,ph);if(withLabels)badge(x,q,k,en,font);});
- if(!(job.site||job.memo))return;
- const fy=H-foot;x.fillStyle="#1C2B3A";x.fillRect(0,fy,W,foot);x.fillStyle="#E5AE00";x.fillRect(0,fy,12*k,foot);
- x.textBaseline="alphabetic";x.fillStyle="#FFFFFF";x.font="700 "+px(36)+font;x.fillText(job.site||job.memo,pad+14*k,fy+48*k,W-pad*2-20*k);
- if(job.site&&job.memo){x.font="500 "+px(28)+font;x.fillStyle="#C9D2DA";x.fillText(job.memo,pad+14*k,fy+88*k,W-pad*2-20*k);}
+ const adj=job.adj||{};
+ cells.forEach((q,i)=>{drawAdj(x,q.im,q.x,q.y,pw,ph,adj[i?"a":"b"]);if(withLabels)badge(x,q,k,en,font);});
+
+}
+// A photo cover-fitted into its cell, then zoomed (s) and moved (x, y = parts of the cell size).
+function drawAdj(x,im,cx,cy,w,h,a){
+ if(!a||(a.s===1&&!a.x&&!a.y)){drawCover(x,im,cx,cy,w,h);return;}
+ const iw=im.naturalWidth||im.width, ih=im.naturalHeight||im.height, r=Math.max(w/iw,h/ih)*a.s, dw=iw*r, dh=ih*r;
+ x.save();x.beginPath();x.rect(cx,cy,w,h);x.clip();x.fillStyle="#FFFFFF";x.fillRect(cx,cy,w,h);
+ x.drawImage(im,cx+(w-dw)/2+a.x*w,cy+(h-dh)/2+a.y*h,dw,dh);x.restore();
 }
 // The 施工前 / 施工後 (BEFORE / AFTER) badge: a glossy pill in the photo's corner with the date.
 function badge(x,q,k,en,font){
@@ -1908,6 +2012,7 @@ $("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);}
 /* ---------- Android app hooks ---------- */
 // Back button: close the camera, then go back to the site list. Returns true when handled.
 window.appBack=()=>{
+ if(!$("adjEd").hidden){adjClose();return true;}
  if(!$("home").hidden&&hSel.size){hSelClear();return true;}
  if(!$("viewer").hidden){if(editing)noteEnd(true);else closeViewer();return true;}
  if(sel.size){selClear();return true;}
