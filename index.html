@@ -157,6 +157,11 @@ label.btn{cursor:pointer}
 .opt svg.i{width:20px;height:20px}
 .opt input{position:absolute;opacity:0;pointer-events:none}
 .opt:has(input:checked){background:var(--card);color:var(--cmp);box-shadow:0 1px 4px rgba(16,24,40,.14)}
+.cmpsave{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:62px;margin-top:12px;padding:8px 16px;border-radius:16px;background:linear-gradient(135deg,#7048E8,#9C36B5);color:#fff;box-shadow:0 8px 20px rgba(112,72,232,.28)}
+.cmpsave svg.i{width:26px;height:26px}
+.cmpsave .tx2{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3}
+.cmpsave b{font-size:19px;font-weight:800}
+.cmpsave small{font-size:14px;font-weight:600;opacity:.92}
 .labbox{margin-top:10px;padding:4px;background:var(--fill);border-radius:16px}
 .switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:50px;padding:0 10px 0 12px;font-size:16px;font-weight:700;cursor:pointer}
 .labseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:2px}
@@ -455,7 +460,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    </div>
    <label class="chk" id="labDateRow" for="cDate"><input type="checkbox" id="cDate" checked><i><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></i><span>文字の横に日付を入れる</span><span class="ex" id="dateEx">2026.10.05</span></label>
   </div>
-  <button id="bSave" hidden><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
+  <button class="cmpsave" id="bSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
  </section>
 
  <section class="card c-extra">
