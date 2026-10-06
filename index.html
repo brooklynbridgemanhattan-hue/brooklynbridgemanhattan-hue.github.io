@@ -330,7 +330,12 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .trim{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:16px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1.5px #9C36B5}
 .trim[hidden]{display:none}
 .trimhd{display:flex;align-items:center;gap:10px}
-.trimhd .both{white-space:nowrap;font-size:14px;font-weight:800;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,#5C7CFA,#F59F00);color:#fff}
+.trimhd .both{white-space:nowrap;font-size:14px;font-weight:700;color:#CBD5E1}
+.tgt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:12px;background:rgba(255,255,255,.08)}
+.tgt button{min-height:44px;border-radius:9px;font-size:16px;font-weight:800;color:#CBD5E1}
+.tgt button.on{background:linear-gradient(90deg,#5C7CFA,#F59F00);color:#fff}
+.tgt .tb.on{background:#5C7CFA;color:#fff}
+.tgt .ta.on{background:#F59F00;color:#2B1D00}
 .trimhd .auto{margin-left:auto;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 14px;border-radius:999px;background:#FACC15;color:#1A1400;font-size:15px;font-weight:800}
 .trimhd .auto svg.i{width:18px;height:18px}
 .trows{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
@@ -566,7 +571,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="adjstage"><canvas id="adjC"></canvas></div>
  <div class="adjtabs" id="adjTabs"><button data-t="pos" class="on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>位置・大きさ</button><button data-t="trim"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg>トリミング</button></div>
  <div class="trim" id="trimPad" hidden>
-  <div class="trimhd"><span class="both">両方同時</span><button class="auto" id="trimAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg>余白を自動でカット</button></div>
+  <div class="tgt" id="trimTgt" role="radiogroup" aria-label="トリミングする写真"><button data-g="both" class="on">両方</button><button data-g="b" class="tb">施工前</button><button data-g="a" class="ta">施工後</button></div>
+  <div class="trimhd"><span class="both" id="trimWho">施工前・施工後を同時に</span><button class="auto" id="trimAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg>余白を自動でカット</button></div>
   <div class="trows"><div class="tr"><span class="tl">上</span><button data-e="t" data-d="-1" aria-label="上を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="tvt">0%</b><button data-e="t" data-d="1" aria-label="上を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="tr"><span class="tl">下</span><button data-e="b" data-d="-1" aria-label="下を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="tvb">0%</b><button data-e="b" data-d="1" aria-label="下を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="tr"><span class="tl">左</span><button data-e="l" data-d="-1" aria-label="左を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="tvl">0%</b><button data-e="l" data-d="1" aria-label="左を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="tr"><span class="tl">右</span><button data-e="r" data-d="-1" aria-label="右を戻す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="tvr">0%</b><button data-e="r" data-d="1" aria-label="右を切る"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
   <p class="trimnote">＋で多く切る、−で戻す(長押しで連続)</p>
  </div>
@@ -1297,7 +1303,7 @@ async function gotPhoto(mode,blob,o,shot){
   else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
   return;}
  if(job.adj)job.adj[mode==="before"?"b":"a"]={s:1,x:0,y:0}; // a new photo starts unadjusted
- job.crop=null;
+ job.crop=null;job.crops=null;
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
  await saveJob();refreshDetail();
@@ -1609,13 +1615,15 @@ $("vDel").onclick=async()=>{
 const ADJ0=()=>({s:1,x:0,y:0});
 let adjOld=null;
 const CROP0=()=>({t:0,b:0,l:0,r:0});
+let trimTgt="both";
+const trimObj=()=>trimTgt==="both"?job.crop:job.crops[trimTgt];
 function adjDraw(){
- const a=job.adj, c=job.crop;["t","b","l","r"].forEach(e=>$("tv"+e).textContent=Math.round(c[e]*100)+"%");["b","a"].forEach(k=>$("padv"+k).textContent=Math.round(a[k].s*100)+"%");
+ const a=job.adj, c=trimObj();["t","b","l","r"].forEach(e=>$("tv"+e).textContent=Math.round(c[e]*100)+"%");["b","a"].forEach(k=>$("padv"+k).textContent=Math.round(a[k].s*100)+"%");
  if(imgs.b&&imgs.a)compose($("adjC"),0.5,imgs.b,imgs.a);
 }
 $("bAdj").onclick=async()=>{
  if(!job||!job.before||!job.after)return;await getImgs();
- job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();adjOld=JSON.stringify({adj:job.adj,crop:job.crop});adjTab("pos");
+ job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};adjOld=JSON.stringify({adj:job.adj,crop:job.crop,crops:job.crops});trimTgt="both";trimTgtShow();adjTab("pos");
  $("adjEd").hidden=false;adjDraw();
 };
 function adjStep(k,act){
@@ -1634,19 +1642,25 @@ $("adjEd").querySelectorAll(".pg button").forEach(b=>{
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
  b.addEventListener("contextmenu",e=>e.preventDefault());
 });
-$("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();adjDraw();};
-$("adjOk").onclick=async()=>{$("adjEd").hidden=true;if(JSON.stringify({adj:job.adj,crop:job.crop})!==adjOld){await saveJob();make();}};
-function adjClose(){if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;}$("adjEd").hidden=true;}
+$("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
+$("adjOk").onclick=async()=>{$("adjEd").hidden=true;if(JSON.stringify({adj:job.adj,crop:job.crop,crops:job.crops})!==adjOld){await saveJob();make();}};
+function adjClose(){if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
+// which photo the trim buttons work on: 両方 / 施工前 / 施工後
+function trimTgtShow(){
+ $("trimTgt").querySelectorAll("button").forEach(b=>{const on=b.dataset.g===trimTgt;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});
+ $("trimWho").textContent={both:"施工前・施工後を同時に",b:"施工前だけを切る",a:"施工後だけを切る"}[trimTgt];
+}
+$("trimTgt").onclick=e=>{const b=e.target.closest("[data-g]");if(!b)return;trimTgt=b.dataset.g;trimTgtShow();adjDraw();};
 // tabs: 位置・大きさ / トリミング
 function adjTab(t){
  $("adjTabs").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
  $("posPads").hidden=t!=="pos";$("trimPad").hidden=t!=="trim";
- $("adjHint").textContent=t==="pos"?"＋拡大 −縮小 ↑↓←→ 移動 ・ 長押しで連続":"施工前・施工後の同じところを一緒に切り取ります";
+ $("adjHint").textContent=t==="pos"?"＋拡大 −縮小 ↑↓←→ 移動 ・ 長押しで連続":"切る写真を選んで上下左右を切り取ります(2枚は同じ高さにそろえて並びます)";
 }
 $("adjTabs").onclick=e=>{const b=e.target.closest("[data-t]");if(b)adjTab(b.dataset.t);};
 // cut an edge (d=1) or give it back (d=-1); at least 30% of each side stays
 function trimStep(e,d){
- const c=job.crop, o={t:"b",b:"t",l:"r",r:"l"}[e];
+ const c=trimObj(), o={t:"b",b:"t",l:"r",r:"l"}[e];
  c[e]=Math.max(0,Math.min(0.7-c[o],c[e]+d*0.01));adjDraw();
 }
 $("trimPad").querySelectorAll(".tr button").forEach(b=>{
@@ -1660,14 +1674,17 @@ $("trimPad").querySelectorAll(".tr button").forEach(b=>{
 $("trimAuto").onclick=()=>{
  const bw=imgs.b.width||imgs.b.naturalWidth, bh=imgs.b.height||imgs.b.naturalHeight, portrait=bh>=bw, W=portrait?900:1200, H=portrait?1200:900;
  let L=0,T=0,R=W,B=H;
- [["b",imgs.b],["a",imgs.a]].forEach(([k,im])=>{const a=job.adj[k], iw=im.width||im.naturalWidth, ih=im.height||im.naturalHeight;
+ // 両方: where both photos have picture; one photo: that photo's own white edges (on top of the shared cut)
+ [["b",imgs.b],["a",imgs.a]].filter(([k])=>trimTgt==="both"||trimTgt===k).forEach(([k,im])=>{const a=job.adj[k], iw=im.width||im.naturalWidth, ih=im.height||im.naturalHeight;
   const r=Math.max(W/iw,H/ih)*a.s, dw=iw*r, dh=ih*r, x0=(W-dw)/2+a.x*W, y0=(H-dh)/2+a.y*H;
   L=Math.max(L,x0);T=Math.max(T,y0);R=Math.min(R,x0+dw);B=Math.min(B,y0+dh);});
  const c={l:Math.max(0,L/W),t:Math.max(0,T/H),r:Math.max(0,(W-R)/W),b:Math.max(0,(H-B)/H)};
  if(c.l+c.r>0.7||c.t+c.b>0.7){toast("自動では切れません(余白が大きすぎます)",true);return;}
  // a hair more so no white line is left
  ["l","t","r","b"].forEach(e=>{if(c[e]>0)c[e]=Math.min(0.7,c[e]+0.002);});
- job.crop=c;adjDraw();
+ if(trimTgt==="both")job.crop=c;
+ else{const sh=job.crop;["l","t","r","b"].forEach(e=>c[e]=Math.max(0,c[e]-sh[e]));job.crops[trimTgt]=c;}
+ adjDraw();
  toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");
 };
 
@@ -1889,22 +1906,32 @@ function fullBlob(){
 function compose(c,k,iB,iA){
  const bw=iB.naturalWidth||iB.width, bh=iB.naturalHeight||iB.height;
  const portrait=bh>=bw, fw=(portrait?900:1200)*k, fh=(portrait?1200:900)*k;
- // トリミング: the same edges are cut from both photos so they stay matched
- const cr=job.crop||{t:0,b:0,l:0,r:0}, pw=fw*(1-cr.l-cr.r), ph=fh*(1-cr.t-cr.b);
- const gap=26*k,pad=34*k,foot=pad;
- const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+ph+foot:pad+ph*2+gap+foot);
+ // トリミング: job.crop is cut from both photos, job.crops.b / .a from one photo only.
+ // Cells are then scaled to the same height (side by side) or width (stacked), so nothing is cut off.
+ const vis=["b","a"].map(i=>{const e=effCrop(i);return {e,w:fw*(1-e.l-e.r),h:fh*(1-e.t-e.b)};});
+ const H0=Math.max(vis[0].h,vis[1].h), W0=Math.max(vis[0].w,vis[1].w);
+ vis.forEach(v=>{v.s=layout==="h"?H0/v.h:W0/v.w;v.cw=v.w*v.s;v.ch=v.h*v.s;});
+ const gap=26*k,pad=34*k;
+ const W=Math.round(layout==="h"?pad*2+vis[0].cw+gap+vis[1].cw:pad*2+W0), H=Math.round(layout==="h"?pad*2+H0:pad*2+vis[0].ch+gap+vis[1].ch);
  c.width=W;c.height=H;const x=c.getContext("2d");
  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
- const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif', px=n=>Math.round(n*k)+"px ";
+ const font='"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",sans-serif';
  const en=labType==="en";
  const cells=[{im:iB,t:en?"BEFORE":"施工前",d:job.beforeAt,x:pad,y:pad,c1:"#5C7CFA",c2:"#3B5BDB",fg:"#FFFFFF"},
-  {im:iA,t:en?"AFTER":"施工後",d:job.afterAt,x:layout==="h"?pad+pw+gap:pad,y:layout==="h"?pad:pad+ph+gap,c1:"#FFC53D",c2:"#F59F00",fg:"#2B1D00"}];
+  {im:iA,t:en?"AFTER":"施工後",d:job.afterAt,x:layout==="h"?pad+vis[0].cw+gap:pad,y:layout==="h"?pad:pad+vis[0].ch+gap,c1:"#FFC53D",c2:"#F59F00",fg:"#2B1D00"}];
  const adj=job.adj||{};
- cells.forEach((q,i)=>{
-  x.save();x.beginPath();x.rect(q.x,q.y,pw,ph);x.clip();
-  drawAdj(x,q.im,q.x-cr.l*fw,q.y-cr.t*fh,fw,fh,adj[i?"a":"b"]);x.restore();
+ cells.forEach((q,i)=>{const v=vis[i];
+  x.save();x.beginPath();x.rect(q.x,q.y,v.cw,v.ch);x.clip();
+  x.translate(q.x,q.y);x.scale(v.s,v.s);x.translate(-v.e.l*fw,-v.e.t*fh);
+  drawAdj(x,q.im,0,0,fw,fh,adj[i?"a":"b"]);x.restore();
   if(withLabels)badge(x,q,k,en,font);});
-
+}
+// Both-photo cut plus this photo's own cut (at least 15% of each side stays).
+function effCrop(i){
+ const c=job.crop||{}, o=(job.crops&&job.crops[i])||{}, e={};
+ ["t","b","l","r"].forEach(k=>e[k]=(c[k]||0)+(o[k]||0));
+ [["l","r"],["t","b"]].forEach(([p,q])=>{const sum=e[p]+e[q];if(sum>0.85){e[p]*=0.85/sum;e[q]*=0.85/sum;}});
+ return e;
 }
 // A photo cover-fitted into its cell, then zoomed (s) and moved (x, y = parts of the cell size).
 function drawAdj(x,im,cx,cy,w,h,a){
