@@ -897,7 +897,7 @@ $("hSelX").onclick=hSelClear;
 $("hSelDel").onclick=async()=>{
  if(!hSel.size)return;
  if(!hDelArm){hDelArm=true;setTx("hSelDel","もう一度押すと削除");return;}
- const n=hSel.size, gone=[];for(const id of hSel){const j=(await allJobsSafe()||[]).find(x=>x.id===id);gone.push(...nidsOf(j));await delJob(id);}
+ const n=hSel.size, gone=[];for(const id of hSel){const j=((await allJobsSafe())||(IDB?[]:MEM)).find(x=>x.id===id);gone.push(...nidsOf(j));dropFromPhone(savedUris(j));await delJob(id);}
  hSel.clear();await showHome();toast(n+"件 削除しました");photoGC(gone);
 };
 $("hNew").onclick=()=>{openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:"",extras:[]});getPlace();};
@@ -962,8 +962,9 @@ let typeT=0;["site","memo"].forEach(id=>$(id).addEventListener("input",()=>{clea
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("detail").hidden&&worthKeeping()){clearTimeout(typeT);saveJob();}});
 $("dBack").onclick=async()=>{if(job&&(job.before||job.site))await saveJob();showHome();};
 $("bDel").onclick=async()=>{
- if(!delArm){delArm=true;setTx("bDel","もう一度押すと削除します(元に戻せません)");return;}
- const gone=nidsOf(job);await delJob(job.id);job=null;showHome();photoGC(gone);
+ if(!delArm){delArm=true;setTx("bDel","もう一度押すと削除(スマホの写真からも消えます)");return;}
+ const gone=nidsOf(job), dn=dropFromPhone(savedUris(job));await delJob(job.id);job=null;showHome();photoGC(gone);
+ if(dn)toast("現場を削除しました(スマホの写真からも削除)");
 };
 
 /* ---------- camera ---------- */
@@ -1113,7 +1114,7 @@ $("cShot").onclick=async()=>{
   gotPhoto("extra",b,o,true);
   return;
  }
- stopCam();await gotPhoto(mode,b,o,false,g);
+ stopCam();await gotPhoto(mode,b,o,true,g);
 };
 
 /* ---------- holding the phone sideways ---------- */
@@ -1408,16 +1409,17 @@ $("fExtra").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)
 $("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
 async function gotPhoto(mode,blob,o,shot,g){
  const now=Date.now();
- if(mode==="extra"){(job.extras=job.extras||[]).push(blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now});await saveJob();renderThumbs();
+ if(mode==="extra"){const ex=blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now};(job.extras=job.extras||[]).push(ex);await saveJob();renderThumbs();
   // App: other photos also go straight into the phone's photos (Google Photos), like a camera.
-  const ok=!shot||!window.AndroidApp?null:blob.nid&&canNative()?(await nativeSave(blob.nid,"","",photoName("写真",now)))==="ok":await toPhone(blob,"写真",now);
+  const r=!shot||!window.AndroidApp?null:blob.nid&&canNative()?await nativeSave(blob.nid,"","",photoName("写真",now)):await toPhone(blob,"写真",now);
+  const ok=r==null?null:okR(r);if(ok){keepUri(ex,"saved",r);if(job.extras.includes(ex))saveJob();else dropFromPhone([uriR(r)]);}
   if(stream){if(ok!=null)$("shotN").textContent=shotCount+"枚 "+(ok?"保存しました":"保存できませんでした");}
   else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
   return;}
  if(job.adj)job.adj[mode==="before"?"b":"a"]={s:1,x:0,y:0}; // a new photo starts unadjusted
  job.crop=null;job.crops=null;
  // 施工前・施工後 are levelled right away: the shot as taken is kept in job.raw, the turn in job.rot
- const lk=mode==="before"?"b":"a", oldNids=[mode==="before"?job.beforeNid:job.afterNid,job.rawNid&&job.rawNid[lk]];job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
+ const lk=mode==="before"?"b":"a", oldNids=[mode==="before"?job.beforeNid:job.afterNid,job.rawNid&&job.rawNid[lk]], SK=lk==="b"?"savedB":"savedA", oldSaved=job[SK]||[];job[SK]=[];job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
  job.rawNid=job.rawNid||{};
  job.grav[lk]=g||null;job.rot[lk]=0;
  if(blob.lvRaw){
@@ -1436,6 +1438,10 @@ async function gotPhoto(mode,blob,o,shot,g){
  if(job.rot[lk])toast("傾きを自動で補正しました("+fmtDeg(job.rot[lk])+")");
  await saveJob();
  photoGC(oldNids);
+ // 撮り直し: the photo it replaces goes from the phone's photos too
+ if(oldSaved.length)dropFromPhone(oldSaved);
+ // App camera: 施工前・施工後 also go straight into the phone's photos, like other photos
+ if(shot)autoSaveBA(lk,job.rot[lk]);
  make();
  if(mode==="before"&&maskAfterShot)openMaskEditor();
 }
@@ -1515,8 +1521,8 @@ $("selX").onclick=selClear;
 $("selDel").onclick=async()=>{
  if(!sel.size)return;
  if(!selDelArm){selDelArm=true;setTx("selDel","もう一度押すと削除");return;}
- const n=sel.size, gone=(job.extras||[]).filter((x,i)=>sel.has(i)).map(x=>x.nid);job.extras=(job.extras||[]).filter((x,i)=>!sel.has(i));
- await saveJob();renderThumbs();toast(n+"枚 削除しました");photoGC(gone);
+ const n=sel.size, rm=(job.extras||[]).filter((x,i)=>sel.has(i)), gone=rm.map(x=>x.nid), dn=dropFromPhone(rm.flatMap(x=>x.saved||[]));job.extras=(job.extras||[]).filter((x,i)=>!sel.has(i));
+ await saveJob();renderThumbs();toast(n+"枚 削除しました"+(dn?"(スマホの写真からも削除)":""));photoGC(gone);
 };
 // Full-screen gallery: kind "extra" = other photos (save / delete), "pair" = 施工前 / 施工後 (save).
 let gal=null, galDelArm=false;
@@ -1542,9 +1548,12 @@ $("vSave").onclick=async()=>{if(!gal||vSaving)return;const x=galItems(gal.kind)[
   if(e&&e.nid&&canNative()&&!window.AndroidApp.hasPhoto(e.nid)){e.nid=null;ensureNid(e);} // copy gone: save from the photo itself, make a new copy
   if(e&&e.nid&&canNative()){
    // App: the phone writes the comments in and saves (no big data through the page)
-   const sp=notesOf(e).length?tagSpec(e):null, r=await nativeSave(e.nid,sp?sp.json:"",sp?sp.key:"",photoName(x.name,x.at));
-   saved(r==="ok",r==="ok"?"保存しました":"保存できませんでした("+String(r).replace(/^error:/,"")+")。もう一度お試しください。");
-  }else await saveBlob(e&&notesOf(e).length?await burned(e):x.blob,x.name,x.at);}
+   const sp=notesOf(e).length?tagSpec(e):null, r=await nativeSave(e.nid,sp?sp.json:"",sp?sp.key:"",photoName(x.name,x.at,sp?"コメント入り":""));
+   saved(okR(r),okR(r)?"保存しました":"保存できませんでした("+String(r).replace(/^error:/,"")+")。もう一度お試しください。");
+   keepUri(e,"saved",r);
+  }else{const withNotes=!!(e&&notesOf(e).length), r=await saveBlob(withNotes?await burned(e):x.blob,x.name,x.at,withNotes?"コメント入り":"");
+   if(e)keepUri(e,"saved",r);else keepUri(job,x.name==="施工前"?"savedB":"savedA",r);}
+  saveJob();}
  finally{vSaving=false;$("vSave").disabled=false;setTx("vSave","保存");}};
 // Tapping the 施工前 / 施工後 photo opens it full screen.
 $("sB").addEventListener("click",()=>{if(job&&job.before)openGallery(0,"pair");});
@@ -1736,7 +1745,7 @@ async function withTags(x){
 $("vDel").onclick=async()=>{
  if(!gal||gal.kind!=="extra")return;
  if(!galDelArm){galDelArm=true;setTx("vDel","もう一度押すと削除");return;}
- const gone=job.extras.splice(gal.i,1).map(x=>x.nid);await saveJob();renderThumbs();toast("削除しました");photoGC(gone);
+ const rm=job.extras.splice(gal.i,1), gone=rm.map(x=>x.nid), n=dropFromPhone(rm.flatMap(x=>x.saved||[]));await saveJob();renderThumbs();toast(n?"削除しました(スマホの写真からも削除)":"削除しました");photoGC(gone);
  if(job.extras.length)openGallery(Math.min(gal.i,job.extras.length-1));else closeViewer();
 };
 
@@ -1864,6 +1873,19 @@ $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crop
 $("adjOk").onclick=async()=>{if(trimOn)trimSet(false);$("adjEd").hidden=true;if(adjSnap()!==adjOld){await saveJob();make();}};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
 
+/* ---------- 施工前・施工後: into the phone's photos as soon as they are taken ---------- */
+async function autoSaveBA(k,deg){
+ if(!window.AndroidApp)return;
+ const j=job, at=k==="b"?j.beforeAt:j.afterAt, b=k==="b"?j.before:j.after, nid=k==="b"?j.beforeNid:j.afterNid, kind=k==="b"?"施工前":"施工後";
+ if(!b)return;
+ const r=nid&&canNative()&&window.AndroidApp.hasPhoto(nid)?await nativeSave(nid,"","",photoName(kind,at)):await toPhone(b,kind,at);
+ const still=(k==="b"?j.beforeAt:j.afterAt)===at&&(k==="b"?j.before:j.after)===b;
+ if(!okR(r)){if(j===job)toast(kind+"をスマホに保存できませんでした",true);return;}
+ if(!still){dropFromPhone([uriR(r)]);return;} // retaken / re-levelled meanwhile
+ keepUri(j,k==="b"?"savedB":"savedA",r);putJob(j);
+ if(j===job)toast(deg?"水平に補正して、スマホに保存しました("+fmtDeg(deg)+")":kind+"をスマホに保存しました");
+}
+
 /* ---------- 傾き補正 (施工前・施工後) ---------- */
 // Turned in place: the picture is not enlarged, the corners it leaves are white.
 const LV_MAX=15;
@@ -1977,7 +1999,10 @@ $("lvOk").onclick=async()=>{
   job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;
   const bn=b.nid||(b===raw?rn:null)||null;
   if(k==="b"){job.before=b;job.beforeNid=bn;}else{job.after=b;job.afterNid=bn;}
-  refreshDetail();lvClose();toast(deg?"傾きを補正しました("+fmtDeg(deg)+")":"撮ったままに戻しました");await saveJob();photoGC([was]);make();
+  refreshDetail();lvClose();toast(deg?"傾きを補正しました("+fmtDeg(deg)+")":"撮ったままに戻しました");
+  const SK=k==="b"?"savedB":"savedA", had=job[SK]||[];job[SK]=[];
+  await saveJob();photoGC([was]);make();
+  if(had.length){dropFromPhone(had);autoSaveBA(k,deg);}
  }catch(e){toast("補正できませんでした",true);}
  ok.disabled=false;setTx2("lvOk","完了");lvClose();
 };
@@ -1996,28 +2021,29 @@ function allInfo(){
  const n={b:0,a:0,c:0,x:0};L.forEach(it=>{if(it.cmp)n.c++;else if(it.x)n.x++;else if(it.kind==="施工前")n.b++;else n.a++;});
  $("bAllSub").textContent="その他の写真 "+L.length+"枚"+(L.some(it=>it.x&&notesOf(it.x).length)?"(コメント入り)":"");
 }
-async function saveQuiet(blob,kind,at){
- if(window.AndroidApp)return await toPhone(blob,kind,at);
- const a=document.createElement("a");a.href=blobUrl(blob);a.download=photoName(kind,at);document.body.appendChild(a);a.click();a.remove();
- await sleep(400);return true;
+async function saveQuiet(blob,kind,at,tag){
+ if(window.AndroidApp)return await toPhone(blob,kind,at,tag);
+ const a=document.createElement("a");a.href=blobUrl(blob);a.download=photoName(kind,at,tag);document.body.appendChild(a);a.click();a.remove();
+ await sleep(400);return "ok";
 }
+// Saves one photo of すべての写真を保存; answers like toPhone.
 async function saveOne(it){
- const name=photoName(it.kind,it.at);
  if(it.cmp){await makeDone;return await saveQuiet(await fullBlob(),it.kind,it.at);}
- const notes=it.x?notesOf(it.x):[];
+ const notes=it.x?notesOf(it.x):[], tag=notes.length?"コメント入り":"", name=photoName(it.kind,it.at,tag);
  if(it.nid&&canNative()&&!window.AndroidApp.hasPhoto(it.nid)){if(it.x){it.x.nid=null;ensureNid(it.x);}it.nid=null;}
  if(it.nid&&canNative()){
   let sp=null;
   if(notes.length){const bm=await createImageBitmap(it.blob);sp=tagSpec(it.x,bm.width,bm.height);bm.close&&bm.close();}
-  return (await nativeSave(it.nid,sp?sp.json:"",sp?sp.key:"",name))==="ok";
+  return await nativeSave(it.nid,sp?sp.json:"",sp?sp.key:"",name);
  }
- return await saveQuiet(notes.length?await withTags(it.x):it.blob,it.kind,it.at);
+ return await saveQuiet(notes.length?await withTags(it.x):it.blob,it.kind,it.at,tag);
 }
 $("bAll").onclick=async()=>{
  if(allBusy||!job)return;const L=allList();if(!L.length)return;
  allBusy=true;$("bAll").disabled=true;let ok=0;
  try{
-  for(let i=0;i<L.length;i++){setTx("bAll","保存中… "+(i+1)+" / "+L.length);try{if(await saveOne(L[i]))ok++;}catch(e){}}
+  for(let i=0;i<L.length;i++){setTx("bAll","保存中… "+(i+1)+" / "+L.length);try{const r=await saveOne(L[i]);if(okR(r)){ok++;keepUri(L[i].x,"saved",r);}}catch(e){}}
+  saveJob();
  }finally{allBusy=false;$("bAll").disabled=false;setTx("bAll","すべての写真を保存");allInfo();}
  if(ok===L.length)saved(true,L.length+"枚 保存しました");else saved(false,(L.length-ok)+"枚 保存できませんでした");
 };
@@ -2364,23 +2390,33 @@ window.addEventListener("resize",()=>{if(!$("viewer").hidden)vFit(false);});
 $("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(await fullBlob()));};
 
 function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
-function photoName(kind,t){const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);return kind+"_"+(site?site+"_":"")+stamp(t)+".jpg";}
+function photoName(kind,t,tag){const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);return kind+"_"+(site?site+"_":"")+stamp(t)+(tag?"_"+tag:"")+".jpg";}
+/* Saving answers "ok:<where it went in the phone's photos>". The app remembers it with the
+   photo, so deleting the photo in the app also deletes it from the phone (Google Photos /
+   the phone's photo app). Android lets the app delete what it saved itself without asking. */
+const okR=r=>typeof r==="string"&&(r==="ok"||r.startsWith("ok:"));
+const uriR=r=>okR(r)&&r.length>3?r.slice(3):null;
+function keepUri(o,key,r){const u=uriR(r);if(u&&o){(o[key]=o[key]||[]).push(u);}}
+function savedUris(j){if(!j)return [];return [...(j.savedB||[]),...(j.savedA||[]),...(j.savedC||[]),...(j.extras||[]).flatMap(x=>x.saved||[])];}
+function dropFromPhone(uris){uris=(uris||[]).filter(Boolean);if(!uris.length||!window.AndroidApp||!window.AndroidApp.deleteFromGallery)return 0;
+ try{return window.AndroidApp.deleteFromGallery(JSON.stringify(uris))|0;}catch(e){return 0;}}
 // App only: writes the photo into the phone's DCIM/Camera. Returns true when saved.
 const b64s=new WeakMap();
 function b64Of(blob){
  if(!b64s.has(blob))b64s.set(blob,new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(",")[1]);fr.onerror=rej;fr.readAsDataURL(blob);}));
  return b64s.get(blob);
 }
-async function toPhone(blob,kind,t){
+// Returns the phone's answer: "ok:<uri>" when saved, otherwise "error:…".
+async function toPhone(blob,kind,t,tag){
  try{const b64=await b64Of(blob);
-  return window.AndroidApp.savePhoto(b64,photoName(kind,t))==="ok";}catch(e){return false;}
+  return String(window.AndroidApp.savePhoto(b64,photoName(kind,t,tag)));}catch(e){return "error";}
 }
-async function saveBlob(blob,kind,t){
- const name=photoName(kind,t);
+async function saveBlob(blob,kind,t,tag){
+ const name=photoName(kind,t,tag);
  if(window.AndroidApp){
-  const ok=await toPhone(blob,kind,t);
+  const r=await toPhone(blob,kind,t,tag), ok=okR(r);
   saved(ok,ok?"保存しました":"保存できませんでした。もう一度お試しください。");
-  return;
+  return r;
  }
  const file=new File([blob],name,{type:"image/jpeg"});
  // Android: save straight to the Download folder (shows up in Google Photos).
@@ -2392,12 +2428,12 @@ async function saveBlob(blob,kind,t){
   return;
  }
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
- saved(true,"保存しました");
+ saved(true,"保存しました");return "ok";
 }
-$("bSave").onclick=async()=>{await makeDone;if(!imgs.b)return;await saveBlob(await fullBlob(),"施工前後",Date.now());
+$("bSave").onclick=async()=>{await makeDone;if(!imgs.b)return;keepUri(job,"savedC",await saveBlob(await fullBlob(),"施工前後",Date.now()));
  if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();await saveJob();showNext();}};
-$("svB").onclick=()=>{if(job.before)saveBlob(job.before,"施工前",job.beforeAt);};
-$("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);};
+$("svB").onclick=async()=>{if(job.before){keepUri(job,"savedB",await saveBlob(job.before,"施工前",job.beforeAt));saveJob();}};
+$("svA").onclick=async()=>{if(job.after){keepUri(job,"savedA",await saveBlob(job.after,"施工後",job.afterAt));saveJob();}};
 
 /* ---------- Android app hooks ---------- */
 // Back button: close the camera, then go back to the site list. Returns true when handled.
