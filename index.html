@@ -478,11 +478,14 @@ html.natcam #vid{display:none}
 .cam .camhud #zoomRow{flex:1;min-width:0}
 .cam .camhud .shoot{display:flex;gap:14px;align-items:center;padding:0}
 .cam .camhud .shot{width:76px;height:76px}
-.cam .camhud .tools{position:absolute;right:8px;top:8px;display:grid;grid-template-columns:1fr 1fr;align-content:center;gap:4px 6px;pointer-events:auto;padding:6px;border-radius:18px;background:rgba(11,13,18,.55)}
-.cam .camhud .tools button svg.i,.cam .camhud .tools .fl svg.i{width:42px;height:42px;padding:10px}
-.cam .camhud .tools button{max-width:none;font-size:15px}
-.cam .camhud .tools .fl{grid-column:auto;justify-self:center;flex-direction:column;height:auto;padding:0;background:none;gap:5px;font-size:15px;color:#D0D5DD}
-.cam .camhud .tools .fl svg.i{width:50px;height:50px;padding:14px;border-radius:50%;background:rgba(255,255,255,.1)}
+.hudcol{position:absolute;right:0;top:0;display:flex;flex-direction:column;align-items:center;padding:8px 6px;gap:12px;pointer-events:none}
+.hudshot{flex:1;display:flex;align-items:center;justify-content:center;min-height:92px;pointer-events:auto}
+.cam .camhud .hudshot .shot{width:84px;height:84px;box-shadow:0 0 0 4px rgba(11,13,18,.9),0 0 0 7px #fff}
+.cam .camhud .tools{position:static;width:100%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;gap:4px 2px;pointer-events:auto;padding:6px;border-radius:18px;background:rgba(11,13,18,.55)}
+.cam .camhud .tools button svg.i,.cam .camhud .tools .fl svg.i{width:40px;height:40px;padding:10px}
+.cam .camhud .tools button{max-width:none;font-size:13px;gap:3px}
+.cam .camhud .tools .fl{grid-column:auto;justify-self:center;flex-direction:column;height:auto;padding:0;background:none;gap:3px;font-size:13px;color:#D0D5DD}
+.cam .camhud .tools .fl svg.i{border-radius:50%;background:rgba(255,255,255,.1)}
 .cam .camhud .tools .fl.on svg.i{background:#FACC15;color:#1A1400}
 .cam .camhud .tools .fl.auto svg.i{background:rgba(250,204,21,.18);color:#FACC15}
 .cam .camhud .rl{font-size:16px}
@@ -619,7 +622,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <div class="frame" id="frame"><span class="flab" id="fLabel"></span></div>
   <div class="pip" id="pip" hidden><div class="pipbox" id="pipBox"><img id="pipImg" alt="施工前の写真"><span class="piptag">施工前</span></div><button class="piptg" id="pipT"><span class="tx">非表示</span></button></div>
  </div></div>
- <div class="camhud" id="camHud" hidden></div>
+ <div class="camhud" id="camHud" hidden><div class="hudcol" id="hudCol"><div class="hudshot" id="hudShot"></div></div></div>
  <div class="bar">
   <div class="r zr" id="zoomRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span><input type="range" id="zm" min="1.6" max="6.4" step="0.1" value="1.6" aria-label="ズーム"><b id="zmV">標準</b></div>
   <div class="r" id="opRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg>濃さ</span><input type="range" id="op" min="0" max="80" value="35" aria-label="重ね具合"></div>
@@ -1047,19 +1050,19 @@ function setSideUI(deg){
  if(deg===sideDeg)return;sideDeg=deg;
  const cam=$("cam"), hud=$("camHud"), tools=cam.querySelector(".tools");
  // [element, where it goes when sideways, put first?]
- const moves=[[$("camMode"),hud],[$("fLabel"),hud],[$("shotN"),hud],[$("sideW"),hud],[cam.querySelector(".bar"),hud],[tools,hud],[$("tFlash"),tools,true],[$("pip"),hud]];
+ const moves=[[$("camMode"),hud],[$("fLabel"),hud],[$("shotN"),hud],[$("sideW"),hud],[cam.querySelector(".bar"),hud],[tools,$("hudCol"),true],[$("tFlash"),tools,true],[$("pip"),hud],[$("cShot"),$("hudShot")]];
  if(deg){
   moves.forEach(([e,to,first])=>{homes.set(e,{p:e.parentNode,n:e.nextSibling});first?to.insertBefore(e,to.firstChild):to.appendChild(e);});
   hud.hidden=false;hud.style.width=cam.clientHeight+"px";hud.style.height=cam.clientWidth+"px";hud.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";
  }else{
   moves.slice().reverse().forEach(([e])=>{const h=homes.get(e);if(h)h.p.insertBefore(e,h.n);});
-  hud.hidden=true;tools.style.width=tools.style.bottom="";
+  hud.hidden=true;$("hudCol").style.width=$("hudCol").style.bottom="";
  }
  fitStage();alignRot=null;prepAlign();
  if(deg){
-  // column width = the black space beside the picture (at least wide enough for the labels)
+  // the black band beside the picture: tools at the top, the shutter centred under them
   const free=(cam.clientHeight-$("stage").clientHeight)/2;
-  tools.style.width=Math.max(104,free-16)+"px";tools.style.bottom=(cam.querySelector(".bar").offsetHeight+8)+"px";
+  $("hudCol").style.width=Math.max(120,free)+"px";$("hudCol").style.bottom=cam.querySelector(".bar").offsetHeight+"px";
  }
 }
 function turnFixed(el,deg){
@@ -1071,7 +1074,7 @@ setInterval(()=>{
  const rot=camRot();
  if(stream){$("sideW").hidden=rot===0;setSideUI(-rot);natLayout();
   // keep the tool column clear of the bottom panel (it grows when 重ね具合 appears)
-  if(sideDeg){const tl=$("cam").querySelector(".tools"), bar=$("cam").querySelector(".bar");tl.style.bottom=(bar.offsetHeight+8)+"px";}
+  if(sideDeg)$("hudCol").style.bottom=$("cam").querySelector(".bar").offsetHeight+"px";
   pipFit();}
  if(!$("med").hidden&&-rot!==medDeg){medDeg=-rot;turnFixed($("med"),medDeg);layoutMask();}
 },300);
