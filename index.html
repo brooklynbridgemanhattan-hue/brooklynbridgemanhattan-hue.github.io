@@ -229,6 +229,12 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .selbar .x{width:50px;background:transparent;color:#fff}
 .selbar .del{padding:0 20px;background:var(--danger);color:#fff}
 .selbar svg.i{width:22px;height:22px}
+.allsave{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:62px;margin-top:14px;padding:8px 16px;border-radius:16px;background:var(--extra);color:#fff;box-shadow:0 8px 20px rgba(12,133,153,.25)}
+.allsave svg.i{width:26px;height:26px}
+.allsave .tx2{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3}
+.allsave b{font-size:19px;font-weight:800}
+.allsave small{font-size:14px;font-weight:600;opacity:.92}
+.allsave:disabled{opacity:.8}
 .c-extra .none{margin:4px 2px 0;font-size:14px;color:var(--sub)}
 #bDel{margin-top:2px}
 
@@ -475,6 +481,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <label class="btn b-extra full" id="nExtra" for="fExtra" hidden style="margin-bottom:10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで撮る</label>
   <div class="thumbs" id="thumbs"></div>
   <p class="none" id="thumbsNone">まだありません。タップで拡大、長押しで選択できます。</p>
+  <button class="allsave" id="bAll" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx2"><b class="tx">すべての写真を保存</b><small id="bAllSub"></small></span></button>
  </section>
 
 
@@ -1160,8 +1167,8 @@ async function gotPhoto(mode,blob,o,shot){
   if(stream){if(ok!=null)$("shotN").textContent=shotCount+"枚 "+(ok?"保存しました":"保存できませんでした");}
   else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
   return;}
- if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;}
- else{job.after=blob;job.afterAt=now;job.afterOri=o;}
+ if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;}
+ else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
  await saveJob();refreshDetail();
  $("result").style.display="none";
  make();
@@ -1218,7 +1225,7 @@ function renderThumbs(){
  const xs=(job&&job.extras)||[];
  $("thumbs").innerHTML=xs.map((x,i)=>'<button data-x="'+i+'" aria-label="写真 '+(i+1)+(notesOf(x).length?' '+esc(notesOf(x).map(n=>n.t).join(' / ')):'')+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="ck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span>'+(notesOf(x).length?'<span class="cm"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+(notesOf(x).length>1?notesOf(x).length:'')+'</span>':'')+'</button>').join("");
  $("thumbsNone").hidden=xs.length>0;
- selClear();
+ selClear();allInfo();
 }
 // Like Google Photos: tap = full screen; long press = select (then tap picks / un-picks).
 const sel=new Set();let selDelArm=false;
@@ -1424,8 +1431,8 @@ function nativeSave(id,spec,key,name){return new Promise(res=>{const req="r"+(++
  setTimeout(()=>{if(saveWait.has(req)){saveWait.delete(req);res("error:timeout");}},30000);
  window.AndroidApp.savePhotoFile(req,key,id,spec,name);});}
 // The comments laid out in photo pixels (same layout as on screen).
-function tagSpec(x){
- const W=vw.nw, H=vw.nh;if(!W||W<2)return null;
+function tagSpec(x,W0,H0){
+ const W=W0||vw.nw, H=H0||vw.nh;if(!W||W<2)return null;
  const c=document.createElement("canvas").getContext("2d");
  const a=notesOf(x).map(n=>{const L=tagLayout(c,n.t,W,n.tag.s);
   const tx=Math.min(Math.max(0,n.tag.x),Math.max(0,1-L.w/W)), ty=Math.min(Math.max(0,n.tag.y),Math.max(0,1-L.h/H));
@@ -1465,6 +1472,47 @@ $("vDel").onclick=async()=>{
  if(!galDelArm){galDelArm=true;setTx("vDel","もう一度押すと削除");return;}
  job.extras.splice(gal.i,1);await saveJob();renderThumbs();toast("削除しました");
  if(job.extras.length)openGallery(Math.min(gal.i,job.extras.length-1));else closeViewer();
+};
+
+/* ---------- すべての写真を保存 ---------- */
+// 施工前, 施工後, the comparison photo and every other photo (comments written in) to the phone.
+function allList(){
+ if(!job)return [];const L=[];
+ if(job.before)L.push({kind:"施工前",blob:job.before,at:job.beforeAt,nid:job.beforeNid});
+ if(job.after)L.push({kind:"施工後",blob:job.after,at:job.afterAt,nid:job.afterNid});
+ if(job.before&&job.after)L.push({kind:"施工前後",cmp:true,at:Date.now()});
+ (job.extras||[]).forEach((x,i)=>L.push({kind:"写真"+(i+1),blob:x.blob,at:x.at,nid:x.nid,x}));
+ return L;
+}
+let allBusy=false;
+function allInfo(){
+ if(allBusy||!job)return;const L=allList();$("bAll").hidden=!L.length;
+ const n={b:0,a:0,c:0,x:0};L.forEach(it=>{if(it.cmp)n.c++;else if(it.x)n.x++;else if(it.kind==="施工前")n.b++;else n.a++;});
+ $("bAllSub").textContent="全"+L.length+"枚("+[n.b&&"施工前",n.a&&"施工後",n.c&&"比較",n.x&&"その他"].filter(Boolean).join("・")+")";
+}
+async function saveQuiet(blob,kind,at){
+ if(window.AndroidApp)return await toPhone(blob,kind,at);
+ const a=document.createElement("a");a.href=blobUrl(blob);a.download=photoName(kind,at);document.body.appendChild(a);a.click();a.remove();
+ await sleep(400);return true;
+}
+async function saveOne(it){
+ const name=photoName(it.kind,it.at);
+ if(it.cmp){await makeDone;return await saveQuiet(await fullBlob(),it.kind,it.at);}
+ const notes=it.x?notesOf(it.x):[];
+ if(it.nid&&canNative()){
+  let sp=null;
+  if(notes.length){const bm=await createImageBitmap(it.blob);sp=tagSpec(it.x,bm.width,bm.height);bm.close&&bm.close();}
+  return (await nativeSave(it.nid,sp?sp.json:"",sp?sp.key:"",name))==="ok";
+ }
+ return await saveQuiet(notes.length?await withTags(it.x):it.blob,it.kind,it.at);
+}
+$("bAll").onclick=async()=>{
+ if(allBusy||!job)return;const L=allList();if(!L.length)return;
+ allBusy=true;$("bAll").disabled=true;let ok=0;
+ try{
+  for(let i=0;i<L.length;i++){setTx("bAll","保存中… "+(i+1)+" / "+L.length);try{if(await saveOne(L[i]))ok++;}catch(e){}}
+ }finally{allBusy=false;$("bAll").disabled=false;setTx("bAll","すべての写真を保存");allInfo();}
+ if(ok===L.length)saved(true,L.length+"枚 保存しました");else saved(false,(L.length-ok)+"枚 保存できませんでした");
 };
 
 /* ---------- completion report (link added later) ---------- */
