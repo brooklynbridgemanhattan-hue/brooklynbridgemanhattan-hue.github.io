@@ -145,13 +145,14 @@ input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgb
 .slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#101828}
 .tag{position:absolute;top:8px;left:8px;z-index:2;font-size:14px;font-weight:800;padding:3px 11px;border-radius:999px;background:var(--before);color:#fff}
 .col.after .tag{background:var(--after);color:var(--after-ink)}
-.slot .ph{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--before);text-align:center;padding:0 10px;line-height:1.45}
+.slot .ph{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;font-weight:800;margin-top:22px;color:var(--before);text-align:center;padding:0 10px;line-height:1.45}
 .col.after .slot .ph{color:var(--after-text)}
-.col.after.off .slot .ph{color:var(--sub);font-weight:600}
-.slot .ph .pi{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--before);color:#fff}
+.col.after.off .slot .ph{color:var(--sub);font-weight:700;font-size:16px}
+.col.before .slot .ph,.col.after:not(.off) .slot .ph{white-space:nowrap;padding:0 2px}
+.slot .ph .pi{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:var(--before);color:#fff}
 .col.after .slot .ph .pi{background:var(--after);color:var(--after-ink)}
 .col.after.off .slot .ph .pi{background:#D0D5DD;color:#fff}
-.slot .ph .pi svg.i{width:26px;height:26px}
+.slot .ph .pi svg.i{width:36px;height:36px}
 .slot .dt{position:absolute;right:8px;bottom:8px;z-index:2;font-size:13px;font-weight:700;background:rgba(16,24,40,.72);color:#fff;padding:2px 9px;border-radius:999px}
 .tmask{position:absolute;border:2px dashed #FACC15;background:rgba(250,204,21,.14);z-index:1;pointer-events:none}
 .tmask span,.cmask span{position:absolute;left:5px;top:3px;font-size:12px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
