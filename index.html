@@ -75,6 +75,16 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .jd{font-size:14px;color:var(--sub);display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jd svg.i{width:15px;height:15px}
 .job .chev{color:#98A2B3}
+/* long press a site to select it (then tap to pick / un-pick); the bar at the bottom deletes */
+.job{position:relative;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;transition:box-shadow .15s,transform .1s}
+.jck{position:absolute;left:6px;top:6px;z-index:2;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(16,24,40,.25);display:none;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.jck svg{width:16px;height:16px;stroke:#fff;stroke-width:3.4;fill:none;opacity:0}
+.list.sel .jck{display:flex}
+.job.on{box-shadow:0 0 0 2.5px var(--brand),var(--sh);background:#F5F8FF}
+.job.on .jck{background:var(--brand)}
+.job.on .jck svg{opacity:1}
+.list.sel .job .chev{opacity:0}
+body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .empty{margin:0;font-size:15px;color:var(--sub);padding:28px 16px;text-align:center;background:var(--card);border-radius:var(--r);border:1.5px dashed var(--line)}
 .note{display:flex;gap:8px;font-size:14px;color:var(--sub);margin:22px 4px 0;line-height:1.6}
 .note svg.i{width:18px;height:18px;margin-top:2px}
@@ -497,6 +507,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
+<div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
 <div class="med" id="med" hidden>
@@ -670,22 +681,49 @@ const CAM_SVG='<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M1
 const CHEV_SVG='<svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
 let homeTab="w";
 function showTab(){$("tabW").classList.toggle("on",homeTab==="w");$("tabD").classList.toggle("on",homeTab==="d");$("lWait").hidden=homeTab!=="w";$("lDone").hidden=homeTab!=="d";}
-$("tabW").onclick=()=>{homeTab="w";showTab();};$("tabD").onclick=()=>{homeTab="d";showTab();};
+$("tabW").onclick=()=>{homeTab="w";hSelClear();showTab();};$("tabD").onclick=()=>{homeTab="d";hSelClear();showTab();};
 async function showHome(){
  try{selClear();}catch(e){}
  urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
  $("detail").hidden=true;$("home").hidden=false;job=null;
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
- const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jimg">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img src="'+blobUrl(j.after)+'" alt="">':'')+'</span>'+
+ const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img src="'+blobUrl(j.after)+'" alt="">':'')+'</span>'+
   '<div class="jbody"><div class="jt">'+esc(j.site||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
   '<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div></div>'+CHEV_SVG+'</button>';
  const w=js.filter(j=>!j.after), d=js.filter(j=>j.after);
  $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">施工後待ちの現場はありません</p>';
  $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">完了した現場はまだありません</p>';
- $("nW").textContent=w.length;$("nD").textContent=d.length;showTab();
+ $("nW").textContent=w.length;$("nD").textContent=d.length;showTab();hSelShow();
  window.scrollTo(0,0);
 }
-document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(!b)return;allJobs().then(js=>{const j=js.find(x=>x.id===b.dataset.job);if(j)openJob(j);});});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(!b)return;
+ if(hPressFired){hPressFired=false;return;}
+ if(hSel.size){hSelToggle(b.dataset.job);return;}allJobs().then(js=>{const j=js.find(x=>x.id===b.dataset.job);if(j)openJob(j);});});
+// Home: long press a site card to select it; then tap picks / un-picks; 削除 (press twice) removes.
+const hSel=new Set();let hDelArm=false, hPressT=0, hPressAt=null, hPressFired=false;
+function hSelShow(){
+ ["lWait","lDone"].forEach(id=>$(id).classList.toggle("sel",hSel.size>0));
+ document.querySelectorAll("#home [data-job]").forEach(b=>b.classList.toggle("on",hSel.has(b.dataset.job)));
+ $("hSelBar").hidden=hSel.size===0;$("hSelN").textContent=hSel.size+"件を選択中";
+ hDelArm=false;setTx("hSelDel","削除");
+}
+function hSelClear(){hSel.clear();hSelShow();}
+function hSelToggle(id){if(hSel.has(id))hSel.delete(id);else hSel.add(id);hSelShow();}
+["lWait","lDone"].forEach(id=>{const L=$(id);
+ L.addEventListener("pointerdown",e=>{const b=e.target.closest("[data-job]");if(!b)return;hPressFired=false;hPressAt={x:e.clientX,y:e.clientY};
+  clearTimeout(hPressT);hPressT=setTimeout(()=>{hPressFired=true;if(!hSel.has(b.dataset.job))hSelToggle(b.dataset.job);
+   try{if(window.AndroidApp)AndroidApp.vibrate(25);else if(navigator.vibrate)navigator.vibrate(20);}catch(err){}},450);});
+ L.addEventListener("pointermove",e=>{if(hPressAt&&Math.hypot(e.clientX-hPressAt.x,e.clientY-hPressAt.y)>10)clearTimeout(hPressT);});
+ ["pointerup","pointercancel","pointerleave"].forEach(t=>L.addEventListener(t,()=>clearTimeout(hPressT)));
+ L.addEventListener("contextmenu",e=>e.preventDefault());
+});
+$("hSelX").onclick=hSelClear;
+$("hSelDel").onclick=async()=>{
+ if(!hSel.size)return;
+ if(!hDelArm){hDelArm=true;setTx("hSelDel","もう一度押すと削除");return;}
+ const n=hSel.size;for(const id of hSel)await delJob(id);
+ hSel.clear();await showHome();toast(n+"件 削除しました");
+};
 $("hNew").onclick=()=>{openJob({id:"j"+Date.now(),created:Date.now(),site:"",memo:"",extras:[]});getPlace();};
 
 /* ---------- detail ---------- */
@@ -702,6 +740,7 @@ function setSlot(slot,blob,at){
  else{s.classList.remove("has");const p=document.createElement("span");p.className="ph";p.innerHTML='<span class="pi">'+CAM_SVG+'</span>'+(slot==="sB"||job.before?"タップして撮影":"施工前の<br>あとに撮れます");s.appendChild(p);}
 }
 function openJob(j){
+ hSelClear();
  job=j;$("home").hidden=true;$("detail").hidden=false;
  $("site").value=j.site||"";$("memo").value=j.memo||"";
  $("result").style.display="none";$("saveMsg").textContent="";delArm=false;setTx("bDel","この現場を削除");
@@ -1869,6 +1908,7 @@ $("svA").onclick=()=>{if(job.after)saveBlob(job.after,"施工後",job.afterAt);}
 /* ---------- Android app hooks ---------- */
 // Back button: close the camera, then go back to the site list. Returns true when handled.
 window.appBack=()=>{
+ if(!$("home").hidden&&hSel.size){hSelClear();return true;}
  if(!$("viewer").hidden){if(editing)noteEnd(true);else closeViewer();return true;}
  if(sel.size){selClear();return true;}
  if(!$("med").hidden){$("med").hidden=true;return true;}
