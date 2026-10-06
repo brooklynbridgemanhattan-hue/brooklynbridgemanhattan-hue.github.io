@@ -1143,12 +1143,14 @@ function natSetup(info){
  $("zmV").textContent=zoomLabel(lo);
  showFlash();
 }
-function natShot(rot){return new Promise(res=>{
+function natShot(rot,tilt){return new Promise(res=>{
  const t=setTimeout(()=>{window.onAppShot=null;res(null);},20000);
  window.onAppShot=async s=>{clearTimeout(t);window.onAppShot=null;
   if(!String(s).startsWith("ok:")){res(null);return;}
-  try{const r=await fetch("/cam/shot/"+s.slice(3),{cache:"no-store"});if(!r.ok){res(null);return;}const b=await r.blob();b.nid=s.slice(3);res(b);}catch(e){res(null);}};
- window.AndroidCam.capture(flashMode,rot|0);});}
+  const [id,rawId,deg]=s.slice(3).split("|"); // levelled: "<id>|<as-taken id>|<tilt>"
+  try{const r=await fetch("/cam/shot/"+id,{cache:"no-store"});if(!r.ok){res(null);return;}const b=await r.blob();b.nid=id;
+   if(rawId){b.lvRaw=rawId;b.lvDeg=+deg;}res(b);}catch(e){res(null);}};
+ if(tilt)window.AndroidCam.captureLevel(flashMode,rot|0,tilt);else window.AndroidCam.capture(flashMode,rot|0);});}
 
 /* ---------- lens choice, zoom, flash ---------- */
 let track=null, trackCaps={}, imgCap=null, photoCaps=null, digitalZoom=1, zoomPend=null;
@@ -1256,7 +1258,10 @@ async function cropBlob(blob,z){
 // Takes the picture, firing the flash when asked (real flash where the phone allows it,
 // otherwise the light is switched on for the shot).
 async function grab(){
- if(NATIVE){await steady();return await natShot(camRot());}
+ if(NATIVE){await steady();
+  // 施工前・施工後: the phone levels the photo in the same pass as taking it
+  let t=0;if((camMode==="before"||camMode==="after")&&gravOK&&window.AndroidCam.captureLevel){const d=gravTilt(grav);t=d==null?0:Math.round(d*10)/10;if(Math.abs(t)<0.3)t=0;}
+  return await natShot(camRot(),t);}
  const rot=camRot(), b=await grabRaw();
  return rot&&b?await rotateBlob(b,rot):b;
 }
@@ -1358,15 +1363,24 @@ async function gotPhoto(mode,blob,o,shot,g){
  job.crop=null;job.crops=null;
  // 施工前・施工後 are levelled right away: the shot as taken is kept in job.raw, the turn in job.rot
  const lk=mode==="before"?"b":"a";job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
- job.raw[lk]=blob;job.grav[lk]=g||null;job.rot[lk]=0;
- const deg=await autoTilt(blob,g);job.auto[lk]=deg;
- if(deg){const lb=await levelBlob(blob,deg).catch(()=>null);if(lb){blob=lb;job.rot[lk]=deg;}}
+ job.rawNid=job.rawNid||{};
+ job.grav[lk]=g||null;job.rot[lk]=0;
+ if(blob.lvRaw){
+  // already levelled by the phone; the photo as taken is fetched in the background
+  job.raw[lk]=null;job.rawNid[lk]=blob.lvRaw;job.rot[lk]=job.auto[lk]=blob.lvDeg;rawFetch(job,lk,blob.lvRaw);
+ }else{
+  job.raw[lk]=blob;job.rawNid[lk]=blob.nid||null;
+  const deg=await autoTilt(blob,g);job.auto[lk]=deg;
+  if(deg){const lb=await levelBlob(blob,deg,blob.nid).catch(()=>null);if(lb){blob=lb;job.rot[lk]=deg;}}
+ }
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
- await saveJob();refreshDetail();
+ // show it at once; writing it into the phone's storage follows
+ refreshDetail();
  $("result").style.display="none";
- make();
  if(job.rot[lk])toast("傾きを自動で補正しました("+fmtDeg(job.rot[lk])+")");
+ await saveJob();
+ make();
  if(mode==="before"&&maskAfterShot)openMaskEditor();
 }
 
@@ -1805,16 +1819,19 @@ function gravTilt(g){
 }
 // Without the phone's tilt: the strongest nearly level / upright edges in the picture.
 async function imgTilt(blob){
- const im=await createImageBitmap(blob), S=Math.min(1,400/Math.max(im.width,im.height)), w=Math.max(8,Math.round(im.width*S)), h=Math.max(8,Math.round(im.height*S));
+ // decoded straight to a small size (much quicker than the full photo)
+ let im;try{im=await createImageBitmap(blob,{resizeWidth:600,resizeQuality:"high"});}catch(e){im=await createImageBitmap(blob);}
+ const S=Math.min(1,600/Math.max(im.width,im.height)), w=Math.max(8,Math.round(im.width*S)), h=Math.max(8,Math.round(im.height*S));
  const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");x.imageSmoothingQuality="high";x.drawImage(im,0,0,w,h);if(im.close)im.close();
  const d=x.getImageData(0,0,w,h).data;let g=new Float32Array(w*h);for(let i=0;i<w*h;i++)g[i]=d[i*4]*.3+d[i*4+1]*.59+d[i*4+2]*.11;
  // soften twice so stair-stepped edges don't read as level / upright
  for(let n=0;n<2;n++){const o=new Float32Array(w*h);for(let y=0;y<h;y++)for(let q=0;q<w;q++){let v=0,c=0;for(let j=-1;j<=1;j++)for(let k=-1;k<=1;k++){const yy=y+j,qq=q+k;if(yy>=0&&yy<h&&qq>=0&&qq<w){v+=g[yy*w+qq];c++;}}o[y*w+q]=v/c;}g=o;}
  // edge direction per small block (structure tensor): steady, one-direction blocks are straight edges
- const N=LV_MAX*4*2+1, bins=new Float64Array(N), B=12;let tot=0;
+ const N=LV_MAX*4*2+1, bins=new Float64Array(N), B=16;let tot=0;
  for(let by=1;by+B<h-1;by+=B)for(let bx=1;bx+B<w-1;bx+=B){let sxx=0,syy=0,sxy=0;
   for(let y=by;y<by+B;y++)for(let q=bx;q<bx+B;q++){const i=y*w+q;
-   const gx=g[i-w+1]+2*g[i+1]+g[i+w+1]-g[i-w-1]-2*g[i-1]-g[i+w-1], gy=g[i+w-1]+2*g[i+w]+g[i+w+1]-g[i-w-1]-2*g[i-w]-g[i-w+1];
+   // Scharr weights: the edge direction comes out the same whichever way it points
+   const gx=(3*(g[i-w+1]+g[i+w+1]-g[i-w-1]-g[i+w-1])+10*(g[i+1]-g[i-1]))/4, gy=(3*(g[i+w-1]+g[i+w+1]-g[i-w-1]-g[i-w+1])+10*(g[i+w]-g[i-w]))/4;
    sxx+=gx*gx;syy+=gy*gy;sxy+=gx*gy;}
   const e=sxx+syy;if(e<B*B*900)continue;
   const coh=Math.hypot(sxx-syy,2*sxy)/e;if(coh<0.7)continue;
@@ -1824,7 +1841,9 @@ async function imgTilt(blob){
  let best=-1,bv=0;const sm=i=>{let v=0;for(let j=-2;j<=2;j++){const k=i+j;if(k>=0&&k<N)v+=bins[k]*(3-Math.abs(j));}return v;};
  for(let i=0;i<N;i++){const v=sm(i);if(v>bv){bv=v;best=i;}}
  if(best<0||!tot||bv/9<tot*0.04)return null; // no clear straight edges: leave it as taken
- return -(best/4-LV_MAX);
+ // between steps: the top of a curve through the peak and its neighbours
+ const l=best>0?sm(best-1):bv, r=best<N-1?sm(best+1):bv, den=l-2*bv+r, off=den<0?Math.max(-.5,Math.min(.5,(l-r)/(2*den))):0;
+ return -((best+off)/4-LV_MAX);
 }
 async function autoTilt(blob,g){
  let d=gravTilt(g);
@@ -1832,18 +1851,34 @@ async function autoTilt(blob,g){
  d=d==null?0:Math.round(d*10)/10;
  return Math.abs(d)<0.3?0:d;
 }
-async function levelBlob(raw,deg){
+// App: the phone turns its own copy of the photo (about 3x quicker than doing it in the page).
+let lvReq=0;const lvWait=new Map();
+window.onAppLevel=(req,r)=>{const f=lvWait.get(req);if(f){lvWait.delete(req);f(r);}};
+function natLevel(id,deg){return new Promise(res=>{const req="l"+(++lvReq);lvWait.set(req,res);
+ setTimeout(()=>{if(lvWait.has(req)){lvWait.delete(req);res("error:timeout");}},15000);
+ try{window.AndroidApp.level(req,id,deg);}catch(e){lvWait.delete(req);res("error");}});}
+async function levelBlob(raw,deg,nid){
  if(!deg)return raw;
+ if(nid&&window.AndroidApp&&window.AndroidApp.level){
+  const r=await natLevel(nid,deg);
+  if(r.startsWith("ok:"))try{const id=r.slice(3), q=await fetch("/cam/shot/"+id,{cache:"no-store"});if(q.ok){const b=await q.blob();b.nid=id;return b;}}catch(e){}
+ }
  const im=await createImageBitmap(raw), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
  const x=c.getContext("2d");x.fillStyle="#FFFFFF";x.fillRect(0,0,c.width,c.height);
  x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);x.imageSmoothingQuality="high";x.drawImage(im,-im.width/2,-im.height/2);if(im.close)im.close();
  return await new Promise(r=>c.toBlob(r,"image/jpeg",0.93));
 }
+const rawPend={};
+function rawFetch(j,k,id){
+ rawPend[k]=(async()=>{try{const r=await fetch("/cam/shot/"+id,{cache:"no-store"});if(!r.ok)return;const b=await r.blob();
+  if(j.rawNid&&j.rawNid[k]===id){j.raw[k]=b;if(j===job)await saveJob();else await putJob(j);}}catch(e){}})();
+}
 // The editor: the photo as taken, turned live with the slider; 完了 makes the levelled photo.
 let lv=null;
-function lvOpen(k){
+async function lvOpen(k){
  const cur=k==="b"?job.before:job.after;if(!cur)return;
  job.raw=job.raw||{};job.rot=job.rot||{};
+ if(!job.raw[k]&&rawPend[k])await rawPend[k];
  const raw=job.raw[k]||cur;
  lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0};
  $("lvT").textContent=(k==="b"?"施工前":"施工後")+"の傾きを補正";
@@ -1879,10 +1914,13 @@ $("lvOk").onclick=async()=>{
  if(deg===lv.old&&job.raw[k]){lvClose();return;}
  const ok=$("lvOk");ok.disabled=true;setTx2("lvOk","補正中…");
  try{
-  const b=await levelBlob(raw,deg);
-  job.raw[k]=raw;job.rot[k]=deg;
-  if(k==="b"){job.before=b;job.beforeNid=null;}else{job.after=b;job.afterNid=null;}
-  await saveJob();refreshDetail();make();
+  job.rawNid=job.rawNid||{};
+  const rn=job.raw[k]?job.rawNid[k]:(k==="b"?job.beforeNid:job.afterNid);
+  const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null);
+  job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;
+  const bn=b.nid||(b===raw?rn:null)||null;
+  if(k==="b"){job.before=b;job.beforeNid=bn;}else{job.after=b;job.afterNid=bn;}
+  refreshDetail();lvClose();toast(deg?"傾きを補正しました("+fmtDeg(deg)+")":"撮ったままに戻しました");await saveJob();make();
  }catch(e){toast("補正できませんでした",true);}
  ok.disabled=false;setTx2("lvOk","完了");lvClose();
 };
