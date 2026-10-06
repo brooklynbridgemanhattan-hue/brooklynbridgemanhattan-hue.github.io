@@ -161,6 +161,15 @@ label.btn{cursor:pointer}
 .switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:50px;padding:0 10px 0 12px;font-size:16px;font-weight:700;cursor:pointer}
 .labseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:2px}
 .labseg[hidden]{display:none}
+.chk{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px;font-size:16px;font-weight:700;cursor:pointer}
+.chk[hidden]{display:none}
+.chk input{position:absolute;opacity:0;pointer-events:none}
+.chk i{width:26px;height:26px;border-radius:8px;box-shadow:inset 0 0 0 2px #98A2B3;background:#fff;display:grid;place-items:center;flex:none;transition:background .15s}
+.chk i svg{width:18px;height:18px;stroke:#fff;stroke-width:3.2;fill:none;opacity:0}
+.chk input:checked+i{background:var(--cmp);box-shadow:none}
+.chk input:checked+i svg{opacity:1}
+.chk .ex{margin-left:auto;font-size:13px;font-weight:700;color:var(--sub);font-family:"Helvetica Neue",Arial,system-ui,sans-serif}
+.chk input:not(:checked)~.ex{text-decoration:line-through;opacity:.5}
 .labseg button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:52px;padding:0 6px;border-radius:12px;box-shadow:inset 0 0 0 1.5px var(--line);background:rgba(255,255,255,.5)}
 .labseg button.on{background:var(--card);box-shadow:inset 0 0 0 2px var(--cmp),0 1px 4px rgba(16,24,40,.12)}
 /* little copies of the badges written on the photo */
@@ -444,6 +453,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
     <button data-l="ja" role="radio"><span class="bdg b">施工前</span><span class="bdg a">施工後</span></button>
     <button data-l="en" role="radio"><span class="bdg b en">BEFORE</span><span class="bdg a en">AFTER</span></button>
    </div>
+   <label class="chk" id="labDateRow" for="cDate"><input type="checkbox" id="cDate" checked><i><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></i><span>文字の横に日付を入れる</span><span class="ex" id="dateEx">2026.10.05</span></label>
   </div>
   <button id="bSave" hidden><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
  </section>
@@ -690,7 +700,7 @@ function refreshDetail(){
  const n=$("camNote");
  if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中の色の判定は出ません)。";n.hidden=false;}
  else n.hidden=true;
- showNext();
+ showNext();showLab();
 }
 // The one "next step" button at the bottom, and the 1-2-3 steps at the top.
 function showNext(){
@@ -1624,7 +1634,7 @@ function fullBlob(){
 function compose(c,k,iB,iA){
  const bw=iB.naturalWidth||iB.width, bh=iB.naturalHeight||iB.height;
  const portrait=bh>=bw, pw=(portrait?900:1200)*k, ph=(portrait?1200:900)*k;
- const gap=12*k,pad=24*k,foot=(job.site||job.memo)?110*k:pad;
+ const gap=26*k,pad=34*k,foot=(job.site||job.memo)?110*k:pad;
  const W=Math.round(layout==="h"?pad*2+pw*2+gap:pad*2+pw), H=Math.round(layout==="h"?pad+ph+foot:pad+ph*2+gap+foot);
  c.width=W;c.height=H;const x=c.getContext("2d");
  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
@@ -1647,7 +1657,7 @@ function badge(x,q,k,en,font){
  const ls=en&&"letterSpacing" in x;
  if(ls)x.letterSpacing=Math.round(4*k)+"px";x.font=tf;const tw=x.measureText(q.t).width;if(ls)x.letterSpacing="0px";
  x.font=df;const dw=x.measureText(dt).width;
- const w=26*k+tw+22*k+2*k+20*k+dw+28*k, bx=q.x+m, by=q.y+m;
+ const w=labDate?26*k+tw+22*k+2*k+20*k+dw+28*k:26*k+tw+26*k, bx=q.x+m, by=q.y+m;
  x.shadowColor="rgba(0,0,0,.35)";x.shadowBlur=18*k;x.shadowOffsetY=4*k;
  const g=x.createLinearGradient(bx,by,bx+w,by+H);g.addColorStop(0,q.c1);g.addColorStop(1,q.c2);
  x.fillStyle=g;x.beginPath();x.roundRect?x.roundRect(bx,by,w,H,r):x.rect(bx,by,w,H);x.fill();
@@ -1657,15 +1667,18 @@ function badge(x,q,k,en,font){
  x.fillStyle=sh;x.beginPath();x.roundRect?x.roundRect(bx,by,w,H,r):x.rect(bx,by,w,H);x.fill();
  x.fillStyle=q.fg;x.textBaseline="middle";x.textAlign="left";
  if(ls)x.letterSpacing=Math.round(4*k)+"px";x.font=tf;x.fillText(q.t,bx+26*k,by+H/2+2*k);if(ls)x.letterSpacing="0px";
- x.globalAlpha=.45;x.fillRect(bx+26*k+tw+22*k,by+18*k,2*k,H-36*k);x.globalAlpha=.9;
- x.font=df;x.fillText(dt,bx+26*k+tw+22*k+2*k+20*k,by+H/2+2*k);
+ if(labDate){x.globalAlpha=.45;x.fillRect(bx+26*k+tw+22*k,by+18*k,2*k,H-36*k);x.globalAlpha=.9;
+  x.font=df;x.fillText(dt,bx+26*k+tw+22*k+2*k+20*k,by+H/2+2*k);}
  x.restore();
 }
 $("cLabel").checked=withLabels;
 $("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}showLab();make();};
 // 施工前・施工後 or BEFORE・AFTER on the photo
 let labType="ja";try{labType=localStorage.getItem("ba-labtype")==="en"?"en":"ja";}catch(e){}
-function showLab(){$("labSeg").hidden=!withLabels;$("labSeg").querySelectorAll("button").forEach(b=>{const on=b.dataset.l===labType;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});}
+let labDate=true;try{labDate=localStorage.getItem("ba-labdate")!=="0";}catch(e){}
+$("cDate").checked=labDate;
+$("cDate").onchange=e=>{labDate=e.target.checked;try{localStorage.setItem("ba-labdate",labDate?"1":"0");}catch(err){}make();};
+function showLab(){$("labSeg").hidden=!withLabels;$("labDateRow").hidden=!withLabels;const dd=new Date((job&&job.beforeAt)||Date.now());$("dateEx").textContent=dd.getFullYear()+"."+pad2(dd.getMonth()+1)+"."+pad2(dd.getDate());$("labSeg").querySelectorAll("button").forEach(b=>{const on=b.dataset.l===labType;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});}
 $("labSeg").onclick=e=>{const b=e.target.closest("[data-l]");if(!b||b.dataset.l===labType)return;labType=b.dataset.l;try{localStorage.setItem("ba-labtype",labType);}catch(err){}showLab();make();};
 showLab();
 // The save button says which layout will be saved.
