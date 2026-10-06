@@ -1475,12 +1475,9 @@ $("vDel").onclick=async()=>{
 };
 
 /* ---------- すべての写真を保存 ---------- */
-// 施工前, 施工後, the comparison photo and every other photo (comments written in) to the phone.
+// Every other photo (comments written in) to the phone. 施工前・施工後 are not included.
 function allList(){
  if(!job)return [];const L=[];
- if(job.before)L.push({kind:"施工前",blob:job.before,at:job.beforeAt,nid:job.beforeNid});
- if(job.after)L.push({kind:"施工後",blob:job.after,at:job.afterAt,nid:job.afterNid});
- if(job.before&&job.after)L.push({kind:"施工前後",cmp:true,at:Date.now()});
  (job.extras||[]).forEach((x,i)=>L.push({kind:"写真"+(i+1),blob:x.blob,at:x.at,nid:x.nid,x}));
  return L;
 }
@@ -1488,7 +1485,7 @@ let allBusy=false;
 function allInfo(){
  if(allBusy||!job)return;const L=allList();$("bAll").hidden=!L.length;
  const n={b:0,a:0,c:0,x:0};L.forEach(it=>{if(it.cmp)n.c++;else if(it.x)n.x++;else if(it.kind==="施工前")n.b++;else n.a++;});
- $("bAllSub").textContent="全"+L.length+"枚("+[n.b&&"施工前",n.a&&"施工後",n.c&&"比較",n.x&&"その他"].filter(Boolean).join("・")+")";
+ $("bAllSub").textContent="その他の写真 "+L.length+"枚"+(L.some(it=>it.x&&notesOf(it.x).length)?"(コメント入り)":"");
 }
 async function saveQuiet(blob,kind,at){
  if(window.AndroidApp)return await toPhone(blob,kind,at);
