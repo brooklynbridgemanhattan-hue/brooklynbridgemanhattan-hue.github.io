@@ -204,8 +204,10 @@ label.btn{cursor:pointer}
 .switch i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
 .switch input:checked+i{background:var(--cmp)}
 .switch input:checked+i::after{left:21px}
-.addbtn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 16px;border-radius:999px;background:var(--extra);color:#fff;font-size:15px;font-weight:800}
-.addbtn svg.i{width:19px;height:19px}
+.c-extra .sh2{flex-wrap:wrap}
+.addbtn{flex-basis:100%;white-space:nowrap;margin-top:2px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 18px;border-radius:999px;background:linear-gradient(135deg,#22B8CF,#1C7ED6);color:#fff;font-size:19px;font-weight:800;box-shadow:0 6px 16px rgba(28,126,214,.35)}
+.addbtn svg.i{width:24px;height:24px}
+.c-extra .sh2 h2{white-space:nowrap}
 .linkrow{display:flex;align-items:center;gap:12px;width:100%;padding:16px;margin-bottom:14px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh);font-size:17px;font-weight:700;text-align:left;color:var(--ink)}
 .linkrow .li{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--ok-soft);color:var(--ok)}
 .linkrow .tx{flex:1}
@@ -540,7 +542,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </section>
 
  <section class="card c-extra">
-  <div class="sh2"><span class="cdot"></span><h2>その他の写真</h2><button class="addbtn" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>撮る</span></button></div>
+  <div class="sh2"><span class="cdot"></span><h2>その他の写真</h2><button class="addbtn" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>カメラで撮る</span></button></div>
   <label class="btn b-extra full" id="nExtra" for="fExtra" hidden style="margin-bottom:10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで撮る</label>
   <div class="thumbs" id="thumbs"></div>
   <p class="none" id="thumbsNone">まだありません。タップで拡大、長押しで選択できます。</p>
