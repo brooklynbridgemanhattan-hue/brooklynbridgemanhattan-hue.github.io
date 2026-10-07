@@ -138,6 +138,20 @@ input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgb
 /* photos: the empty tile itself is the camera button */
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .col{display:flex;flex-direction:column;gap:8px;min-width:0}
+@keyframes softGlow{0%,100%{box-shadow:0 0 0 0 rgba(var(--gc),0),0 0 0 0 rgba(var(--gc),0)}50%{box-shadow:0 0 0 5px rgba(var(--gc),.55),0 0 28px 6px rgba(var(--gc),.45)}}
+.glow{--gc:124,58,237;animation:softGlow 1.8s ease-in-out 3}
+.glow1{animation-iteration-count:1}
+#sB.glow{--gc:59,91,219}#sA.glow{--gc:245,159,0}
+@media (prefers-reduced-motion:reduce){.glow{animation-duration:2.6s}}
+.shotok{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(5,8,15,.55);animation:okIn .2s ease-out}
+.shotok.out{opacity:0;transition:opacity .25s}
+.shotok .ok{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 22px 18px;border-radius:24px;background:rgba(16,24,40,.92);box-shadow:0 18px 40px rgba(0,0,0,.45);max-width:calc(100% - 48px)}
+.shotok .ck{width:68px;height:68px;border-radius:50%;background:#2F9E44;display:grid;place-items:center;box-shadow:0 0 0 6px rgba(47,158,68,.3)}
+.shotok .ck svg{width:40px;height:40px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.shotok img{max-width:200px;max-height:34vh;border-radius:12px;border:3px solid #fff;object-fit:contain;background:#000}
+.shotok b{color:#fff;font-size:21px;font-weight:800;text-align:center;text-wrap:balance}
+@keyframes okIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.holdstill{position:absolute;left:50%;top:18%;transform:translateX(-50%);z-index:25;padding:10px 18px;border-radius:999px;background:rgba(16,24,40,.85);color:#fff;font-size:17px;font-weight:800;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 .slot{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:16px;overflow:hidden;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .col.before .slot:not(.has){background:var(--before-soft);box-shadow:inset 0 0 0 2px #C5D0FA}
 .col.after .slot:not(.has){background:var(--after-soft);box-shadow:inset 0 0 0 2px #FFE08A}
@@ -388,9 +402,8 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvsl input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:34px;height:34px;margin-top:-13px;border-radius:50%;background:#fff;border:5px solid #9C36B5;box-shadow:0 1px 6px rgba(0,0,0,.5)}
 .lvsl input::-moz-range-track{height:8px;border-radius:4px;background:rgba(255,255,255,.18)}
 .lvsl input::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:5px solid #9C36B5}
-.lvrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lvrow{display:grid;grid-template-columns:1fr;gap:10px}
 .lvrow button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:52px;border-radius:14px;font-size:16px;font-weight:800;background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
-.lvrow #lvAuto{background:linear-gradient(135deg,#1C7ED6,#4263EB);box-shadow:none}
 .lvrow svg.i{width:20px;height:20px}
 
 /* ---------- box editor ---------- */
@@ -631,7 +644,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="lvstage" id="lvStage"><div class="lvbox" id="lvBox"><img id="lvImg" alt=""><div class="lvgrid"></div></div></div>
  <div class="lvval"><button id="lvM" aria-label="左に0.1度">−0.1°</button><b id="lvV">0.0°</b><button id="lvP" aria-label="右に0.1度">＋0.1°</button></div>
  <div class="lvsl"><span>左に回す</span><input type="range" id="lvR" min="-15" max="15" step="0.1" value="0" aria-label="傾き"><span>右に回す</span></div>
- <div class="lvrow"><button id="lvAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg>自動で水平にする</button><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
+ <div class="lvrow"><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
  <div class="adjbtns"><button class="o2" id="lvX">キャンセル</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
 </div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
@@ -644,6 +657,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 </div>
 
 <div class="cam" id="cam" data-mode="before">
+ <div class="shotok" id="shotOk" hidden><div class="ok"><span class="ck"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><img id="shotOkImg" alt=""><b id="shotOkT"></b></div></div>
+ <div class="holdstill" id="holdStill" hidden>撮影中… そのまま動かさないでください</div>
  <div class="view"><div class="stage" id="stage">
   <video id="vid" playsinline muted autoplay></video>
   <img class="ghost" id="ghost" alt="">
@@ -924,8 +939,17 @@ function openJob(j){
  job=j;setPref("ba-open",j.id);$("home").hidden=true;$("detail").hidden=false;
  $("site").value=j.site||"";$("memo").value=j.memo||"";
  $("result").style.display="none";$("saveMsg").textContent="";delArm=false;setTx("bDel","この現場を削除");
- refreshDetail();make();window.scrollTo(0,0);
+ refreshDetail();make();window.scrollTo(0,0);startGlow();
 }
+// Slow, soft glow (3 times) to point at something; n = how many times.
+function glow(el,n){if(!el)return;el.classList.remove("glow","glow1");void el.offsetWidth;el.classList.add("glow");if(n===1)el.classList.add("glow1");
+ const end=()=>{el.classList.remove("glow","glow1");el.removeEventListener("animationend",end);};el.addEventListener("animationend",end);}
+// 施工前 is where a site starts: it glows when an un-started site opens.
+// 比較写真 glows the first time it comes into view after the site opens.
+let cmpGlowed=false;
+const cmpSeen=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&e.intersectionRatio>=0.3&&!cmpGlowed&&job&&job.before&&job.after&&$("result").style.display!=="none"){cmpGlowed=true;glow($("result"));}});},{threshold:[0.3]});
+cmpSeen.observe($("result"));
+function startGlow(){cmpGlowed=false;if(job&&!job.before)setTimeout(()=>{if(job&&!job.before&&!$("detail").hidden)glow($("sB"));},350);}
 function refreshDetail(){
  setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);
  // empty tiles are the camera buttons; 撮り直す shows under a photo
@@ -1108,22 +1132,39 @@ $("pipImg").addEventListener("load",()=>pipFit());
 $("pipT").onclick=e=>{e.stopPropagation();pipOn=!pipOn;try{localStorage.setItem("ba-pip",pipOn?"1":"0");}catch(err){}pipShow();};
 
 let shotCount=0;
+// The moment the picture is really taken: white flash + short buzz.
+function buzz(ms){try{if(window.AndroidApp&&window.AndroidApp.vibrate)window.AndroidApp.vibrate(ms);else if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+function shotMoment(){const fl=$("flash");fl.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));buzz(40);}
+// "撮れました": big check with the photo just taken, shown for a moment.
+function shotDone(blob,text,ms){
+ const o=$("shotOk");$("shotOkT").textContent=text;$("shotOkImg").src=blobUrl(blob);
+ o.firstElementChild.style.transform=sideDeg?"rotate("+sideDeg+"deg)":""; // held sideways: faces the user like the rest
+ const st=$("holdStill");st.style.transform="translateX(-50%)"+(sideDeg?" rotate("+sideDeg+"deg)":"");
+ o.classList.remove("out");o.hidden=false;buzz(25);
+ return new Promise(r=>setTimeout(()=>{o.classList.add("out");setTimeout(()=>{o.hidden=true;o.classList.remove("out");},250);r();},ms));
+}
+// Back on the site page: the new photo glows so it is plain it is there.
+function justShot(id){const el=$(id);if(!el)return;el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);}
 let shooting=false;
 $("cShot").onclick=async()=>{
  if(!camReady()||shooting)return;
  shooting=true;
  const mode=camMode, o=oriOK?{...ori}:null, g=gravOK?{...grav}:null;
- const fl=$("flash");fl.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));
- $("cShot").classList.add("busy");setTx2("cShot","撮影中…");
- let b=null;try{b=await grab();}finally{shooting=false;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
- if(!b){if(stream)toast("撮影できませんでした。もう一度押してください");return;}
+ // pressed: the button says so at once and can't be pressed again; the flash and a buzz
+ // come when the picture is really taken (shotMoment), then a big "撮れました" with the photo
+ $("cShot").classList.add("busy");setTx2("cShot","撮影中…");$("holdStill").style.transform="translateX(-50%)"+(sideDeg?" rotate("+sideDeg+"deg)":"");$("holdStill").style.top=sideDeg?"45%":"";$("holdStill").hidden=false;
+ let b=null;try{b=await grab();}finally{$("holdStill").hidden=true;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
+ if(!b){shooting=false;if(stream)toast("撮影できませんでした。もう一度押してください");return;}
+ const name={before:"施工前",after:"施工後",extra:"写真"}[mode];
  if(mode==="extra"){
   // Other photos: stay in the camera so several can be taken in a row.
   shotCount++;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
   gotPhoto("extra",b,o,true);
+  await shotDone(b,shotCount+"枚目を撮影しました",650);shooting=false;
   return;
  }
- stopCam();await gotPhoto(mode,b,o,true,g);
+ await shotDone(b,name+"を撮影しました",900);shooting=false;
+ stopCam();await gotPhoto(mode,b,o,true,g);justShot(mode==="before"?"sB":"sA");
 };
 
 /* ---------- holding the phone sideways ---------- */
@@ -1325,9 +1366,8 @@ async function cropBlob(blob,z){
 async function grab(){
  if(NATIVE){await steady();
   // 施工前・施工後: the phone levels the photo in the same pass as taking it
-  let t=0;if((camMode==="before"||camMode==="after")&&gravOK&&window.AndroidCam.captureLevel){const d=gravTilt(grav);t=d==null?0:Math.round(d*10)/10;if(Math.abs(t)<0.3)t=0;}
-  return await natShot(camRot(),t);}
- const rot=camRot(), b=await grabRaw();
+  shotMoment();return await natShot(camRot(),0);}
+ const rot=camRot();shotMoment();const b=await grabRaw();
  return rot&&b?await rotateBlob(b,rot):b;
 }
 async function rotateBlob(blob,deg){
@@ -1439,15 +1479,13 @@ async function gotPhoto(mode,blob,o,shot,g){
   job.raw[lk]=null;job.rawNid[lk]=blob.lvRaw;job.rot[lk]=job.auto[lk]=blob.lvDeg;rawFetch(job,lk,blob.lvRaw);
  }else{
   job.raw[lk]=blob;job.rawNid[lk]=blob.nid||null;
-  const deg=await autoTilt(blob,g);job.auto[lk]=deg;
-  if(deg){const lb=await levelBlob(blob,deg,blob.nid).catch(()=>null);if(lb){blob=lb;job.rot[lk]=deg;}}
+  // no automatic levelling (it could tilt photos the wrong way); 傾きを補正 does it by hand
  }
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
  // show it at once; writing it into the phone's storage follows
  refreshDetail();
  $("result").style.display="none";
- if(job.rot[lk])toast("傾きを自動で補正しました("+fmtDeg(job.rot[lk])+")");
  await saveJob();
  photoGC(oldNids);
  // App camera: 施工前・施工後 also go straight into the phone's photos, like other photos.
@@ -1901,7 +1939,7 @@ async function autoSaveRun(k,deg,old){
  if(!still){dropFromPhone([uriR(r)]);return;} // retaken / re-levelled meanwhile
  keepUri(j,k==="b"?"savedB":"savedA",r);putJob(j);
  if(old.length)dropFromPhone(old);
- if(j===job)toast(deg?"水平に補正して、スマホに保存しました("+fmtDeg(deg)+")":kind+"をスマホに保存しました");
+ if(j===job)toast(kind+"をスマホに保存しました");
 }
 
 /* ---------- 傾き補正 (施工前・施工後) ---------- */
@@ -1999,11 +2037,6 @@ $("lvB").onclick=()=>lvOpen("b");$("lvA").onclick=()=>lvOpen("a");
  b.addEventListener("pointerdown",e=>{e.preventDefault();stop();lvSet(lv.deg+st);rep=setTimeout(()=>{rep=setInterval(()=>lvSet(lv.deg+st),60);},380);});
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
 $("lvZero").onclick=()=>lvSet(0);
-$("lvAuto").onclick=async()=>{
- if(!lv)return;const k=lv.k;let d=job.auto&&job.auto[k];
- if(d==null||!job.raw[k]){d=await autoTilt(lv.raw,job.grav&&job.grav[k]);}
- lvSet(d);toast(d?"水平に合わせました("+fmtDeg(d)+")":"傾きは見つかりませんでした");
-};
 function lvClose(){lv=null;$("lvEd").hidden=true;}
 $("lvX").onclick=lvClose;
 $("lvOk").onclick=async()=>{
