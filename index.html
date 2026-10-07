@@ -1049,7 +1049,7 @@ let camFail=false;
 function noCam(){camFail=true;$("nativeBtns").hidden=false;$("nExtra").hidden=false;refreshDetail();}
 let reArm=false,reT=0;
 $("bBefore").onclick=()=>{
- if(job&&job.before&&job.after&&!reArm){
+ if(job&&job.before&&!reArm){ // retaking 施工前 always asks once (施工後 retakes at once)
   reArm=true;setTx("bBefore","もう一度押すと 撮り直し");$("bBefore").classList.add("arm");toast((job.savedB||[]).length?"前の施工前の写真は、スマホからも消えます":"前の施工前の写真は消えます");
   clearTimeout(reT);reT=setTimeout(()=>{reArm=false;setTx("bBefore","撮り直す");$("bBefore").classList.remove("arm");},4000);return;}
  reArm=false;clearTimeout(reT);setTx("bBefore","撮り直す");$("bBefore").classList.remove("arm");startCam("before");};
