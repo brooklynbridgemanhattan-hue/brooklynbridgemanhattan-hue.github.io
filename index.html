@@ -128,6 +128,7 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .fl-l{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px}
 .fl-l svg.i{width:17px;height:17px}
 input.t{width:100%;font:inherit;font-size:17px;padding:13px 14px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--fill);color:var(--ink);outline:none}
+.sama{position:relative;display:block}.sama input.t{padding-right:44px}.sama .suf{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:17px;font-weight:700;color:var(--sub);pointer-events:none}
 input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .place{display:flex;gap:8px}
 .pv{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:13px 14px;border-radius:var(--r-s);background:var(--fill);border:1.5px solid var(--line);font-size:17px;font-weight:700}
@@ -560,10 +561,10 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <main class="wrap dwrap">
  <section class="card c-info">
   <div class="sh2"><span class="cdot"></span><h2>現場の情報</h2></div>
-  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><input class="t" id="site" type="text" placeholder="例:山田様"></label>
+  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><span class="sama"><input class="t" id="site" type="text" placeholder="例:山田" enterkeyhint="done" autocomplete="off"><span class="suf" aria-hidden="true">様</span></span></label>
   <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
    <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
-  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" placeholder="例:旧機種 → 新機種"></label>
+  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" enterkeyhint="done" placeholder="例:旧機種 → 新機種"></label>
  </section>
 
  <ol class="steps" id="steps"><li data-s="b"><i>1</i>施工前</li><li data-s="a"><i>2</i>施工後</li><li data-s="c"><i>3</i>比較写真</li></ol>
@@ -631,7 +632,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="nextbar" id="nextBar"><button class="next m-before" id="nextBtn"><span id="nextI"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="tx2"><b id="nextT">施工前を撮る</b><small id="nextS"></small></span></button></div>
 </div>
 
-<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
+<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" enterkeyhint="done" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="adj" id="adjEd" hidden>
  <div class="adjhd"><b>写真の位置・大きさを調整</b><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
@@ -891,7 +892,7 @@ async function showHome(){
  $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
  const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img src="'+blobUrl(j.after)+'" alt="">':'')+'</span>'+
-  '<div class="jbody"><div class="jt">'+esc(j.site||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
+  '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
   '<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div></div>'+CHEV_SVG+'</button>';
  const w=js.filter(j=>!j.after), d=js.filter(j=>j.after);
  $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">施工後待ちの現場はありません</p>';
@@ -945,7 +946,7 @@ function setSlot(slot,blob,at){
 function openJob(j){
  hSelClear();
  job=j;setPref("ba-open",j.id);$("home").hidden=true;$("detail").hidden=false;
- $("site").value=j.site||"";$("memo").value=j.memo||"";
+ $("site").value=bareName(j.site);$("memo").value=j.memo||"";
  $("result").style.display="none";$("saveMsg").textContent="";delArm=false;setTx("bDel","この現場を削除");
  refreshDetail();make();window.scrollTo(0,0);startGlow();
 }
@@ -971,7 +972,7 @@ function refreshDetail(){
  $("sA").parentNode.classList.toggle("off",!job.before);
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
  $("lvB").hidden=!job.before;$("lvA").hidden=!job.after;
- showPlace();renderThumbs();$("dTitle").textContent=job.site||"現場の詳細";
+ showPlace();renderThumbs();$("dTitle").textContent=custName(job)||"現場の詳細";
  $("bMask").disabled=!job.before;$("bMask").hidden=!job.before;setTx("bMask",job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)");
  const n=$("camNote");
  if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中の色の判定は出ません)。";n.hidden=false;}
@@ -995,8 +996,15 @@ $("nextBtn").onclick=()=>{if(!job)return;if(!job.before)$("bBefore").click();els
 // Tapping an empty photo tile opens the camera.
 $("sB").addEventListener("click",()=>{if(job&&!job.before&&!camFail)$("bBefore").click();});
 $("sA").addEventListener("click",()=>{if(job&&job.before&&!job.after&&!camFail)$("bAfter").click();});
-async function saveJob(){job.site=$("site").value.trim();job.memo=$("memo").value.trim();await putJob(job);}
-$("site").addEventListener("input",()=>{$("dTitle").textContent=$("site").value.trim()||"現場の詳細";});
+// お客様名 is kept without 様 (an older "山田様" is read the same); shown as "山田様".
+const bareName=t=>String(t||"").trim().replace(/\s*(様|さま)$/,"").trim();
+const custName=j=>{const n=bareName(j&&j.site);return n?n+"様":"";};
+async function saveJob(){job.site=bareName($("site").value);job.memo=$("memo").value.trim();await putJob(job);}
+$("site").addEventListener("input",()=>{const n=bareName($("site").value);$("dTitle").textContent=n?n+"様":"現場の詳細";});
+// The keyboard's ✓ (完了) finishes typing: the keyboard closes and what was typed is kept.
+// (Enter while still converting kana/kanji only confirms the conversion.)
+const doneKey=e=>e.key==="Enter"&&!e.isComposing&&e.keyCode!==229;
+["site","memo"].forEach(id=>$(id).addEventListener("keydown",e=>{if(doneKey(e)){e.preventDefault();$(id).blur();}}));
 $("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
 const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||job.before||job.after||(job.extras||[]).length);
 let typeT=0;["site","memo"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(typeT);typeT=setTimeout(()=>{if(worthKeeping())saveJob();},500);}));
@@ -1659,6 +1667,7 @@ $("vNoteT").addEventListener("input",()=>{
 });
 // Leaving the box (OK, tapping elsewhere) puts the text on the photo; 戻る cancels.
 $("vNoteT").addEventListener("blur",()=>{if(editing)noteEnd(cancelEdit);});
+$("vNoteT").addEventListener("keydown",e=>{if(doneKey(e)&&!e.shiftKey){e.preventDefault();$("vNoteT").blur();}});
 function noteEnd(cancel){
  if(!editing)return;editing=false;cancelEdit=false;
  const x=galX(), ns=notesOf(x), v=$("vNoteT").value.trim();
@@ -2457,7 +2466,7 @@ window.addEventListener("resize",()=>{if(!$("viewer").hidden)vFit(false);});
 $("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(await fullBlob()));};
 
 function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
-function photoName(kind,t,tag){const site=(job.site||"").replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);return kind+"_"+(site?site+"_":"")+stamp(t)+(tag?"_"+tag:"")+".jpg";}
+function photoName(kind,t,tag){const site=custName(job).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);return kind+"_"+(site?site+"_":"")+stamp(t)+(tag?"_"+tag:"")+".jpg";}
 /* Saving answers "ok:<where it went in the phone's photos>". The app remembers it with the
    photo, so deleting the photo in the app also deletes it from the phone (Google Photos /
    the phone's photo app). Android lets the app delete what it saved itself without asking. */
