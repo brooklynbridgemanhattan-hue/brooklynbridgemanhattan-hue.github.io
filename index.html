@@ -1049,8 +1049,8 @@ let camFail=false;
 function noCam(){camFail=true;$("nativeBtns").hidden=false;$("nExtra").hidden=false;refreshDetail();}
 let reArm=false,reT=0;
 $("bBefore").onclick=()=>{
- if(job&&job.before&&job.after&&(job.savedB||[]).length&&!reArm){
-  reArm=true;setTx("bBefore","もう一度押すと 撮り直し");$("bBefore").classList.add("arm");toast("前の施工前の写真は、スマホからも消えます");
+ if(job&&job.before&&job.after&&!reArm){
+  reArm=true;setTx("bBefore","もう一度押すと 撮り直し");$("bBefore").classList.add("arm");toast((job.savedB||[]).length?"前の施工前の写真は、スマホからも消えます":"前の施工前の写真は消えます");
   clearTimeout(reT);reT=setTimeout(()=>{reArm=false;setTx("bBefore","撮り直す");$("bBefore").classList.remove("arm");},4000);return;}
  reArm=false;clearTimeout(reT);setTx("bBefore","撮り直す");$("bBefore").classList.remove("arm");startCam("before");};
 $("bAfter").onclick=()=>startCam("after");
@@ -1210,8 +1210,11 @@ $("cShot").onclick=async()=>{
   await shotDone(b,shotCount+"枚目を撮影しました",650);shooting=false;
   return;
  }
- await shotDone(b,name+"を撮影しました",900);shooting=false;
- stopCam();await gotPhoto(mode,b,o,true,g);justShot(mode==="before"?"sB":"sA");
+ const got=gotPhoto(mode,b,o,true,g); // under the camera screen, meanwhile
+ await shotDone(b,name+"を撮影しました",700);shooting=false;
+ stopCam();await got;
+ if(mode==="before"&&maskAfterShot&&$("med").hidden)openMaskEditor(); // waits until the camera has closed
+ justShot(mode==="before"?"sB":"sA");
 };
 
 /* ---------- holding the phone sideways ---------- */
@@ -1426,7 +1429,7 @@ async function rotateBlob(blob,deg){
 // Waits (max 0.6 s) for the phone to settle after the shutter tap, so the shot isn't shaken.
 let spin=0;
 window.addEventListener("devicemotion",e=>{const q=e.rotationRate;if(q&&q.alpha!=null)spin=Math.abs(q.alpha)+Math.abs(q.beta)+Math.abs(q.gamma);});
-async function steady(){const t0=performance.now();await sleep(120);while(spin>25&&performance.now()-t0<600)await sleep(40);}
+async function steady(){const t0=performance.now();while(spin>25&&performance.now()-t0<350)await sleep(30);}
 // Small grey thumbnail of what is on screen now (used to line the still photo up with the preview).
 function viewThumb(W,H){const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d",{willReadFrequently:true});drawVideo(x,W,H);return grayData(x,W,H);}
 function grayData(x,W,H){const d=x.getImageData(0,0,W,H).data,g=new Float32Array(W*H);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.299*d[j]+0.587*d[j+1]+0.114*d[j+2];return g;}
@@ -1540,7 +1543,7 @@ async function gotPhoto(mode,blob,o,shot,g){
  if(shot)autoSaveBA(lk,job.rot[lk],oldSaved);
  else if(oldSaved.length)dropFromPhone(oldSaved);
  make();
- if(mode==="before"&&maskAfterShot)openMaskEditor();
+ if(mode==="before"&&maskAfterShot&&$("cam").style.display!=="flex"&&$("med").hidden)openMaskEditor();
 }
 
 /* ---------- place (city / ward of the current position) ---------- */
@@ -2532,7 +2535,7 @@ async function saveBlob(blob,kind,t,tag){
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
  saved(true,"保存しました");return "ok";
 }
-$("bSave").onclick=async()=>{await makeDone;if(!imgs.b)return;keepUri(job,"savedC",await saveBlob(await fullBlob(),"施工前後",Date.now()));
+$("bSave").onclick=async()=>{buzz(30);await makeDone;if(!imgs.b)return;keepUri(job,"savedC",await saveBlob(await fullBlob(),"施工前後",Date.now()));
  if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();await saveJob();showNext();}};
 $("svB").onclick=async()=>{if(job.before){keepUri(job,"savedB",await saveBlob(job.before,"施工前",job.beforeAt));saveJob();}};
 $("svA").onclick=async()=>{if(job.after){keepUri(job,"savedA",await saveBlob(job.after,"施工後",job.afterAt));saveJob();}};
