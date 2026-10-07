@@ -65,7 +65,8 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .list{display:flex;flex-direction:column;gap:10px}
 .job{display:flex;align-items:center;gap:14px;width:100%;padding:12px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);text-align:left;color:var(--ink)}
 .jimg{display:flex;flex:none}
-.jimg img{width:56px;height:70px;object-fit:cover;background:var(--fill);border:2px solid var(--card)}
+.jimg img{width:56px;height:70px;object-fit:cover;background:#E4E7EC;border:2px solid var(--card)}
+.job{content-visibility:auto;contain-intrinsic-size:auto 98px}
 .jimg img:first-child{border-radius:12px 0 0 12px}
 .jimg img:last-child{border-radius:0 12px 12px 0}
 .jimg img:only-child{border-radius:12px}
@@ -821,7 +822,28 @@ function openDB(){return new Promise(res=>{try{const r=indexedDB.open("ba-camera
 function tx(mode){return IDB.transaction("jobs",mode).objectStore("jobs");}
 function allJobs(){return new Promise(res=>{if(!IDB)return res(MEM);const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>res([]);});}
 function putJobDB(j){return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==j.id).concat([j]);return res();}try{const r=tx("readwrite").put(j);r.onsuccess=()=>res();r.onerror=()=>res();}catch(e){res();}});}
-function putJob(j){j.upd=Date.now();mirror(j);return putJobDB(j);}
+function putJob(j){j.upd=Date.now();mirror(j);setTimeout(()=>ensureThumbs(j),0);return putJobDB(j);}
+/* The site list shows small ready-made thumbnails (a few KB, kept with the site), not the
+   full photos: those are 12-megapixel pictures the phone had to decode for a 56 px tile,
+   which made the list slow and left tiles grey while scrolling. */
+async function thumbOf(blob){
+ let im;try{im=await createImageBitmap(blob,{resizeWidth:240,resizeQuality:"medium"});}catch(e){im=await createImageBitmap(blob);}
+ const W=168,H=210,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+ const r=Math.max(W/im.width,H/im.height), w=im.width*r, h=im.height*r;x.drawImage(im,(W-w)/2,(H-h)/2,w,h);if(im.close)im.close();
+ return c.toDataURL("image/jpeg",0.8);
+}
+const thKey=(j,k)=>String(k==="b"?j.beforeAt:j.afterAt)+"|"+((j.rot&&j.rot[k])||0)+"|"+((k==="b"?j.before:j.after)||{}).size;
+const thBusy=new Set();
+async function ensureThumbs(j){
+ if(!j||thBusy.has(j.id))return false;thBusy.add(j.id);let changed=false;
+ try{for(const k of ["b","a"]){const b=k==="b"?j.before:j.after, K=k==="b"?"thB":"thA";
+  if(!b){if(j[K]){j[K]=null;j[K+"k"]=null;changed=true;}continue;}
+  const key=thKey(j,k);if(j[K]&&j[K+"k"]===key)continue;
+  try{j[K]=await thumbOf(b);j[K+"k"]=key;changed=true;}catch(e){}}
+  if(changed){await putJobDB(j);mirror(j);}
+ }finally{thBusy.delete(j.id);}
+ return changed;
+}
 function delJob(id){try{if(NJ())window.AndroidApp.deleteJobData(id);}catch(e){}
  return new Promise(res=>{if(!IDB){MEM=MEM.filter(x=>x.id!==id);return res();}const r=tx("readwrite").delete(id);r.onsuccess=()=>res();r.onerror=()=>res();});}
 /* App: every site is also kept by the phone itself (details as a file, photos as the phone's
@@ -891,7 +913,7 @@ async function showHome(){
  document.querySelectorAll(".hint").forEach(x=>x.remove());
  $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
- const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img src="'+blobUrl(j.after)+'" alt="">':'')+'</span>'+
+ const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(j.before?'<img'+(j.thB?' src="'+j.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img'+(j.thA?' src="'+j.thA+'"':'')+' data-th="a" alt="" decoding="async">':'')+'</span>'+
   '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
   '<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div></div>'+CHEV_SVG+'</button>';
  const w=js.filter(j=>!j.after), d=js.filter(j=>j.after);
@@ -899,6 +921,10 @@ async function showHome(){
  $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">完了した現場はまだありません</p>';
  $("nW").textContent=w.length;$("nD").textContent=d.length;showTab();hSelShow();
  window.scrollTo(0,0);
+ // sites from before thumbnails existed get theirs once, one by one, filled in as they come
+ (async()=>{for(const j of js){if((j.before&&!j.thB)||(j.after&&!j.thA)){if($("home").hidden)return;
+  await ensureThumbs(j);const card=document.querySelector('[data-job="'+j.id+'"]');
+  if(card)card.querySelectorAll("img[data-th]").forEach(im=>{const t=im.dataset.th==="b"?j.thB:j.thA;if(t)im.src=t;});}}})();
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-job]");if(!b)return;
  if(hPressFired){hPressFired=false;return;}
