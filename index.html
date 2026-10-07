@@ -138,11 +138,18 @@ input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgb
 /* photos: the empty tile itself is the camera button */
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .col{display:flex;flex-direction:column;gap:8px;min-width:0}
-@keyframes softGlow{0%,100%{box-shadow:0 0 0 0 rgba(var(--gc),0),0 0 0 0 rgba(var(--gc),0)}50%{box-shadow:0 0 0 5px rgba(var(--gc),.55),0 0 28px 6px rgba(var(--gc),.45)}}
-.glow{--gc:124,58,237;animation:softGlow 1.8s ease-in-out 3}
+/* "look here": the thing slowly swells a little with a thick yellow ring, 3 times, with a short note above */
+@keyframes breathe{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(250,204,21,0),0 0 0 0 rgba(250,204,21,0)}
+ 50%{transform:scale(1.035);box-shadow:0 0 0 6px rgba(250,204,21,.95),0 0 30px 10px rgba(250,204,21,.55)}}
+.glow{position:relative;z-index:5;animation:breathe 1.6s ease-in-out 3}
 .glow1{animation-iteration-count:1}
-#sB.glow{--gc:59,91,219}#sA.glow{--gc:245,159,0}
-@media (prefers-reduced-motion:reduce){.glow{animation-duration:2.6s}}
+@media (prefers-reduced-motion:reduce){.glow{animation-duration:2.4s}}
+.hint{position:absolute;z-index:40;transform:translateX(-50%);padding:10px 16px;border-radius:14px;background:#FACC15;color:#1A1400;font-size:17px;font-weight:800;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.25);pointer-events:none;animation:hintIn .35s ease-out}
+.hint::after{content:"";position:absolute;left:50%;margin-left:-9px;border:9px solid transparent}
+.hint.up::after{top:100%;border-top-color:#FACC15}
+.hint.down::after{bottom:100%;border-bottom-color:#FACC15}
+.hint.out{opacity:0;transition:opacity .4s}
+@keyframes hintIn{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translateX(-50%)}}
 .shotok{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(5,8,15,.55);animation:okIn .2s ease-out}
 .shotok.out{opacity:0;transition:opacity .25s}
 .shotok .ok{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 22px 18px;border-radius:24px;background:rgba(16,24,40,.92);box-shadow:0 18px 40px rgba(0,0,0,.45);max-width:calc(100% - 48px)}
@@ -880,6 +887,7 @@ $("tabW").onclick=()=>{homeTab="w";hSelClear();showTab();};$("tabD").onclick=()=
 async function showHome(){
  try{selClear();}catch(e){}
  urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
+ document.querySelectorAll(".hint").forEach(x=>x.remove());
  $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
  const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(j.before?'<img src="'+blobUrl(j.before)+'" alt="">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img src="'+blobUrl(j.after)+'" alt="">':'')+'</span>'+
@@ -941,15 +949,20 @@ function openJob(j){
  $("result").style.display="none";$("saveMsg").textContent="";delArm=false;setTx("bDel","この現場を削除");
  refreshDetail();make();window.scrollTo(0,0);startGlow();
 }
-// Slow, soft glow (3 times) to point at something; n = how many times.
-function glow(el,n){if(!el)return;el.classList.remove("glow","glow1");void el.offsetWidth;el.classList.add("glow");if(n===1)el.classList.add("glow1");
- const end=()=>{el.classList.remove("glow","glow1");el.removeEventListener("animationend",end);};el.addEventListener("animationend",end);}
-// 施工前 is where a site starts: it glows when an un-started site opens.
-// 比較写真 glows the first time it comes into view after the site opens.
+// Points at something: it slowly swells with a yellow ring (n times, 3 if not given),
+// with a short note above it (below when there is no room above) while it does.
+function glow(el,n,note){if(!el)return;el.classList.remove("glow","glow1");void el.offsetWidth;el.classList.add("glow");if(n===1)el.classList.add("glow1");
+ let h=null;
+ if(note){document.querySelectorAll(".hint").forEach(x=>x.remove());
+  const r=el.getBoundingClientRect(), up=r.top>90;h=document.createElement("div");h.className="hint "+(up?"up":"down");h.textContent=note;document.body.appendChild(h);
+  const hw=h.offsetWidth, cx=Math.min(Math.max(r.left+r.width/2,hw/2+8),innerWidth-hw/2-8);h.style.left=(cx+scrollX)+"px";h.style.top=(up?r.top+scrollY-h.offsetHeight-14:r.bottom+scrollY+14)+"px";}
+ const end=()=>{el.classList.remove("glow","glow1");el.removeEventListener("animationend",end);if(h){h.classList.add("out");setTimeout(()=>h.remove(),450);}};el.addEventListener("animationend",end);}
+// 施工前 is where a site starts: it is pointed at when an un-started site opens.
+// Once both photos are there, 比較写真を保存する is pointed at the first time it comes into view.
 let cmpGlowed=false;
-const cmpSeen=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&e.intersectionRatio>=0.3&&!cmpGlowed&&job&&job.before&&job.after&&$("result").style.display!=="none"){cmpGlowed=true;glow($("result"));}});},{threshold:[0.3]});
-cmpSeen.observe($("result"));
-function startGlow(){cmpGlowed=false;if(job&&!job.before)setTimeout(()=>{if(job&&!job.before&&!$("detail").hidden)glow($("sB"));},350);}
+const cmpSeen=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&!cmpGlowed&&job&&job.before&&job.after&&$("result").style.display!=="none"&&$("viewer").hidden){cmpGlowed=true;glow($("bSave"),3,"比較写真を保存しましょう");}});},{threshold:[0.9]});
+cmpSeen.observe($("bSave"));
+function startGlow(){cmpGlowed=false;if(job&&!job.before)setTimeout(()=>{if(job&&!job.before&&!$("detail").hidden)glow($("sB"),3,"ここから撮影スタート");},350);}
 function refreshDetail(){
  setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);
  // empty tiles are the camera buttons; 撮り直す shows under a photo
@@ -1012,7 +1025,7 @@ let stream=null, camMode=null, ori={beta:null,gamma:null}, oriOK=false, loop=nul
 window.addEventListener("deviceorientation",e=>{if(e.beta!=null){ori={beta:e.beta,gamma:e.gamma};oriOK=true;}});
 async function askOri(){try{if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission();}catch(e){}}
 
-async function startCam(mode){
+async function startCam(mode){document.querySelectorAll(".hint").forEach(x=>x.remove());
  camMode=mode;await askOri();
  const v=$("vid");
  if(NATIVE){
