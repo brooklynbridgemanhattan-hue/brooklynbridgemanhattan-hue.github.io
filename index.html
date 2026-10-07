@@ -412,6 +412,48 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvsl input::-moz-range-track{height:8px;border-radius:4px;background:rgba(255,255,255,.18)}
 .lvsl input::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:5px solid #9C36B5}
 .lvrow{display:grid;grid-template-columns:1fr;gap:10px}
+/* full-screen trimming */
+.tfs{position:fixed;inset:0;z-index:70;background:#05070D;color:#fff;display:flex;flex-direction:column;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));user-select:none;-webkit-user-select:none}
+.tfs-top{display:flex;align-items:center;gap:10px}
+.tfs-top .x{flex:none;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center}
+.tfs-top .x svg.i{width:22px;height:22px}
+.tfs-seg{flex:1;display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.08)}
+.tfs-seg button{min-height:42px;border-radius:10px;color:#CBD5E1;font-size:15px;font-weight:800;white-space:nowrap}
+.tfs-seg button.on[data-k=b]{background:#3B5BDB;color:#fff}
+.tfs-seg button.on[data-k=a]{background:#F59F00;color:#2B1D00}
+.tfs-seg button.on[data-k=both]{background:#7048E8;color:#fff}
+.tfs-hint{font-size:14px;line-height:1.4;color:#CBD5E1;font-weight:600;text-align:center;text-wrap:balance}
+.tfs-stage{position:relative;flex:1;min-height:0;overflow:hidden;border-radius:10px;touch-action:none;background:#0B1020}
+.tfs-view{position:absolute;left:0;top:0;transform-origin:0 0}
+#tfsC{display:block;width:100%;height:100%}
+.tfs-box{position:absolute;outline:2px solid #FACC15;box-shadow:0 0 0 9999px rgba(0,0,0,.55);touch-action:none;cursor:move}
+.tfs-box i{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;transform:scale(var(--inv,1));touch-action:none}
+.tfs-box i.tl{left:0;top:0}.tfs-box i.tr{left:100%;top:0}.tfs-box i.br{left:100%;top:100%}.tfs-box i.bl{left:0;top:100%}
+.tfs-box i.t{left:50%;top:0}.tfs-box i.b{left:50%;top:100%}.tfs-box i.l{left:0;top:50%}.tfs-box i.r{left:100%;top:50%}
+.tfs-box i.c::before{content:"";position:absolute;width:22px;height:22px;border:6px solid #FACC15;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.tfs-box i.tl::before{left:21px;top:21px;border-right:0;border-bottom:0}
+.tfs-box i.tr::before{right:21px;top:21px;border-left:0;border-bottom:0}
+.tfs-box i.br::before{right:21px;bottom:21px;border-left:0;border-top:0}
+.tfs-box i.bl::before{left:21px;bottom:21px;border-right:0;border-top:0}
+.tfs-box i.e::before{content:"";position:absolute;left:50%;top:50%;border-radius:4px;background:#FACC15;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+.tfs-box i.t::before,.tfs-box i.b::before{width:30px;height:7px;margin:-3.5px 0 0 -15px}
+.tfs-box i.l::before,.tfs-box i.r::before{width:7px;height:30px;margin:-15px 0 0 -3.5px}
+.tfs-loupe{position:absolute;top:10px;left:10px;width:132px;height:132px;border-radius:50%;border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.55);pointer-events:none;background:#000}
+.tfs-loupe.rt{left:auto;right:10px}
+.tfs-mix{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800}
+.tfs-mix .b{color:#91A7FF}.tfs-mix .a{color:#FFD43B}
+.tfs-mix input{flex:1;accent-color:#9C36B5;height:36px}
+.tfs-btns{display:grid;grid-template-columns:1fr 1.35fr 1.15fr;gap:8px}
+.tfs-btns button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:54px;border-radius:14px;font-size:15px;font-weight:800;background:rgba(255,255,255,.1);color:#fff;white-space:nowrap}
+.tfs-btns .ok{background:linear-gradient(135deg,#7048E8,#9C36B5);font-size:17px}
+.tfs-btns svg.i{width:20px;height:20px}
+#adjTrim .tx{word-break:keep-all;line-height:1.25}
+.lvbg{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#CBD5E1}
+.lvbg span{flex:1}
+.lvbg button{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);color:#fff;font-size:16px;font-weight:800;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
+.lvbg button.on{background:#fff;color:#101828;box-shadow:0 0 0 3px #9C36B5}
+.lvbg .sw{width:18px;height:18px;border-radius:5px;box-shadow:inset 0 0 0 1.5px #98A2B3}
+.lvbg .sw.w{background:#fff}.lvbg .sw.k{background:#000}
 .lvrow button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:52px;border-radius:14px;font-size:16px;font-weight:800;background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
 .lvrow svg.i{width:20px;height:20px}
 
@@ -648,11 +690,19 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="adjbtns"><button class="o2" id="adjReset">すべて元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
 </div>
 
+<div class="tfs" id="tfs" hidden>
+ <div class="tfs-top"><button class="x" id="tfsX" aria-label="やめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="tfs-seg" id="tfsSeg" role="tablist"><button data-k="b" role="tab">施工前</button><button data-k="a" role="tab">施工後</button><button data-k="both" role="tab">両方(重ねる)</button></div></div>
+ <div class="tfs-hint" id="tfsHint"></div>
+ <div class="tfs-stage" id="tfsStage"><div class="tfs-view" id="tfsView"><canvas id="tfsC"></canvas><div class="tfs-box" id="tfsBox" data-h="m"><i data-h="tl" class="c tl"></i><i data-h="tr" class="c tr"></i><i data-h="br" class="c br"></i><i data-h="bl" class="c bl"></i><i data-h="t" class="e t"></i><i data-h="r" class="e r"></i><i data-h="b" class="e b"></i><i data-h="l" class="e l"></i></div></div><canvas class="tfs-loupe" id="tfsLoupe" width="264" height="264" hidden></canvas></div>
+ <div class="tfs-mix" id="tfsMix"><span class="b">施工前</span><input type="range" id="tfsMixR" min="0" max="100" value="50" aria-label="重ねる濃さ"><span class="a">施工後</span></div>
+ <div class="tfs-btns"><button id="tfsReset">元に戻す</button><button id="tfsAuto">余白を自動カット</button><button class="ok" id="tfsOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
+</div>
 <div class="adj lved" id="lvEd" hidden>
  <div class="adjhd"><b id="lvT">施工前の傾きを補正</b><span>スライドバーで傾きを調整します(画像は拡大しません)</span></div>
  <div class="lvstage" id="lvStage"><div class="lvbox" id="lvBox"><img id="lvImg" alt=""><div class="lvgrid"></div></div></div>
  <div class="lvval"><button id="lvM" aria-label="左に0.1度">−0.1°</button><b id="lvV">0.0°</b><button id="lvP" aria-label="右に0.1度">＋0.1°</button></div>
  <div class="lvsl"><span>左に回す</span><input type="range" id="lvR" min="-15" max="15" step="0.1" value="0" aria-label="傾き"><span>右に回す</span></div>
+ <div class="lvbg" role="radiogroup" aria-label="余白の色"><span>回したときの余白の色</span><button data-bg="white" role="radio"><i class="sw w"></i>白</button><button data-bg="black" role="radio"><i class="sw k"></i>黒</button></div>
  <div class="lvrow"><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
  <div class="adjbtns"><button class="o2" id="lvX">キャンセル</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
 </div>
@@ -1865,6 +1915,7 @@ function adjSelShow(){
   t==="both"?'<span class="chip b">施工前</span><span class="chip a">施工後</span>を選択中':
   '<span class="chip '+t+'">'+(t==="b"?"施工前":"施工後")+'</span>を選択中';
  $("adjPad").classList.toggle("off",!t);
+ setTx("adjTrim",t==="b"?"施工前を 拡大トリミング":t==="a"?"施工後を 拡大トリミング":"両方重ねて 拡大トリミング");
  $("adjPad").style.setProperty("--pc",{b:"#5C7CFA",a:"#F59F00",both:"#7048E8"}[t]||"#7048E8");
 }
 function adjDraw(){
@@ -1876,7 +1927,7 @@ function adjDraw(){
 // ---- manual trimming (点線の枠) ----
 let trimOn=false, tdrag=null;
 function trimSet(on){trimOn=on;$("adjHint").textContent=on?"枠の角や辺を引っ張って残す範囲を決めます(枠の中を引っぱると移動)":"写真をタップして選び、ボタンで調整します(長押しで連続)";$("adjTrim").classList.toggle("on",on);setTx("adjTrim",on?"トリミング完了":"手動でトリミング");adjDraw();}
-$("adjTrim").onclick=()=>{if(!adjTgt()){toast("先に画像をタップして選択してください",true);return;}trimSet(!trimOn);};
+$("adjTrim").onclick=()=>tfsOpen(adjTgt()||"both");
 // the crop a box shows: 両方 = shared cut; one photo = shared + its own
 const tcrop=k=>adjTgt()==="both"?job.crop:(()=>{const c=job.crop,o=job.crops[k];return {t:c.t+o.t,b:c.b+o.b,l:c.l+o.l,r:c.r+o.r};})();
 // overlay on the preview: one cell per photo (tap = choose), and the trim box on chosen ones while trimming
@@ -1956,20 +2007,22 @@ $("adjPad").querySelectorAll("button[data-a]").forEach(b=>{
  b.addEventListener("contextmenu",e=>e.preventDefault());
 });
 // 余白を自動カット: both chosen (or none) = keep only where both photos have picture; one = cut its own white edges.
-$("adjAuto").onclick=()=>{
- const t=adjTgt()||"both", keys=t==="both"?["b","a"]:[t];
+$("adjAuto").onclick=()=>autoCrop(adjTgt()||"both");
+// t = "b" | "a" | "both"; returns true when it cut
+function autoCrop(t){
+ const keys=t==="both"?["b","a"]:[t];
  const bw=imgs.b.width||imgs.b.naturalWidth, bh=imgs.b.height||imgs.b.naturalHeight, portrait=bh>=bw, W=portrait?900:1200, H=portrait?1200:900;
  let L=0,T=0,R=W,B=H;
  keys.forEach(k=>{const im=imgs[k], a=job.adj[k], iw=im.width||im.naturalWidth, ih=im.height||im.naturalHeight;
   const r=Math.max(W/iw,H/ih)*a.s, dw=iw*r, dh=ih*r, x0=(W-dw)/2+a.x*W, y0=(H-dh)/2+a.y*H;
   L=Math.max(L,x0);T=Math.max(T,y0);R=Math.min(R,x0+dw);B=Math.min(B,y0+dh);});
  const c={l:Math.max(0,L/W),t:Math.max(0,T/H),r:Math.max(0,(W-R)/W),b:Math.max(0,(H-B)/H)};
- if(c.l+c.r>0.7||c.t+c.b>0.7){toast("自動では切れません(余白が大きすぎます)",true);return;}
+ if(c.l+c.r>0.7||c.t+c.b>0.7){toast("自動では切れません(余白が大きすぎます)",true);return false;}
  ["l","t","r","b"].forEach(e=>{if(c[e]>0)c[e]=Math.min(0.7,c[e]+0.002);});
  if(t==="both"){job.crop=c;job.crops={b:CROP0(),a:CROP0()};}
  else job.crops[t]=c;
- adjDraw();toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");
-};
+ adjDraw();toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");return true;
+}
 $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
 $("adjOk").onclick=async()=>{if(trimOn)trimSet(false);$("adjEd").hidden=true;if(adjSnap()!==adjOld){await saveJob();make();}};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
@@ -2040,17 +2093,18 @@ async function autoTilt(blob,g){
 // App: the phone turns its own copy of the photo (about 3x quicker than doing it in the page).
 let lvReq=0;const lvWait=new Map();
 window.onAppLevel=(req,r)=>{const f=lvWait.get(req);if(f){lvWait.delete(req);f(r);}};
-function natLevel(id,deg){return new Promise(res=>{const req="l"+(++lvReq);lvWait.set(req,res);
+function natLevel(id,deg,bg){return new Promise(res=>{const req="l"+(++lvReq);lvWait.set(req,res);
  setTimeout(()=>{if(lvWait.has(req)){lvWait.delete(req);res("error:timeout");}},15000);
- try{window.AndroidApp.level(req,id,deg);}catch(e){lvWait.delete(req);res("error");}});}
-async function levelBlob(raw,deg,nid){
+ try{if(window.AndroidApp.levelColor)window.AndroidApp.levelColor(req,id,deg,bg||"white");else window.AndroidApp.level(req,id,deg);}catch(e){lvWait.delete(req);res("error");}});}
+// bg: colour of the corners the turn leaves ("white" / "black")
+async function levelBlob(raw,deg,nid,bg){
  if(!deg)return raw;
- if(nid&&window.AndroidApp&&window.AndroidApp.level){
-  const r=await natLevel(nid,deg);
+ if(nid&&window.AndroidApp&&window.AndroidApp.level&&(bg!=="black"||window.AndroidApp.levelColor)){
+  const r=await natLevel(nid,deg,bg);
   if(r.startsWith("ok:"))try{const id=r.slice(3), q=await fetch("/cam/shot/"+id,{cache:"no-store"});if(q.ok){const b=await q.blob();b.nid=id;return b;}}catch(e){}
  }
  const im=await createImageBitmap(raw), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
- const x=c.getContext("2d");x.fillStyle="#FFFFFF";x.fillRect(0,0,c.width,c.height);
+ const x=c.getContext("2d");x.fillStyle=bg==="black"?"#000000":"#FFFFFF";x.fillRect(0,0,c.width,c.height);
  x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);x.imageSmoothingQuality="high";x.drawImage(im,-im.width/2,-im.height/2);if(im.close)im.close();
  return await new Promise(r=>c.toBlob(r,"image/jpeg",0.93));
 }
@@ -2066,7 +2120,8 @@ async function lvOpen(k){
  job.raw=job.raw||{};job.rot=job.rot||{};
  if(!job.raw[k]&&rawPend[k])await rawPend[k];
  const raw=job.raw[k]||cur;
- lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0};
+ const bg0=(job.lvBg&&job.lvBg[k])||getPref("ba-lvbg")||"white";
+ lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,bg:bg0,oldBg:bg0};lvBgShow();
  $("lvT").textContent=(k==="b"?"施工前":"施工後")+"の傾きを補正";
  $("lvEd").classList.toggle("a",k==="a");
  const im=$("lvImg");im.onload=lvFit;im.src=blobUrl(raw);
@@ -2077,6 +2132,10 @@ function lvFit(){
  const W=Math.min($("lvEd").clientWidth-28,900), H=Math.max(180,window.innerHeight*0.5), r=Math.min(W/iw,H/ih);
  $("lvBox").style.width=Math.round(iw*r)+"px";$("lvBox").style.height=Math.round(ih*r)+"px";
 }
+// the colour the turned corners get: shown behind the preview, used when the photo is made
+function lvBgShow(){if(!lv)return;$("lvBox").style.background=lv.bg==="black"?"#000":"#fff";
+ document.querySelectorAll(".lvbg button").forEach(b=>{const on=b.dataset.bg===lv.bg;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});}
+document.querySelectorAll(".lvbg button").forEach(b=>b.onclick=()=>{if(!lv)return;lv.bg=b.dataset.bg;setPref("ba-lvbg",lv.bg);lvBgShow();});
 function lvShow(){
  const d=Math.round(lv.deg*10)/10;lv.deg=d;
  $("lvImg").style.transform="rotate("+d+"deg)";$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
@@ -2091,14 +2150,14 @@ $("lvZero").onclick=()=>lvSet(0);
 function lvClose(){lv=null;$("lvEd").hidden=true;}
 $("lvX").onclick=lvClose;
 $("lvOk").onclick=async()=>{
- if(!lv)return;const {k,raw,deg}=lv;
- if(deg===lv.old&&job.raw[k]){lvClose();return;}
+ if(!lv)return;const {k,raw,deg,bg}=lv;
+ if(deg===lv.old&&bg===lv.oldBg&&job.raw[k]){lvClose();return;}
  const ok=$("lvOk");ok.disabled=true;setTx2("lvOk","補正中…");
  try{
   job.rawNid=job.rawNid||{};
   const was=k==="b"?job.beforeNid:job.afterNid, rn=job.raw[k]?job.rawNid[k]:was;
-  const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null);
-  job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;
+  const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null,bg);
+  job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;job.lvBg=job.lvBg||{};job.lvBg[k]=bg;
   const bn=b.nid||(b===raw?rn:null)||null;
   if(k==="b"){job.before=b;job.beforeNid=bn;}else{job.after=b;job.afterNid=bn;}
   refreshDetail();lvClose();toast(deg?"傾きを補正しました("+fmtDeg(deg)+")":"撮ったままに戻しました");
@@ -2109,6 +2168,96 @@ $("lvOk").onclick=async()=>{
  ok.disabled=false;setTx2("lvOk","完了");lvClose();
 };
 window.addEventListener("resize",()=>{if(lv)lvFit();});
+
+/* ---------- トリミング (full screen) ---------- */
+// One photo (施工前 / 施工後) or both laid over each other, as large as the screen allows.
+// The box works on the same cut as before: 両方 = job.crop (both photos), one photo = its own
+// cut on top of that. Two fingers zoom in; while a corner or edge is dragged a magnifier shows
+// what is under the finger, and the edge snaps to where a photo's picture starts.
+let tf=null;
+function tfFrame(){const bw=imgs.b.width||imgs.b.naturalWidth, bh=imgs.b.height||imgs.b.naturalHeight;return bh>=bw?[900,1200]:[1200,900];}
+// where the picture of photo k lies in its frame (parts of the frame), for snapping
+function tfPicture(k){const [W,H]=tfFrame(), im=imgs[k], a=job.adj[k], iw=im.width||im.naturalWidth, ih=im.height||im.naturalHeight;
+ const r=Math.max(W/iw,H/ih)*a.s, dw=iw*r, dh=ih*r, x0=(W-dw)/2+a.x*W, y0=(H-dh)/2+a.y*H;
+ return {l:Math.max(0,x0/W),t:Math.max(0,y0/H),r:Math.min(1,(x0+dw)/W),b:Math.min(1,(y0+dh)/H)};}
+function tfsOpen(k){
+ if(!imgs.b||!imgs.a)return;
+ job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};
+ const [W,H]=tfFrame(), K=1.25, fr={};
+ ["b","a"].forEach(q=>{const c=document.createElement("canvas");c.width=W*K;c.height=H*K;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);drawAdj(x,imgs[q],0,0,c.width,c.height,job.adj[q]);fr[q]=c;});
+ tf={k,fr,W:W*K,H:H*K,mix:0.5,old:JSON.stringify({crop:job.crop,crops:job.crops}),v:{s:1,x:0,y:0},pts:new Map()};
+ const c=$("tfsC");c.width=tf.W;c.height=tf.H;
+ $("tfs").hidden=false;$("tfsMixR").value=50;tfsMode(k);
+}
+function tfsMode(k){tf.k=k;tf.v={s:1,x:0,y:0};
+ document.querySelectorAll("#tfsSeg button").forEach(b=>{const on=b.dataset.k===k;b.classList.toggle("on",on);b.setAttribute("aria-selected",on);});
+ $("tfsMix").hidden=k!=="both";
+ $("tfsHint").textContent=k==="both"?"2枚を重ねています。枠は両方の写真を同じ位置で切ります(下のバーで見え方を変えられます)":"枠の角や辺を引っぱって残す範囲を決めます。2本指で拡大できます";
+ tfsLayout();tfsPaint();}
+function tfsPaint(){const x=$("tfsC").getContext("2d");x.globalAlpha=1;x.fillStyle="#fff";x.fillRect(0,0,tf.W,tf.H);
+ if(tf.k==="both"){x.drawImage(tf.fr.b,0,0);x.globalAlpha=tf.mix;x.drawImage(tf.fr.a,0,0);x.globalAlpha=1;}else x.drawImage(tf.fr[tf.k],0,0);}
+// fit the frame in the stage, then the zoom / pan on top
+function tfsLayout(){const st=$("tfsStage"), sw=st.clientWidth, sh=st.clientHeight, r=Math.min(sw/tf.W,sh/tf.H);
+ tf.dw=tf.W*r;tf.dh=tf.H*r;tf.ox=(sw-tf.dw)/2;tf.oy=(sh-tf.dh)/2;
+ const v=$("tfsView");v.style.width=tf.dw+"px";v.style.height=tf.dh+"px";tfsView();}
+function tfsView(){const v=tf.v;v.s=Math.max(1,Math.min(6,v.s));
+ v.x=Math.min(0,Math.max(tf.dw-tf.dw*v.s,v.x));v.y=Math.min(0,Math.max(tf.dh-tf.dh*v.s,v.y));
+ $("tfsView").style.transform="translate("+(tf.ox+v.x)+"px,"+(tf.oy+v.y)+"px) scale("+v.s+")";
+ $("tfsBox").style.setProperty("--inv",1/v.s);tfsBox();}
+// the cut the box shows / sets
+const tfLo=()=>tf.k==="both"?CROP0():job.crop;
+function tfGet(){if(tf.k==="both")return {...job.crop};const c=job.crop,o=job.crops[tf.k];return {t:c.t+o.t,b:c.b+o.b,l:c.l+o.l,r:c.r+o.r};}
+function tfSet(c){if(tf.k==="both"){job.crop=c;return;}const sh=job.crop;job.crops[tf.k]={t:Math.max(0,c.t-sh.t),b:Math.max(0,c.b-sh.b),l:Math.max(0,c.l-sh.l),r:Math.max(0,c.r-sh.r)};}
+function tfsBox(){const c=tfGet(), b=$("tfsBox");
+ b.style.left=c.l*tf.dw+"px";b.style.top=c.t*tf.dh+"px";b.style.width=(1-c.l-c.r)*tf.dw+"px";b.style.height=(1-c.t-c.b)*tf.dh+"px";}
+// snap targets: frame edges and where each shown photo's picture starts / ends
+function tfSnaps(){const ks=tf.k==="both"?["b","a"]:[tf.k], xs=[0,1], ys=[0,1];ks.forEach(q=>{const p=tfPicture(q);xs.push(p.l,p.r);ys.push(p.t,p.b);});return {xs,ys};}
+function tfsLoupe(px,py){const L=$("tfsLoupe"), x=L.getContext("2d"), N=L.width, s=tf.v.s, R=(132/2.6)*(tf.W/(tf.dw*s)), sx=px*tf.W-R/2, sy=py*tf.H-R/2;
+ x.fillStyle="#000";x.fillRect(0,0,N,N);x.drawImage($("tfsC"),sx,sy,R,R,0,0,N,N);
+ const c=tfGet(), k=N/R, X=v=>(v*tf.W-sx)*k, Y=v=>(v*tf.H-sy)*k;
+ x.fillStyle="rgba(0,0,0,.45)";const l=X(c.l),r=X(1-c.r),t=Y(c.t),b=Y(1-c.b);
+ x.fillRect(0,0,N,t);x.fillRect(0,b,N,N-b);x.fillRect(0,t,l,b-t);x.fillRect(r,t,N-r,b-t);
+ x.strokeStyle="#FACC15";x.lineWidth=4;x.strokeRect(l,t,r-l,b-t);
+ x.fillStyle="#fff";x.beginPath();x.arc(N/2,N/2,4,0,7);x.fill();
+ L.classList.toggle("rt",px*tf.dw*s+tf.v.x<tf.dw/2);L.hidden=false;}
+let tfd=null, tfTap=0;
+$("tfsStage").addEventListener("pointerdown",e=>{
+ if(!tf)return;e.preventDefault();$("tfsStage").setPointerCapture(e.pointerId);
+ const h=e.target.closest("[data-h]");
+ tf.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(tf.pts.size===2){tfd={pinch:true,s0:tf.v.s,x0:tf.v.x,y0:tf.v.y,...tfPinch()};$("tfsLoupe").hidden=true;return;}
+ if(h&&tf.pts.size===1){tfd={h:h.dataset.h,x0:e.clientX,y0:e.clientY,c0:tfGet()};return;}
+ const now=Date.now();if(now-tfTap<300){tf.v={s:1,x:0,y:0};tfsView();tfTap=0;return;}tfTap=now; // double tap: back to the whole photo
+ tfd={pan:true,x0:e.clientX,y0:e.clientY,vx:tf.v.x,vy:tf.v.y};
+});
+function tfPinch(){const [p,q]=[...tf.pts.values()], r=$("tfsStage").getBoundingClientRect();return {d:Math.hypot(p.x-q.x,p.y-q.y)||1,mx:(p.x+q.x)/2-r.left-tf.ox,my:(p.y+q.y)/2-r.top-tf.oy};}
+$("tfsStage").addEventListener("pointermove",e=>{
+ if(!tf||!tfd||!tf.pts.has(e.pointerId))return;tf.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(tfd.pinch){if(tf.pts.size<2)return;const p=tfPinch(), s=Math.max(1,Math.min(6,tfd.s0*p.d/tfd.d));
+  // the point between the fingers stays under them
+  const cx=(tfd.mx-tfd.x0)/tfd.s0, cy=(tfd.my-tfd.y0)/tfd.s0;tf.v.s=s;tf.v.x=p.mx-cx*s;tf.v.y=p.my-cy*s;tfsView();return;}
+ if(tfd.pan){if(tf.v.s>1){tf.v.x=tfd.vx+e.clientX-tfd.x0;tf.v.y=tfd.vy+e.clientY-tfd.y0;tfsView();}return;}
+ const s=tf.v.s, dx=(e.clientX-tfd.x0)/(tf.dw*s), dy=(e.clientY-tfd.y0)/(tf.dh*s), c={...tfd.c0}, lo=tfLo(), MIN=0.1, h=tfd.h;
+ const snap=(v,list,size)=>{let best=v,bd=14/(size*s);list.forEach(t=>{const d=Math.abs(v-t);if(d<bd){bd=d;best=t;}});return best;}, S=tfSnaps();
+ if(h==="m"){const w=1-c.l-c.r, hh=1-c.t-c.b;c.l=Math.min(1-lo.r-w,Math.max(lo.l,c.l+dx));c.r=1-w-c.l;c.t=Math.min(1-lo.b-hh,Math.max(lo.t,c.t+dy));c.b=1-hh-c.t;}
+ else{
+  if(h.includes("l"))c.l=Math.min(1-c.r-MIN,Math.max(lo.l,snap(c.l+dx,S.xs,tf.dw)));
+  if(h.includes("r"))c.r=Math.min(1-c.l-MIN,Math.max(lo.r,1-snap(1-(c.r-dx),S.xs,tf.dw)));
+  if(h.includes("t"))c.t=Math.min(1-c.b-MIN,Math.max(lo.t,snap(c.t+dy,S.ys,tf.dh)));
+  if(h.includes("b"))c.b=Math.min(1-c.t-MIN,Math.max(lo.b,1-snap(1-(c.b-dy),S.ys,tf.dh)));
+ }
+ tfSet(c);tfsBox();
+ if(h!=="m"){const px=h.includes("l")?c.l:h.includes("r")?1-c.r:(c.l+1-c.r)/2, py=h.includes("t")?c.t:h.includes("b")?1-c.b:(c.t+1-c.b)/2;tfsLoupe(px,py);}
+});
+const tfUp=e=>{if(!tf)return;tf.pts.delete(e.pointerId);if(!tf.pts.size){tfd=null;$("tfsLoupe").hidden=true;}else if(tfd&&tfd.pinch)tfd=null;};
+$("tfsStage").addEventListener("pointerup",tfUp);$("tfsStage").addEventListener("pointercancel",tfUp);
+document.querySelectorAll("#tfsSeg button").forEach(b=>b.onclick=()=>{if(tf)tfsMode(b.dataset.k);});
+$("tfsMixR").addEventListener("input",e=>{tf.mix=e.target.value/100;tfsPaint();});
+$("tfsReset").onclick=()=>{if(!tf)return;if(tf.k==="both")job.crop=CROP0();else job.crops[tf.k]=CROP0();tfsBox();};
+$("tfsAuto").onclick=()=>{if(tf&&autoCrop(tf.k))tfsBox();};
+function tfsClose(keep){if(!tf)return;if(!keep){const o=JSON.parse(tf.old);job.crop=o.crop;job.crops=o.crops;}tf=null;tfd=null;$("tfs").hidden=true;$("tfsLoupe").hidden=true;adjDraw();}
+$("tfsOk").onclick=()=>tfsClose(true);$("tfsX").onclick=()=>tfsClose(false);
+window.addEventListener("resize",()=>{if(tf)tfsLayout();});
 
 /* ---------- すべての写真を保存 ---------- */
 // Every other photo (comments written in) to the phone. 施工前・施工後 are not included.
@@ -2543,6 +2692,7 @@ $("svA").onclick=async()=>{if(job.after){keepUri(job,"savedA",await saveBlob(job
 /* ---------- Android app hooks ---------- */
 // Back button: close the camera, then go back to the site list. Returns true when handled.
 window.appBack=()=>{
+ if(!$("tfs").hidden){tfsClose(false);return true;}
  if(!$("lvEd").hidden){lvClose();return true;}
  if(!$("adjEd").hidden){adjClose();return true;}
  if(!$("home").hidden&&hSel.size){hSelClear();return true;}
