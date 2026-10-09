@@ -458,6 +458,8 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvbg button{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);color:#fff;font-size:16px;font-weight:800;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
 .lvbg button.on{background:#fff;color:#101828;box-shadow:0 0 0 3px #9C36B5}
 .lvbg .sw{width:18px;height:18px;border-radius:5px;box-shadow:inset 0 0 0 1.5px #98A2B3}
+.lvgr button{min-width:76px;justify-content:center}
+#lvEd.nogrid .lvgrid{display:none}
 .lvbg .sw.w{background:#fff}.lvbg .sw.k{background:#000}
 .lvrow button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:52px;border-radius:14px;font-size:16px;font-weight:800;background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
 .lvrow svg.i{width:20px;height:20px}
@@ -708,6 +710,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="lvval"><button id="lvM" aria-label="左に0.1度">−0.1°</button><b id="lvV">0.0°</b><button id="lvP" aria-label="右に0.1度">＋0.1°</button></div>
  <div class="lvsl"><span>左に回す</span><input type="range" id="lvR" min="-15" max="15" step="0.1" value="0" aria-label="傾き"><span>右に回す</span></div>
  <div class="lvbg" role="radiogroup" aria-label="余白の色"><span>回したときの余白の色</span><button data-bg="white" role="radio"><i class="sw w"></i>白</button><button data-bg="black" role="radio"><i class="sw k"></i>黒</button></div>
+ <div class="lvbg lvgr" role="radiogroup" aria-label="グリッドを表示"><span>グリッドを表示</span><button data-gr="1" role="radio">オン</button><button data-gr="0" role="radio">オフ</button></div>
  <div class="lvrow"><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
  <div class="adjbtns"><button class="o2" id="lvX">キャンセル</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
 </div>
@@ -2172,13 +2175,17 @@ async function lvOpen(k){
 }
 function lvFit(){
  const im=$("lvImg"), iw=im.naturalWidth, ih=im.naturalHeight;if(!iw)return;
- const W=Math.min($("lvEd").clientWidth-28,900), H=Math.max(180,window.innerHeight*0.5), r=Math.min(W/iw,H/ih);
+ const W=Math.min($("lvEd").clientWidth-28,900), H=Math.max(180,window.innerHeight*0.43), r=Math.min(W/iw,H/ih);
  $("lvBox").style.width=Math.round(iw*r)+"px";$("lvBox").style.height=Math.round(ih*r)+"px";
 }
 // the colour the turned corners get: shown behind the preview, used when the photo is made
-function lvBgShow(){if(!lv)return;$("lvBox").style.background=lv.bg==="black"?"#000":"#fff";
- document.querySelectorAll(".lvbg button").forEach(b=>{const on=b.dataset.bg===lv.bg;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});}
-document.querySelectorAll(".lvbg button").forEach(b=>b.onclick=()=>{if(!lv)return;lv.bg=b.dataset.bg;setPref("ba-lvbg",lv.bg);lvBgShow();});
+function lvBgShow(){if(!lv)return;$("lvBox").style.background=lv.bg==="black"?"#000":"#fff";lvGridShow();
+ document.querySelectorAll(".lvbg button[data-bg]").forEach(b=>{const on=b.dataset.bg===lv.bg;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});}
+document.querySelectorAll(".lvbg button[data-bg]").forEach(b=>b.onclick=()=>{if(!lv)return;lv.bg=b.dataset.bg;setPref("ba-lvbg",lv.bg);lvBgShow();});
+// グリッドを表示 オン / オフ (remembered; on at first)
+function lvGridShow(){const on=getPref("ba-lvgrid")!=="0";$("lvEd").classList.toggle("nogrid",!on);
+ document.querySelectorAll(".lvgr button").forEach(b=>{const sel=(b.dataset.gr==="1")===on;b.classList.toggle("on",sel);b.setAttribute("aria-checked",sel);});}
+document.querySelectorAll(".lvgr button").forEach(b=>b.onclick=()=>{setPref("ba-lvgrid",b.dataset.gr);lvGridShow();});
 function lvShow(){
  const d=Math.round(lv.deg*10)/10;lv.deg=d;
  $("lvImg").style.transform="rotate("+d+"deg)";$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
