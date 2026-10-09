@@ -1163,7 +1163,8 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
  setFrame("na","比べています…");lvlShown=null;
  $("camMask").hidden=true;
  shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");
- if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();$("pipImg").src=photoSrc;}
+ if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();$("pipImg").src=photoSrc;
+  setTimeout(()=>{if(camMode==="after"&&job&&job.before)outlineSrc().catch(()=>{});},1200);}
  pipShow();
  $("cam").style.display="flex";$("camLoad").hidden=true;$("cam").classList.remove("loading");
  if(NATIVE){const t0=Date.now();while(!natFrame&&stream&&Date.now()-t0<4000)await sleep(50);}
@@ -1195,10 +1196,13 @@ function stopCam(){
 $("cCancel").onclick=stopCam;
 $("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
 $("tGrid").onclick=()=>{$("tGrid").classList.toggle("on");$("grid").classList.toggle("on");};
-$("tGhost").onclick=()=>{const on=$("tGhost").classList.toggle("on");$("ghost").style.display=on?"block":"none";ghostLook();};
+$("tGhost").onclick=()=>{$("tGhost").classList.toggle("on");ghostLook();};
 $("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").style.display=on?"block":"none";$("cam").classList.toggle("judging",on);};
 // Outlines don't hide the live view, so they show at full strength without the slider.
+// The 施工前 picture over the camera: shown when 重ねる or 線表示 is on (線表示 = its outlines only).
+// (線表示 on its own used to show nothing, because only 重ねる made the picture visible.)
 function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost").classList.contains("on");
+ $("ghost").style.display=camMode==="after"&&(g||line)?"block":"none";
  $("ghost").style.opacity=line?1:$("op").value/100;$("opRow").style.display=g&&!line&&camMode==="after"?"flex":"none";}
 // 交換する機器を枠で囲む (before camera): open the box editor right after the shot or not.
 let maskSeed=null; // where the last 比べない frame was (the frame screen starts there)
@@ -1213,7 +1217,12 @@ $("tAllOff").onclick=()=>{
  else{const back=savedLook;savedLook=null;back.forEach(id=>{if(!$(id).classList.contains("on"))$(id).click();});setTx("tAllOff","表示オフ");$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");}
 };
 LOOK.forEach(id=>$(id).addEventListener("click",e=>{if(savedLook&&e.isTrusted){savedLook=null;setTx("tAllOff","表示オフ");$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");}}));
-$("tLine").onclick=async()=>{const on=$("tLine").classList.toggle("on");$("ghost").src=on?await outlineSrc():photoSrc;ghostLook();};
+$("tLine").onclick=async()=>{const on=$("tLine").classList.toggle("on");ghostLook();
+ let src=photoSrc;
+ if(on)try{src=await outlineSrc();}catch(e){$("tLine").classList.remove("on");ghostLook();toast("線を作れませんでした",true);return;}
+ // pressed again while the lines were being made: the latest press wins
+ if($("tLine").classList.contains("on")!==on)return;
+ $("ghost").src=src;ghostLook();};
 let photoSrc="", outlineFor=null, outlineUrl="";
 // The before photo as bright outlines only, so a new unit doesn't hide behind the old one.
 async function outlineSrc(){
