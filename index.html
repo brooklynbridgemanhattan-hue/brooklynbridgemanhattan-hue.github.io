@@ -1198,6 +1198,7 @@ $("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").st
 function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost").classList.contains("on");
  $("ghost").style.opacity=line?1:$("op").value/100;$("opRow").style.display=g&&!line&&camMode==="after"?"flex":"none";}
 // 交換する機器を枠で囲む (before camera): open the box editor right after the shot or not.
+let maskSeed=null; // where the last 比べない frame was (the frame screen starts there)
 let maskAfterShot=true;try{maskAfterShot=localStorage.getItem("ba-maskshot")!=="0";}catch(e){}
 $("tMask").onclick=()=>{maskAfterShot=$("tMask").classList.toggle("on");try{localStorage.setItem("ba-maskshot",maskAfterShot?"1":"0");}catch(e){}
  toast(maskAfterShot?"撮影後に枠で囲む画面を出します":"撮影後に枠で囲む画面を出しません");};
@@ -1620,7 +1621,10 @@ async function gotPhoto(mode,blob,o,shot,g){
   job.raw[lk]=blob;job.rawNid[lk]=blob.nid||null;
   // no automatic levelling (it could tilt photos the wrong way); 傾きを補正 does it by hand
  }
- if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;}
+ if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;
+  // a new 施工前 starts without the old photo's 比べない frame: 枠で囲む on = the frame screen opens
+  // (starting where the last frame was), off = no frame
+  if(job.mask)maskSeed=job.mask;job.mask=null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
  // show it at once; writing it into the phone's storage follows
  refreshDetail();
@@ -2346,7 +2350,7 @@ let mEdit=null, mDrag=null;
 function openMaskEditor(){
  if(!job.before)return;
  medDeg=-camRot();turnFixed($("med"),medDeg);
- mEdit=job.mask?{...job.mask}:{x:0.3,y:0.25,w:0.4,h:0.4};
+ mEdit=job.mask?{...job.mask}:maskSeed?{...maskSeed}:{x:0.3,y:0.25,w:0.4,h:0.4};
  const im=$("mImg");im.onload=layoutMask;im.src=blobUrl(job.before);
  $("med").hidden=false;if(im.complete&&im.naturalWidth)layoutMask();
 }
