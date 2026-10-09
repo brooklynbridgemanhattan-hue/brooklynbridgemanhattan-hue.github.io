@@ -494,7 +494,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 /* app camera: the phone's own preview shows through under the stage */
 html.natcam,html.natcam body,html.natcam .cam{background:transparent!important}
 html.natcam body>*:not(#cam):not(#toast){visibility:hidden}
-html.natcam #vid{display:none}
+html.natcam #vid,html.app #vid{display:none}
 .cam .ghost{pointer-events:none}
 .cam .ghost.rot{inset:auto;left:50%;top:50%;max-width:none;max-height:none}
 .grid{position:absolute;inset:0;pointer-events:none;display:none;
@@ -725,7 +725,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="shotok" id="shotOk" hidden><div class="ok"><span class="ck"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><img id="shotOkImg" alt=""><b id="shotOkT"></b></div></div>
  <div class="holdstill" id="holdStill" hidden>撮影中… そのまま動かさないでください</div>
  <div class="view"><div class="stage" id="stage">
-  <video id="vid" playsinline muted autoplay></video>
+  <video id="vid" playsinline muted autoplay poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
   <img class="ghost" id="ghost" alt="">
   <div class="grid" id="grid"></div>
   <div class="cmask" id="camMask" hidden><span>比べない</span></div>
@@ -1306,15 +1306,19 @@ function camRot(){
 // UI turned to face the user: the camera screen and the box editor follow the phone.
 let sideDeg=0;const homes=new Map();
 function setSideUI(deg){
- if(deg===sideDeg)return;sideDeg=deg;
+ if(deg===sideDeg)return;const was=sideDeg;sideDeg=deg;
  const cam=$("cam"), hud=$("camHud"), tools=cam.querySelector(".tools");
  // [element, where it goes when sideways, put first?]
  const moves=[[$("camMode"),hud],[$("fLabel"),hud],[$("shotN"),hud],[$("sideW"),hud],[cam.querySelector(".bar"),hud],[tools,$("hudCol"),true],[$("tFlash"),tools,true],[$("pip"),hud],[$("cShot"),$("hudShot")]];
  if(deg){
-  moves.forEach(([e,to,first])=>{homes.set(e,{p:e.parentNode,n:e.nextSibling});first?to.insertBefore(e,to.firstChild):to.appendChild(e);});
+  // turned from one side straight to the other: the controls are already in the side panel, only
+  // the panel turns. (Moving them again recorded the panel as their home, so after the camera
+  // closed they stayed in the hidden panel and the next camera had no shutter.)
+  if(!was)moves.forEach(([e,to,first])=>{homes.set(e,{p:e.parentNode,n:e.nextSibling});first?to.insertBefore(e,to.firstChild):to.appendChild(e);});
   hud.hidden=false;hud.style.width=cam.clientHeight+"px";hud.style.height=cam.clientWidth+"px";hud.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";
  }else{
-  moves.slice().reverse().forEach(([e])=>{const h=homes.get(e);if(h)h.p.insertBefore(e,h.n);});
+  moves.slice().reverse().forEach(([e])=>{const h=homes.get(e);if(h){if(h.n&&h.n.parentNode===h.p)h.p.insertBefore(e,h.n);else h.p.appendChild(e);}});
+  homes.clear();
   hud.hidden=true;$("hudCol").style.width=$("hudCol").style.bottom="";
  }
  fitStage();alignRot=null;prepAlign();
@@ -1344,6 +1348,9 @@ setInterval(()=>{
 // resolution. Its preview is placed exactly under #stage; small frames for the alignment
 // check are fetched from /cam/frame, and finished photos from /cam/shot/<id>.
 const NATIVE=!!window.AndroidCam;
+// App: the phone's own camera is used, so the page's <video> is never shown (Android drew its
+// grey "play" placeholder in it for a moment while the camera started)
+if(NATIVE)document.documentElement.classList.add("app");
 let natInfo=null, natFrame=null, natGen=0, natPlace="";
 function srcW(){return NATIVE?(natFrame?natFrame.width:0):$("vid").videoWidth;}
 function srcH(){return NATIVE?(natFrame?natFrame.height:0):$("vid").videoHeight;}
