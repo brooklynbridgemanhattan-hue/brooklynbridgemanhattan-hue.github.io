@@ -2173,10 +2173,18 @@ async function lvOpen(k){
  const im=$("lvImg");im.onload=lvFit;im.src=blobUrl(raw);
  $("lvEd").hidden=false;lvShow();
 }
+// The photo takes all the height left over, keeping a clear gap (LV_GAP) above キャンセル / 完了
+// so they aren't pressed by mistake.
+const LV_GAP=14;
 function lvFit(){
  const im=$("lvImg"), iw=im.naturalWidth, ih=im.naturalHeight;if(!iw)return;
- const W=Math.min($("lvEd").clientWidth-28,900), H=Math.max(180,window.innerHeight*0.43), r=Math.min(W/iw,H/ih);
- $("lvBox").style.width=Math.round(iw*r)+"px";$("lvBox").style.height=Math.round(ih*r)+"px";
+ const ed=$("lvEd"), box=$("lvBox"), W=Math.min(ed.clientWidth-28,900);
+ const size=H=>{const r=Math.min(W/iw,Math.max(180,H)/ih);box.style.width=Math.round(iw*r)+"px";box.style.height=Math.round(ih*r)+"px";};
+ size(window.innerHeight*0.3);
+ // room between 撮ったままに戻す and the buttons (or how much the page runs over)
+ const btns=ed.querySelector(".adjbtns").getBoundingClientRect(), last=$("lvZero").getBoundingClientRect();
+ const over=ed.scrollHeight-ed.clientHeight, free=over>0?-over:btns.top-last.bottom-10-LV_GAP;
+ size(box.offsetHeight+free);
 }
 // the colour the turned corners get: shown behind the preview, used when the photo is made
 function lvBgShow(){if(!lv)return;$("lvBox").style.background=lv.bg==="black"?"#000":"#fff";lvGridShow();
