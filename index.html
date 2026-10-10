@@ -465,6 +465,23 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvsl input::-moz-range-track{height:8px;border-radius:4px;background:rgba(255,255,255,.18)}
 .lvsl input::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:5px solid #9C36B5}
 .lvrow{display:grid;grid-template-columns:1fr;gap:10px}
+/* 補正: 傾き / 明るさ tabs; both sets of controls take the same place, so the photo keeps its size */
+.lvhd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lvtabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.08);flex:none}
+.lvtabs button{min-height:40px;padding:0 16px;border-radius:999px;font-size:16px;font-weight:800;color:#CBD5E1}
+.lvtabs button.on{background:#fff;color:#101828}
+.lvpanes{display:grid}
+.lvpane{grid-area:1/1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.lvpane.off{visibility:hidden;pointer-events:none}
+.tnrow{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#CBD5E1}
+.tnrow span{width:98px;flex:none;white-space:nowrap;font-size:14px}
+.tnrow b{width:40px;flex:none;text-align:right;font-size:18px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
+.tnrow input{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:44px;background:transparent}
+.tnrow input::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,rgba(255,255,255,.25),rgba(255,255,255,.25)) center/2px 100% no-repeat,rgba(255,255,255,.18)}
+.tnrow input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:30px;height:30px;margin-top:-11px;border-radius:50%;background:#fff;border:5px solid #9C36B5;box-shadow:0 1px 6px rgba(0,0,0,.5)}
+.tnrow input::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:5px solid #9C36B5}
+.tnst{flex:none;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:20px;font-weight:800;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
+.tnbtns{grid-template-columns:1fr 1fr}
 /* full-screen trimming */
 .tfs{position:fixed;inset:0;z-index:70;background:#05070D;color:#fff;display:flex;flex-direction:column;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));user-select:none;-webkit-user-select:none}
 .tfs-top{display:flex;align-items:center;gap:10px}
@@ -676,13 +693,13 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <div class="col before">
     <div class="slot" id="sB"><span class="tag">施工前</span><span class="ph"><span class="pi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span>タップして撮影</span></div>
     <button class="mini" id="bBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">撮り直す</span></button>
-    <button class="mini lv" id="lvB" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="10" rx="1.5" transform="rotate(-12 12 10)"/><path d="M2 20h20"/></svg><span class="tx">傾きを補正</span></button>
+    <button class="mini lv" id="lvB" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="10" rx="1.5" transform="rotate(-12 12 10)"/><path d="M2 20h20"/></svg><span class="tx">傾き・明るさ</span></button>
     <button id="svB" hidden disabled></button>
    </div>
    <div class="col after">
     <div class="slot after" id="sA"><span class="tag">施工後</span><span class="ph"><span class="pi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span id="sAph">施工前の<br>あとに撮れます</span></span></div>
     <button class="mini" id="bAfter" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">撮り直す</span></button>
-    <button class="mini lv" id="lvA" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="10" rx="1.5" transform="rotate(-12 12 10)"/><path d="M2 20h20"/></svg><span class="tx">傾きを補正</span></button>
+    <button class="mini lv" id="lvA" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="10" rx="1.5" transform="rotate(-12 12 10)"/><path d="M2 20h20"/></svg><span class="tx">傾き・明るさ</span></button>
     <button id="svA" hidden disabled></button>
    </div>
   </div>
@@ -757,13 +774,19 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="tfs-btns"><button id="tfsReset">元に戻す</button><button id="tfsAuto">余白を自動カット</button><button class="ok" id="tfsOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
 </div>
 <div class="adj lved" id="lvEd" hidden>
- <div class="adjhd"><b id="lvT">施工前の傾きを補正</b><span>スライドバーで傾きを調整します(画像は拡大しません)</span></div>
+ <div class="adjhd lvhd"><b id="lvT">施工前の補正</b><div class="lvtabs" role="tablist"><button data-p="lv" role="tab">傾き</button><button data-p="tn" role="tab">明るさ</button></div></div>
  <div class="lvstage" id="lvStage"><div class="lvbox" id="lvBox"><img id="lvImg" alt=""><div class="lvgrid"></div></div></div>
+ <div class="lvpanes" id="lvPanes"><div class="lvpane" data-p="lv">
  <div class="lvval"><button id="lvM" aria-label="左に0.1度">−0.1°</button><b id="lvV">0.0°</b><button id="lvP" aria-label="右に0.1度">＋0.1°</button></div>
  <div class="lvsl"><span>左に回す</span><input type="range" id="lvR" min="-15" max="15" step="0.1" value="0" aria-label="傾き"><span>右に回す</span></div>
  <div class="lvbg" role="radiogroup" aria-label="余白の色"><span>回したときの余白の色</span><button data-bg="white" role="radio"><i class="sw w"></i>白</button><button data-bg="black" role="radio"><i class="sw k"></i>黒</button></div>
  <div class="lvbg lvgr" role="radiogroup" aria-label="グリッドを表示"><span>グリッドを表示</span><button data-gr="1" role="radio">オン</button><button data-gr="0" role="radio">オフ</button></div>
  <div class="lvrow"><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
+ </div><div class="lvpane" data-p="tn">
+ <div class="tnrow"><span>明るさ</span><button class="tnst" data-t="br" data-d="-1" aria-label="明るさ −1">−</button><input type="range" id="tnBr" min="-50" max="50" step="1" value="0" aria-label="明るさ"><button class="tnst" data-t="br" data-d="1" aria-label="明るさ ＋1">＋</button><b id="tnBrV">0</b></div>
+ <div class="tnrow"><span>コントラスト</span><button class="tnst" data-t="ct" data-d="-1" aria-label="コントラスト −1">−</button><input type="range" id="tnCt" min="-50" max="50" step="1" value="0" aria-label="コントラスト"><button class="tnst" data-t="ct" data-d="1" aria-label="コントラスト ＋1">＋</button><b id="tnCtV">0</b></div>
+ <div class="lvrow tnbtns"><button id="tnAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>自動で調整</button><button id="tnZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>元に戻す</button></div>
+ </div></div>
  <div class="adjbtns"><button class="o2" id="lvX">キャンセル</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
 </div>
 <div class="adj cand" id="cand" hidden>
@@ -1752,7 +1775,7 @@ async function gotPhoto(mode,blob,o,shot,g){
  const prev=snapOf(lk);
  const oldNids=[mode==="before"?job.beforeNid:job.afterNid,job.rawNid&&job.rawNid[lk]], SK=lk==="b"?"savedB":"savedA", oldSaved=job[SK]||[];job[SK]=[];job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
  job.rawNid=job.rawNid||{};
- job.grav[lk]=g||null;job.rot[lk]=0;
+ job.grav[lk]=g||null;job.rot[lk]=0;if(job.tone)job.tone[lk]=null;
  if(blob.lvRaw){
   // already levelled by the phone; the photo as taken is fetched in the background
   job.raw[lk]=null;job.rawNid[lk]=blob.lvRaw;job.rot[lk]=job.auto[lk]=blob.lvDeg;rawFetch(job,lk,blob.lvRaw);
@@ -2220,7 +2243,7 @@ function snapOf(k){
  const b=k==="b"?job.before:job.after;if(!b)return null;
  const g=(o,d)=>{const v=(job[o]||{})[k];return v==null?d:v;};
  return {blob:b,at:k==="b"?job.beforeAt:job.afterAt,ori:(k==="b"?job.beforeOri:job.afterOri)||null,nid:(k==="b"?job.beforeNid:job.afterNid)||null,
-  raw:g("raw",null),rawNid:g("rawNid",null),rot:g("rot",0),auto:g("auto",null),grav:g("grav",null),lvBg:g("lvBg",null),mask:k==="b"?(job.mask||null):null};
+  raw:g("raw",null),rawNid:g("rawNid",null),rot:g("rot",0),auto:g("auto",null),grav:g("grav",null),lvBg:g("lvBg",null),tone:g("tone",null),mask:k==="b"?(job.mask||null):null};
 }
 // adds c; returns the phone copies of the 候補 it pushes out
 function candKeep(k,c){
@@ -2238,6 +2261,7 @@ async function candAdopt(k,c){
  ["raw","rawNid","rot","auto","grav","lvBg"].forEach(o=>{job[o]=job[o]||{};});
  job.raw[k]=c.raw||null;job.rawNid[k]=c.rawNid||null;job.rot[k]=c.rot||0;job.auto[k]=c.auto==null?null:c.auto;job.grav[k]=c.grav||null;
  if(c.lvBg)job.lvBg[k]=c.lvBg;else delete job.lvBg[k];
+ job.tone=job.tone||{};job.tone[k]=c.tone||null;
  if(!job.raw[k]&&job.rawNid[k])rawFetch(job,k,job.rawNid[k]);
  if(job.adj)job.adj[k]={s:1,x:0,y:0};job.crop=null;job.crops=null;job.cmpSavedAt=null;
  const SK=k==="b"?"savedB":"savedA", old=job[SK]||[];job[SK]=[];
@@ -2424,15 +2448,22 @@ function natLevel(id,deg,bg){return new Promise(res=>{const req="l"+(++lvReq);lv
  setTimeout(()=>{if(lvWait.has(req)){lvWait.delete(req);res("error:timeout");}},15000);
  try{if(window.AndroidApp.levelColor)window.AndroidApp.levelColor(req,id,deg,bg||"white");else window.AndroidApp.level(req,id,deg);}catch(e){lvWait.delete(req);res("error");}});}
 // bg: colour of the corners the turn leaves ("white" / "black")
-async function levelBlob(raw,deg,nid,bg){
- if(!deg)return raw;
- if(nid&&window.AndroidApp&&window.AndroidApp.level&&(bg!=="black"||window.AndroidApp.levelColor)){
+async function levelBlob(raw,deg,nid,bg,tn){
+ if(!deg&&!toneOn(tn))return raw;
+ if(!toneOn(tn)&&nid&&window.AndroidApp&&window.AndroidApp.level&&(bg!=="black"||window.AndroidApp.levelColor)){
   const r=await natLevel(nid,deg,bg);
   if(r.startsWith("ok:"))try{const id=r.slice(3), q=await fetch("/cam/shot/"+id,{cache:"no-store"});if(q.ok){const b=await q.blob();b.nid=id;return b;}}catch(e){}
  }
  const im=await createImageBitmap(raw), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
  const x=c.getContext("2d");x.fillStyle=bg==="black"?"#000000":"#FFFFFF";x.fillRect(0,0,c.width,c.height);
- x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);x.imageSmoothingQuality="high";x.drawImage(im,-im.width/2,-im.height/2);if(im.close)im.close();
+ // 明るさ / コントラスト only on the photo, not on the corners the turn leaves
+ let src=im;
+ if(toneOn(tn)){if("filter" in x){x.filter=toneCss(tn);}
+  else{const t=document.createElement("canvas");t.width=im.width;t.height=im.height;const y=t.getContext("2d");y.drawImage(im,0,0);
+   const g=y.getImageData(0,0,t.width,t.height), d=g.data, lut=new Uint8ClampedArray(256), B=1+tn.br/100, C=1+tn.ct/100;
+   for(let i=0;i<256;i++){const v=Math.min(1,i/255*B);lut[i]=Math.round(Math.max(0,Math.min(1,(v-0.5)*C+0.5))*255);}
+   for(let i=0;i<d.length;i+=4){d[i]=lut[d[i]];d[i+1]=lut[d[i+1]];d[i+2]=lut[d[i+2]];}y.putImageData(g,0,0);src=t;}}
+ x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);x.imageSmoothingQuality="high";x.drawImage(src,-im.width/2,-im.height/2);x.filter="none";if(im.close)im.close();
  return await new Promise(r=>c.toBlob(r,"image/jpeg",0.93));
 }
 const rawPend={};
@@ -2448,8 +2479,9 @@ async function lvOpen(k){
  if(!job.raw[k]&&rawPend[k])await rawPend[k];
  const raw=job.raw[k]||cur;
  const bg0=(job.lvBg&&job.lvBg[k])||getPref("ba-lvbg")||"white";
- lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,bg:bg0,oldBg:bg0};lvBgShow();
- $("lvT").textContent=(k==="b"?"施工前":"施工後")+"の傾きを補正";
+ const t0=job.raw[k]&&job.tone&&job.tone[k]?{...job.tone[k]}:{br:0,ct:0};
+ lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,bg:bg0,oldBg:bg0,tn:t0,oldTn:{...t0}};lvBgShow();lvTab("lv");
+ $("lvT").textContent=(k==="b"?"施工前":"施工後")+"の補正";
  $("lvEd").classList.toggle("a",k==="a");
  const im=$("lvImg");im.onload=lvFit;im.src=blobUrl(raw);
  $("lvEd").hidden=false;lvShow();
@@ -2463,7 +2495,7 @@ function lvFit(){
  const size=H=>{const r=Math.min(W/iw,Math.max(180,H)/ih);box.style.width=Math.round(iw*r)+"px";box.style.height=Math.round(ih*r)+"px";};
  size(window.innerHeight*0.3);
  // room between 撮ったままに戻す and the buttons (or how much the page runs over)
- const btns=ed.querySelector(".adjbtns").getBoundingClientRect(), last=$("lvZero").getBoundingClientRect();
+ const btns=ed.querySelector(".adjbtns").getBoundingClientRect(), last=$("lvPanes").getBoundingClientRect();
  const over=ed.scrollHeight-ed.clientHeight, free=over>0?-over:btns.top-last.bottom-10-LV_GAP;
  size(box.offsetHeight+free);
 }
@@ -2477,7 +2509,7 @@ function lvGridShow(){const on=getPref("ba-lvgrid")!=="0";$("lvEd").classList.to
 document.querySelectorAll(".lvgr button").forEach(b=>b.onclick=()=>{setPref("ba-lvgrid",b.dataset.gr);lvGridShow();});
 function lvShow(){
  const d=Math.round(lv.deg*10)/10;lv.deg=d;
- $("lvImg").style.transform="rotate("+d+"deg)";$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
+ $("lvImg").style.transform="rotate("+d+"deg)";tnShow();$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
 }
 function lvSet(d){if(!lv)return;lv.deg=Math.max(-LV_MAX,Math.min(LV_MAX,d));lvShow();}
 $("lvR").addEventListener("input",e=>lvSet(+e.target.value));
@@ -2486,20 +2518,49 @@ $("lvB").onclick=()=>lvOpen("b");$("lvA").onclick=()=>lvOpen("a");
  b.addEventListener("pointerdown",e=>{e.preventDefault();stop();lvSet(lv.deg+st);rep=setTimeout(()=>{rep=setInterval(()=>lvSet(lv.deg+st),60);},380);});
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
 $("lvZero").onclick=()=>lvSet(0);
+// 明るさ / コントラスト (-50…+50): shown live with the same filter the finished photo is made with
+const toneOn=t=>!!t&&(!!t.br||!!t.ct);
+const toneCss=t=>"brightness("+(1+t.br/100)+") contrast("+(1+t.ct/100)+")";
+function lvTab(p){document.querySelectorAll(".lvtabs button").forEach(b=>{const on=b.dataset.p===p;b.classList.toggle("on",on);b.setAttribute("aria-selected",on);});
+ document.querySelectorAll(".lvpane").forEach(x=>x.classList.toggle("off",x.dataset.p!==p));}
+document.querySelectorAll(".lvtabs button").forEach(b=>b.onclick=()=>lvTab(b.dataset.p));
+const fmtTn=v=>(v>0?"+":v<0?"−":"")+Math.abs(v);
+function tnShow(){if(!lv)return;const t=lv.tn;
+ $("lvImg").style.filter=toneOn(t)?toneCss(t):"";
+ $("tnBr").value=t.br;$("tnCt").value=t.ct;$("tnBrV").textContent=fmtTn(t.br);$("tnCtV").textContent=fmtTn(t.ct);}
+function tnSet(key,v){if(!lv)return;lv.tn[key]=Math.max(-50,Math.min(50,Math.round(v)));tnShow();}
+$("tnBr").addEventListener("input",e=>tnSet("br",+e.target.value));
+$("tnCt").addEventListener("input",e=>tnSet("ct",+e.target.value));
+document.querySelectorAll(".tnst").forEach(b=>{let rep=0;const stop=()=>{clearTimeout(rep);clearInterval(rep);}, step=()=>{if(lv)tnSet(b.dataset.t,lv.tn[b.dataset.t]+(+b.dataset.d));};
+ b.addEventListener("pointerdown",e=>{e.preventDefault();stop();step();rep=setTimeout(()=>{rep=setInterval(step,70);},380);});
+ ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
+$("tnZero").onclick=()=>{if(!lv)return;lv.tn={br:0,ct:0};tnShow();};
+// 自動で調整: the middle of the picture's brightness to the middle, its range spread to nearly full
+$("tnAuto").onclick=async()=>{if(!lv)return;const b=$("tnAuto");b.disabled=true;
+ try{let im;try{im=await createImageBitmap(lv.raw,{resizeWidth:240,resizeQuality:"low"});}catch(e){im=await createImageBitmap(lv.raw);}
+  const W=240,H=Math.max(8,Math.round(240*im.height/im.width)), c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(im,0,0,W,H);if(im.close)im.close();
+  const d=x.getImageData(0,0,W,H).data, h=new Uint32Array(256);let n=0;for(let i=0;i<d.length;i+=4){h[(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])|0]++;n++;}
+  const pct=q=>{let a=0;for(let i=0;i<256;i++){a+=h[i];if(a>=n*q)return i/255;}return 1;};
+  const lo=pct(0.01), hi=pct(0.99), mid=pct(0.5);
+  const br=Math.max(0.5,Math.min(1.5,0.5/Math.max(0.05,mid))), lo2=Math.min(1,lo*br), hi2=Math.min(1,hi*br);
+  const ct=Math.max(0.5,Math.min(1.5,0.94/Math.max(0.1,hi2-lo2)));
+  if(lv){lv.tn={br:Math.round((br-1)*100),ct:Math.round((ct-1)*100)};tnShow();toast("明るさ・コントラストを自動で調整しました");}
+ }catch(e){toast("自動で調整できませんでした",true);}
+ b.disabled=false;};
 function lvClose(){lv=null;$("lvEd").hidden=true;}
 $("lvX").onclick=lvClose;
 $("lvOk").onclick=async()=>{
- if(!lv)return;const {k,raw,deg,bg}=lv;
- if(deg===lv.old&&bg===lv.oldBg&&job.raw[k]){lvClose();return;}
+ if(!lv)return;const {k,raw,deg,bg}=lv, tn=toneOn(lv.tn)?{...lv.tn}:null;
+ if(deg===lv.old&&bg===lv.oldBg&&lv.tn.br===lv.oldTn.br&&lv.tn.ct===lv.oldTn.ct&&job.raw[k]){lvClose();return;}
  const ok=$("lvOk");ok.disabled=true;setTx2("lvOk","補正中…");
  try{
   job.rawNid=job.rawNid||{};
   const was=k==="b"?job.beforeNid:job.afterNid, rn=job.raw[k]?job.rawNid[k]:was;
-  const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null,bg);
-  job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;job.lvBg=job.lvBg||{};job.lvBg[k]=bg;
+  const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null,bg,tn);
+  job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;job.lvBg=job.lvBg||{};job.lvBg[k]=bg;job.tone=job.tone||{};job.tone[k]=tn;
   const bn=b.nid||(b===raw?rn:null)||null;
   if(k==="b"){job.before=b;job.beforeNid=bn;}else{job.after=b;job.afterNid=bn;}
-  refreshDetail();lvClose();toast(deg?"傾きを補正しました("+fmtDeg(deg)+")":"撮ったままに戻しました");
+  refreshDetail();lvClose();toast(deg||tn?"補正しました("+[deg?"傾き "+fmtDeg(deg):"",tn?"明るさ "+fmtTn(tn.br)+" ・ コントラスト "+fmtTn(tn.ct):""].filter(Boolean).join(" ・ ")+")":"撮ったままに戻しました");
   const SK=k==="b"?"savedB":"savedA", had=job[SK]||[];job[SK]=[];
   await saveJob();photoGC([was]);make();
   if(had.length)autoSaveBA(k,deg,had);
