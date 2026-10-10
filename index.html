@@ -1484,15 +1484,25 @@ $("cShot").onclick=async()=>{
 };
 // After the camera closes (完了, back button or the app going to the background).
 async function camDone(s){
- const j=job;await s.got;if(!j||job!==j)return;
- const k=s.mode==="before"?"b":"a", n=((j.cand&&j.cand[k])||[]).length, q=quietSaved;quietSaved=null;
- if(camStarting||$("cam").style.display==="flex")return; // another camera was opened meanwhile
- if(s.n>=2&&n)await candOpen(k);
- else if(s.had&&n)toast("前の写真は候補に残しました(「候補」から選び直せます)");
- else if(q)toast(q+"をスマホに保存しました");
- if(job!==j)return;
- if(s.mode==="before"&&maskAfterShot&&$("med").hidden&&!j.mask)openMaskEditor();
- justShot(s.mode==="before"?"sB":"sA");
+ // one notice after the camera closes: スマホに保存しました (once the save is done) and, for a
+ // retake, that the previous photo stays as a 候補 (two notices used to replace each other)
+ saveHeld++;let held=true, noting=false;const release=()=>{if(held){held=false;saveHeld--;}}, t0=Date.now();
+ try{
+  const j=job;await s.got;if(!j||job!==j)return;
+  const k=s.mode==="before"?"b":"a", n=((j.cand&&j.cand[k])||[]).length;
+  if(camStarting||$("cam").style.display==="flex")return; // another camera was opened meanwhile
+  if(s.n>=2&&n){quietSaved=null;release();await candOpen(k);} // the choosing screen says enough
+  else{noting=true;const pend=autoPend[k];
+   (async()=>{try{if(pend)await pend;}catch(e){}
+    const q=quietSaved;quietSaved=null;release();
+    if(saveFailAt>=t0||job!==j)return; // a failed save has already said so
+    let m=q?q+"をスマホに保存しました":"";
+    if(s.had&&n)m=m?m+"(前の写真は候補に残しています)":"前の写真は候補に残しました(「候補」から選び直せます)";
+    if(m)toast(m);})();}
+  if(job!==j)return;
+  if(s.mode==="before"&&maskAfterShot&&$("med").hidden&&!j.mask)openMaskEditor();
+  justShot(s.mode==="before"?"sB":"sA");
+ }finally{if(!noting)release();}
 }
 
 /* ---------- holding the phone sideways ---------- */
@@ -2427,7 +2437,7 @@ $("cdDel").onclick=async()=>{if(!cd)return;const e=cd.list[cd.i];if(e.cur)return
  candBuild(false);if(cd.list.length<2){candClose();return;}candShow();};
 
 /* ---------- 施工前・施工後: into the phone's photos as soon as they are taken ---------- */
-const autoPend={};let quietSaved=null; // saved while the camera was still open (said when it closes)
+const autoPend={};let quietSaved=null, saveHeld=0, saveFailAt=0; // saved while the camera was open / closing (said once when it has closed)
 function autoSaveBA(k,deg,old){const p=autoSaveRun(k,deg,old||[]);autoPend[k]=p;p.finally(()=>{if(autoPend[k]===p)autoPend[k]=null;});return p;}
 async function autoSaveRun(k,deg,old){
  if(!window.AndroidApp)return;
@@ -2443,12 +2453,12 @@ async function autoSaveRun(k,deg,old){
  if(!okR(r)){
   // not saved: keep the previous photo in the phone rather than lose both
   if(old.length){const K=k==="b"?"savedB":"savedA";t[K]=(t[K]||[]).concat(old);putJob(t);}
-  if(t===job)toast(kind+"をスマホに保存できませんでした",true);return;}
+  if(t===job){saveFailAt=Date.now();toast(kind+"をスマホに保存できませんでした",true);}return;}
  if(!still){dropFromPhone([uriR(r),...old]);return;} // replaced meanwhile: neither is the photo in use
  keepUri(t,k==="b"?"savedB":"savedA",r);putJob(t);
  if(old.length)dropFromPhone(old);
- if(t===job){if($("cam").style.display!=="flex")toast(kind+"をスマホに保存しました");
-  else{quietSaved=kind;$("shotN").textContent=shotCount+"枚 保存しました";}} // not over the camera while taking more
+ // said once, after the camera has closed (camDone), not over the camera while taking more
+ if(t===job){if($("cam").style.display!=="flex"&&!saveHeld)toast(kind+"をスマホに保存しました");else quietSaved=kind;}
 }
 
 /* ---------- 傾き補正 (施工前・施工後) ---------- */
@@ -3034,7 +3044,7 @@ function toast(t,ng){const e=$("toast");
  // the part in brackets goes on its own, smaller line; the rest breaks at 、 rather than mid-word
  const m=String(t).match(/^(.+?)[(（](.+)[)）]$/);
  if(m){e.textContent="";const a=document.createElement("span");a.textContent=m[1];const b=document.createElement("small");b.textContent="("+m[2]+")";e.append(a,b);}else e.textContent=t;e.classList.toggle("ng",!!ng);e.classList.remove("out");e.hidden=false;clearTimeout(toastT);
- toastT=setTimeout(()=>{e.classList.add("out");toastT=setTimeout(()=>{e.hidden=true;e.classList.remove("out");},300);},2000);}
+ toastT=setTimeout(()=>{e.classList.add("out");toastT=setTimeout(()=>{e.hidden=true;e.classList.remove("out");},300);},2300);}
 function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
 
 /* ---------- photo viewer ---------- */
