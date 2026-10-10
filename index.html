@@ -426,6 +426,20 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cand .cdstrip button .sck svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
 .cand .cdstrip button.pick .sck svg{opacity:1}
 .cand .cdstrip button.pick img{opacity:.6}
+.cand .cdlow{display:flex;gap:10px;align-items:stretch;min-width:0}
+.cand .cdright{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.cand .cdbef{flex:none;position:relative;align-self:stretch;border-radius:10px;overflow:hidden;background:#000;box-shadow:0 0 0 2px #fff}
+.cand .cdbef img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.cand:not(.a) .cdbef{display:none}
+/* 施工後 (narrower beside the 施工前 photo): every row stays one line, so the big photo keeps its size */
+.cand.a .cdinfo{font-size:14px;gap:6px;white-space:nowrap}
+.cand.a .cdcur{font-size:12px;padding:2px 7px}
+.cand.a .cdsel{gap:6px;white-space:nowrap}
+.cand.a .cdsel span{font-size:13px}
+.cand.a .cdsel button{padding:0 10px;font-size:13px}
+.cand.a #cdSelX{width:44px;padding:0;justify-content:center;font-size:0;gap:0}
+.cand.a #cdSelX svg.i{width:20px;height:20px}
+.cand.a .cddel{white-space:nowrap;padding:0 14px}
 .cand .cdact{min-height:46px;display:flex;align-items:center;justify-content:center}
 .cand .cdsel{display:flex;align-items:center;justify-content:center;gap:10px}
 .cand .cdsel[hidden]{display:none}
@@ -755,10 +769,11 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div class="adj cand" id="cand" hidden>
  <div class="adjhd"><b id="cdT">施工前の写真を選ぶ</b><span>撮った写真から1枚を選んで「この写真を採用」を押します(下の写真を長押しすると、まとめて削除できます)</span></div>
  <div class="cdview" id="cdView"><img id="cdImg" alt=""><button class="cdnav p" id="cdP" aria-label="前の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="cdnav n" id="cdN" aria-label="次の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>
+ <div class="cdlow"><div class="cdbef" id="cdBef"><img id="cdBefImg" alt="施工前の写真"><span class="piptag">施工前</span></div><div class="cdright">
  <div class="cdinfo"><span id="cdNo"></span><span id="cdDt"></span><span class="cdcur" id="cdCur">採用中</span></div>
  <div class="cdstrip" id="cdStrip"></div>
- <div class="cdact"><div class="cdsel" id="cdSel" hidden><button id="cdSelX"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>やめる</button><span id="cdSelN"></span><button class="del" id="cdSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
- <button class="cddel" id="cdDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この候補を削除</span></button></div>
+ <div class="cdact"><div class="cdsel" id="cdSel" hidden><button id="cdSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>やめる</button><span id="cdSelN"></span><button class="del" id="cdSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
+ <button class="cddel" id="cdDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この候補を削除</span></button></div></div></div>
  <div class="adjbtns"><button class="o2" id="cdX">閉じる</button><button class="ok" id="cdOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>この写真を採用</span></button></div>
 </div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
@@ -2241,7 +2256,10 @@ function candOpen(k){
   cd={k,i:0,done:res,list:[],delArm:false};candBuild(true);
   if(cd.list.length<2){candClose();return;}
   $("cdT").textContent=(k==="b"?"施工前":"施工後")+"の写真を選ぶ";$("cand").classList.toggle("a",k==="a");
-  $("cand").hidden=false;candShow();
+  $("cand").hidden=false;
+  // 施工後: the 施工前 photo beside the strip, to compare with
+  if(k==="a"&&job.before){$("cdBefImg").src=blobUrl(job.before);}else $("cdBefImg").removeAttribute("src");
+  candShow();cdBefFit();
  });
 }
 function candBuild(toCur){
@@ -2273,6 +2291,14 @@ let stripAuto=0, stripRaf=0;
   stripRaf=requestAnimationFrame(()=>{stripRaf=0;if(!cd)return;const mid=S.scrollLeft+S.clientWidth/2;let best=cd.i,bd=1e9;
    [...S.children].forEach((b,i)=>{const d=Math.abs(b.offsetLeft+b.offsetWidth/2-mid);if(d<bd){bd=d;best=i;}});
    if(best!==cd.i){cd.i=best;candShow(true);}});},{passive:true});}
+// As large as the rows beside it allow (the big photo above keeps its size), at most 45% of the width.
+function cdBefFit(){
+ const B=$("cdBef");if(!cd||cd.k!=="a"){B.style.width="";return;}
+ const im=$("cdBefImg"), ar=im.naturalWidth&&im.naturalHeight?im.naturalWidth/im.naturalHeight:0.75, L=B.parentNode;
+ B.style.width="0px";const h=$("cdBef").nextElementSibling.offsetHeight;
+ B.style.width=Math.round(Math.min(h*ar,L.clientWidth*0.45))+"px";
+}
+$("cdBefImg").addEventListener("load",cdBefFit);window.addEventListener("resize",()=>{if(cd)cdBefFit();});
 function candGo(d){if(!cd)return;const i=Math.max(0,Math.min(cd.list.length-1,cd.i+d));if(i!==cd.i){cd.i=i;candShow();}}
 function candClose(){if(!cd)return;const r=cd.done;cd=null;$("cand").hidden=true;$("cdImg").removeAttribute("src");$("cdStrip").innerHTML="";$("cdStrip").dataset.sig="";delete $("cdStrip").dataset.shown;r();}
 $("cdP").onclick=()=>candGo(-1);$("cdN").onclick=()=>candGo(1);
