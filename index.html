@@ -161,8 +161,8 @@ input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgb
 .shotok b{color:#fff;font-size:21px;font-weight:800;text-align:center;text-wrap:balance}
 @keyframes okIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 .camload{position:absolute;left:0;right:0;top:38%;z-index:26;display:flex;flex-direction:column;align-items:center;gap:14px;color:#fff;font-size:18px;font-weight:800;pointer-events:none}
-.busy{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:85;display:flex;align-items:center;gap:12px;padding:16px 26px;border-radius:18px;background:rgba(16,24,40,.88);color:#fff;font-size:18px;font-weight:800;pointer-events:none}
-.busy .sp{width:26px;height:26px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin .9s linear infinite}
+.waitnote{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:85;display:flex;align-items:center;gap:12px;padding:16px 26px;border-radius:18px;background:rgba(16,24,40,.88);color:#fff;font-size:18px;font-weight:800;pointer-events:none}
+.waitnote .sp{width:26px;height:26px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin .9s linear infinite}
 .camload .sp{width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin .9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .cam.loading .bar>*:not(.shoot),.cam.loading #tFlash{visibility:hidden}.cam.loading #cShot{opacity:.35}
@@ -759,7 +759,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" enterkeyhint="done" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
-<div class="busy" id="busy" hidden role="status"><span class="sp"></span>保存中…</div>
+<div class="waitnote" id="busy" hidden role="status"><span class="sp"></span>保存中…</div>
 <div class="adj" id="adjEd" hidden>
  <div class="adjhd"><b>写真の位置・大きさを調整</b><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
  <div class="adjstage" id="adjStage"><div class="adjwrap"><canvas id="adjC"></canvas><div class="trimov" id="trimOv"></div></div></div>
