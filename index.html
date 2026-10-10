@@ -413,11 +413,27 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cand .cdnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;border-radius:12px;background:rgba(255,255,255,.14);color:#fff;display:grid;place-items:center}
 .cand .cdnav.p{left:0}.cand .cdnav.n{right:0}.cand .cdnav[disabled]{opacity:.2}
 .cand .cdnav svg.i{width:26px;height:26px}
-.cand .cdstrip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 2px;justify-content:safe center}
+.cand .cdstrip{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px calc(50% - 32px) 2px;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x;overscroll-behavior-x:contain}
+.cand .cdstrip::-webkit-scrollbar{display:none}
+.cand .cdstrip button{scroll-snap-align:center}
 .cand .cdstrip button{position:relative;flex:none;width:64px;height:84px;border-radius:10px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
 .cand .cdstrip button img{width:100%;height:100%;object-fit:cover;display:block}
 .cand .cdstrip button.on{box-shadow:0 0 0 3px #FACC15}
 .cand .cdstrip button.cur::after{content:"採用中";position:absolute;left:0;right:0;bottom:0;background:#2F9E44;color:#fff;font-size:11px;font-weight:800;text-align:center;line-height:18px}
+.cand .cdstrip button .sck{display:none;position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.45);box-shadow:inset 0 0 0 2px #fff}
+.cand .cdstrip.sel button:not(.cur) .sck{display:block}
+.cand .cdstrip button.pick .sck{background:#E03131;box-shadow:inset 0 0 0 2px #fff}
+.cand .cdstrip button .sck svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.cand .cdstrip button.pick .sck svg{opacity:1}
+.cand .cdstrip button.pick img{opacity:.6}
+.cand .cdact{min-height:46px;display:flex;align-items:center;justify-content:center}
+.cand .cdsel{display:flex;align-items:center;justify-content:center;gap:10px}
+.cand .cdsel[hidden]{display:none}
+.cand .cdsel span{font-size:15px;font-weight:800;color:#fff}
+.cand .cdsel button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:700;color:#fff;background:rgba(255,255,255,.1)}
+.cand .cdsel button svg.i{width:18px;height:18px}
+.cand .cdsel .del{color:#FFA8A8}.cand .cdsel .del.arm{background:var(--danger);color:#fff}
+.cand .cdsel .del[disabled]{opacity:.35}
 .cand .cddel{align-self:center;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:700;color:#FFA8A8;background:rgba(255,255,255,.06)}
 .cand .cddel svg.i{width:18px;height:18px}
 .cand .cddel.arm{background:var(--danger);color:#fff}
@@ -734,11 +750,12 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="adjbtns"><button class="o2" id="lvX">キャンセル</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
 </div>
 <div class="adj cand" id="cand" hidden>
- <div class="adjhd"><b id="cdT">施工前の写真を選ぶ</b><span>撮った写真から1枚を選んで「この写真を採用」を押します</span></div>
+ <div class="adjhd"><b id="cdT">施工前の写真を選ぶ</b><span>撮った写真から1枚を選んで「この写真を採用」を押します(下の写真を長押しすると、まとめて削除できます)</span></div>
  <div class="cdview" id="cdView"><img id="cdImg" alt=""><button class="cdnav p" id="cdP" aria-label="前の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="cdnav n" id="cdN" aria-label="次の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>
  <div class="cdinfo"><span id="cdNo"></span><span id="cdDt"></span><span class="cdcur" id="cdCur">採用中</span></div>
  <div class="cdstrip" id="cdStrip"></div>
- <button class="cddel" id="cdDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この候補を削除</span></button>
+ <div class="cdact"><div class="cdsel" id="cdSel" hidden><button id="cdSelX"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>やめる</button><span id="cdSelN"></span><button class="del" id="cdSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
+ <button class="cddel" id="cdDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この候補を削除</span></button></div>
  <div class="adjbtns"><button class="o2" id="cdX">閉じる</button><button class="ok" id="cdOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>この写真を採用</span></button></div>
 </div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
@@ -2191,23 +2208,68 @@ function candBuild(toCur){
  cd.i=Math.min(cd.i,cd.list.length-1);
 }
 const fmtDT=t=>{const d=new Date(t);return fmtD(t)+" "+d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");};
-function candShow(){
+function candShow(fromStrip){
  if(!cd)return;const e=cd.list[cd.i];
  $("cdImg").src=cd.urls[cd.i];$("cdNo").textContent=(cd.i+1)+" / "+cd.list.length;$("cdDt").textContent=fmtDT(e.c.at);
  $("cdCur").hidden=!e.cur;$("cdP").disabled=cd.i===0;$("cdN").disabled=cd.i===cd.list.length-1;
  setTx2("cdOk",e.cur?"この写真のまま":"この写真を採用");
- $("cdDel").hidden=e.cur;cd.delArm=false;setTx("cdDel","この候補を削除");$("cdDel").classList.remove("arm");
+ $("cdDel").hidden=e.cur||!!cd.pick;cd.delArm=false;setTx("cdDel","この候補を削除");$("cdDel").classList.remove("arm");
  const S=$("cdStrip");
  if(S.childElementCount!==cd.list.length||S.dataset.sig!==cd.list.map(x=>x.c.at).join()){
   S.dataset.sig=cd.list.map(x=>x.c.at).join();
-  S.innerHTML=cd.list.map((x,i)=>'<button data-i="'+i+'" aria-label="'+(i+1)+'枚目"><img src="'+cd.urls[i]+'" alt="" decoding="async"></button>').join("");}
- S.querySelectorAll("button").forEach((b,i)=>{b.classList.toggle("on",i===cd.i);b.classList.toggle("cur",cd.list[i].cur);});
- const on=S.children[cd.i];if(on)on.scrollIntoView({block:"nearest",inline:"center"});
+  S.innerHTML=cd.list.map((x,i)=>'<button data-i="'+i+'" aria-label="'+(i+1)+'枚目"><img src="'+cd.urls[i]+'" alt="" decoding="async"><span class="sck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span></button>').join("");}
+ S.querySelectorAll("button").forEach((b,i)=>{b.classList.toggle("on",i===cd.i);b.classList.toggle("cur",cd.list[i].cur);b.classList.toggle("pick",!!cd.pick&&cd.pick.has(cd.list[i].c));});
+ cdSelShow();
+ const on=S.children[cd.i];if(on&&!fromStrip){stripAuto=Date.now()+600;S.scrollTo({left:on.offsetLeft+on.offsetWidth/2-S.clientWidth/2,behavior:S.dataset.shown?"smooth":"auto"});S.dataset.shown="1";}
 }
+// The strip slides under the finger; the photo in the middle of it is the one shown.
+let stripAuto=0, stripRaf=0;
+{const S=$("cdStrip");
+ ["touchstart","pointerdown","wheel"].forEach(t=>S.addEventListener(t,()=>{stripAuto=0;},{passive:true}));
+ S.addEventListener("scroll",()=>{if(!cd||Date.now()<stripAuto||stripRaf)return;
+  stripRaf=requestAnimationFrame(()=>{stripRaf=0;if(!cd)return;const mid=S.scrollLeft+S.clientWidth/2;let best=cd.i,bd=1e9;
+   [...S.children].forEach((b,i)=>{const d=Math.abs(b.offsetLeft+b.offsetWidth/2-mid);if(d<bd){bd=d;best=i;}});
+   if(best!==cd.i){cd.i=best;candShow(true);}});},{passive:true});}
 function candGo(d){if(!cd)return;const i=Math.max(0,Math.min(cd.list.length-1,cd.i+d));if(i!==cd.i){cd.i=i;candShow();}}
-function candClose(){if(!cd)return;const r=cd.done;cd=null;$("cand").hidden=true;$("cdImg").removeAttribute("src");$("cdStrip").innerHTML="";$("cdStrip").dataset.sig="";r();}
+function candClose(){if(!cd)return;const r=cd.done;cd=null;$("cand").hidden=true;$("cdImg").removeAttribute("src");$("cdStrip").innerHTML="";$("cdStrip").dataset.sig="";delete $("cdStrip").dataset.shown;r();}
 $("cdP").onclick=()=>candGo(-1);$("cdN").onclick=()=>candGo(1);
-$("cdStrip").addEventListener("click",e=>{const b=e.target.closest("[data-i]");if(b&&cd){cd.i=+b.dataset.i;candShow();}});
+$("cdStrip").addEventListener("click",e=>{const b=e.target.closest("[data-i]");if(!b||!cd)return;
+ if(cdPressFired){cdPressFired=false;return;}
+ const i=+b.dataset.i;if(cd.pick){cdPickToggle(i);return;}
+ cd.i=i;candShow();});
+// Long press a photo in the strip: choose several (tap picks / un-picks), then 削除 (press twice).
+// The photo in use can't be chosen.
+let cdPressT=0, cdPressAt=null, cdPressFired=false;
+function cdSelShow(){
+ if(!cd)return;const on=!!cd.pick;$("cdStrip").classList.toggle("sel",on);$("cdSel").hidden=!on;
+ if(on){$("cdSelN").textContent=cd.pick.size+"枚を選択中";$("cdSelDel").disabled=!cd.pick.size;}
+ cd.selArm=false;setTx("cdSelDel","削除");$("cdSelDel").classList.remove("arm");
+}
+function cdPickToggle(i){
+ const e=cd.list[i];if(!e)return;
+ if(e.cur){toast("採用中の写真は削除できません",true);return;}
+ if(cd.pick.has(e.c))cd.pick.delete(e.c);else cd.pick.add(e.c);
+ buzz(15);candShow(true);
+}
+function cdSelEnd(){if(!cd||!cd.pick)return;cd.pick=null;candShow(true);}
+{const S=$("cdStrip");
+ S.addEventListener("pointerdown",e=>{const b=e.target.closest("[data-i]");if(!b||!cd)return;cdPressFired=false;cdPressAt={x:e.clientX,y:e.clientY};
+  clearTimeout(cdPressT);cdPressT=setTimeout(()=>{if(!cd)return;cdPressFired=true;const i=+b.dataset.i, en=cd.list[i];
+   if(en&&en.cur&&!cd.pick){toast("採用中の写真は削除できません",true);return;}
+   if(!cd.pick)cd.pick=new Set();if(en&&!en.cur)cd.pick.add(en.c);buzz(25);candShow(true);},450);});
+ S.addEventListener("pointermove",e=>{if(cdPressAt&&Math.hypot(e.clientX-cdPressAt.x,e.clientY-cdPressAt.y)>10)clearTimeout(cdPressT);});
+ ["pointerup","pointercancel","pointerleave"].forEach(t=>S.addEventListener(t,()=>clearTimeout(cdPressT)));
+ S.addEventListener("scroll",()=>clearTimeout(cdPressT),{passive:true});
+ S.addEventListener("contextmenu",e=>e.preventDefault());}
+$("cdSelX").onclick=cdSelEnd;
+$("cdSelDel").onclick=async()=>{
+ if(!cd||!cd.pick||!cd.pick.size)return;
+ if(!cd.selArm){cd.selArm=true;setTx("cdSelDel","もう一度押すと削除");$("cdSelDel").classList.add("arm");return;}
+ const rm=[...cd.pick], L=job.cand[cd.k]||[];job.cand[cd.k]=L.filter(c=>!cd.pick.has(c));
+ const shown=cd.list[cd.i]&&cd.list[cd.i].c;cd.pick=null;
+ await saveJob();photoGC(rm.flatMap(c=>[c.nid,c.rawNid]));refreshDetail();toast(rm.length+"枚の候補を削除しました");
+ candBuild(false);if(cd.list.length<2){candClose();return;}
+ const k=cd.list.findIndex(e=>e.c===shown);cd.i=k>=0?k:Math.max(0,cd.list.findIndex(e=>e.cur));candShow();};
 {let sx=null,sy=0;const V=$("cdView");
  V.addEventListener("pointerdown",e=>{if(e.target.closest(".cdnav"))return;sx=e.clientX;sy=e.clientY;});
  V.addEventListener("pointerup",e=>{if(sx==null)return;const dx=e.clientX-sx, dy=e.clientY-sy;sx=null;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy))candGo(dx<0?1:-1);});
@@ -2900,7 +2962,7 @@ $("svA").onclick=async()=>{if(job.after){keepUri(job,"savedA",await saveBlob(job
 /* ---------- Android app hooks ---------- */
 // Back button: close the camera, then go back to the site list. Returns true when handled.
 window.appBack=()=>{
- if(!$("cand").hidden){candClose();return true;}
+ if(!$("cand").hidden){if(cd&&cd.pick)cdSelEnd();else candClose();return true;}
  if(!$("tfs").hidden){tfsClose(false);return true;}
  if(!$("lvEd").hidden){lvClose();return true;}
  if(!$("adjEd").hidden){adjClose();return true;}
