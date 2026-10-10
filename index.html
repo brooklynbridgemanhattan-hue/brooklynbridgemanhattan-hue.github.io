@@ -181,6 +181,8 @@ input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgb
 .col.after .slot .ph .pi{background:var(--after);color:var(--after-ink)}
 .col.after.off .slot .ph .pi{background:#D0D5DD;color:#fff}
 .slot .ph .pi svg.i{width:36px;height:36px}
+.slot .cbadge{position:absolute;left:8px;top:50px;z-index:3;display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:800;background:rgba(16,24,40,.78);color:#fff;padding:5px 10px;border-radius:999px;box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
+.slot .cbadge svg.i{width:16px;height:16px}
 .slot .dt{position:absolute;right:8px;bottom:8px;z-index:2;font-size:13px;font-weight:700;background:rgba(16,24,40,.72);color:#fff;padding:2px 9px;border-radius:999px}
 .tmask{position:absolute;border:2px dashed #FACC15;background:rgba(250,204,21,.14);z-index:1;pointer-events:none}
 .tmask span,.cmask span{position:absolute;left:5px;top:3px;font-size:12px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000;white-space:nowrap}
@@ -403,6 +405,22 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .col.before .mini.lv{background:#fff;color:var(--before);box-shadow:inset 0 0 0 2px #C5D0FA}
 .col.after .mini.lv{background:#fff;color:var(--after-text);box-shadow:inset 0 0 0 2px #FFE08A}
 .mini.lv{font-size:16px;min-height:44px}
+/* 候補から選ぶ */
+.cand .cdview{position:relative;flex:1;min-height:42vh;display:flex;align-items:center;justify-content:center;touch-action:pan-y;user-select:none}
+.cand .cdview img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:10px;background:#000}
+.cand .cdinfo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:700;color:#E2E8F0}
+.cand .cdcur{background:#2F9E44;color:#fff;font-size:14px;font-weight:800;padding:3px 10px;border-radius:999px}
+.cand .cdnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;border-radius:12px;background:rgba(255,255,255,.14);color:#fff;display:grid;place-items:center}
+.cand .cdnav.p{left:0}.cand .cdnav.n{right:0}.cand .cdnav[disabled]{opacity:.2}
+.cand .cdnav svg.i{width:26px;height:26px}
+.cand .cdstrip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 2px;justify-content:safe center}
+.cand .cdstrip button{position:relative;flex:none;width:64px;height:84px;border-radius:10px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.cand .cdstrip button img{width:100%;height:100%;object-fit:cover;display:block}
+.cand .cdstrip button.on{box-shadow:0 0 0 3px #FACC15}
+.cand .cdstrip button.cur::after{content:"採用中";position:absolute;left:0;right:0;bottom:0;background:#2F9E44;color:#fff;font-size:11px;font-weight:800;text-align:center;line-height:18px}
+.cand .cddel{align-self:center;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:700;color:#FFA8A8;background:rgba(255,255,255,.06)}
+.cand .cddel svg.i{width:18px;height:18px}
+.cand .cddel.arm{background:var(--danger);color:#fff}
 .lved .lvstage{flex:none;display:flex;justify-content:center;align-items:center;min-height:30vh}
 .lvbox{position:relative;overflow:hidden;background:#fff;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
 .lvbox img{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 50%}
@@ -556,6 +574,7 @@ html.natcam #vid,html.app #vid{display:none}
 .cam .tools .lg{display:none}
 /* やめる - round shutter - flash */
 .cam .shoot{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding-top:2px}
+.cam .cancel.fin{background:#2F9E44;font-weight:800}.cam .cancel .ck,.cam .cancel.fin .x{display:none}.cam .cancel.fin .ck{display:block}
 .cam .cancel{justify-self:start;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:52px;padding:0 14px;white-space:nowrap;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:17px;font-weight:700}
 .cam .shot{grid-column:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:84px;height:84px;border-radius:50%;background:var(--mode);color:var(--mode-ink);font-size:18px;font-weight:800;line-height:1.15;box-shadow:0 0 0 4px #0B0D12,0 0 0 7px #fff}
 .cam .shot svg.i{width:26px;height:26px}
@@ -714,6 +733,14 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="lvrow"><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
  <div class="adjbtns"><button class="o2" id="lvX">キャンセル</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
 </div>
+<div class="adj cand" id="cand" hidden>
+ <div class="adjhd"><b id="cdT">施工前の写真を選ぶ</b><span>撮った写真から1枚を選んで「この写真を採用」を押します</span></div>
+ <div class="cdview" id="cdView"><img id="cdImg" alt=""><button class="cdnav p" id="cdP" aria-label="前の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="cdnav n" id="cdN" aria-label="次の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>
+ <div class="cdinfo"><span id="cdNo"></span><span id="cdDt"></span><span class="cdcur" id="cdCur">採用中</span></div>
+ <div class="cdstrip" id="cdStrip"></div>
+ <button class="cddel" id="cdDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この候補を削除</span></button>
+ <div class="adjbtns"><button class="o2" id="cdX">閉じる</button><button class="ok" id="cdOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>この写真を採用</span></button></div>
+</div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
@@ -751,7 +778,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <button id="tDiff" class="t-judge on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span class="lg">色で判定</span><span class="sh">色判定</span></button>
    <button id="tAllOff" class="t-off"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.1A10 10 0 0 1 12 5c5 0 9 4.5 10 7a13 13 0 0 1-3 4.1M6.6 6.6C4.4 8 2.9 10 2 12c1 2.5 5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/></svg><span class="tx">表示オフ</span></button>
   </div>
-  <div class="shoot"><button class="cancel" id="cCancel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg><span class="tx">やめる</span></button><button class="shot" id="cShot"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>撮影</span></button><button class="fl" id="tFlash" aria-label="フラッシュ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span class="tx">オフ</span></button></div>
+  <div class="shoot"><button class="cancel" id="cCancel"><svg class="i x" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg><svg class="i ck" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span class="tx">やめる</span></button><button class="shot" id="cShot"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>撮影</span></button><button class="fl" id="tFlash" aria-label="フラッシュ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span class="tx">オフ</span></button></div>
  </div>
 </div>
 <script type="text/plain" id="alignSrc">
@@ -918,6 +945,7 @@ async function mirrorJob(j){
  if(j.after&&!j.afterNid)j.afterNid=await put(j.after);
  if(j.raw){j.rawNid=j.rawNid||{};for(const k of ["b","a"]){const r=j.raw[k];if(r&&!j.rawNid[k]){const cur=k==="b"?j.before:j.after;j.rawNid[k]=r===cur?(k==="b"?j.beforeNid:j.afterNid):await put(r);}}}
  for(const x of j.extras||[])if(x.blob&&!x.nid)x.nid=await put(x.blob);
+ for(const c of candsOf(j)){if(c.blob&&!c.nid)c.nid=await put(c.blob);if(c.raw&&!c.rawNid)c.rawNid=c.raw===c.blob?c.nid:await put(c.raw);}
  window.AndroidApp.saveJobData(j.id,JSON.stringify(j,(k,v)=>v instanceof Blob?undefined:v));
 }
 function phoneJobs(){if(!NJ())return [];try{const s=window.AndroidApp.listJobData();return s?JSON.parse(s):null;}catch(e){return null;}}
@@ -933,6 +961,9 @@ async function restoreJobs(){
   const rn=j.rawNid||{};j.raw={b:rn.b?(rn.b===j.beforeNid?j.before:await file(rn.b)):null,a:rn.a?(rn.a===j.afterNid?j.after:await file(rn.a)):null};
   for(const x of j.extras||[])x.blob=await file(x.nid);
   j.extras=(j.extras||[]).filter(x=>x.blob);
+  if(j.cand)for(const k of ["b","a"]){const L=j.cand[k]||[];
+   for(const c of L){c.blob=await file(c.nid);c.raw=c.rawNid?(c.rawNid===c.nid?c.blob:await file(c.rawNid)):null;}
+   j.cand[k]=L.filter(c=>c.blob);}
   await putJobDB(j);
  }
 }
@@ -948,7 +979,8 @@ let MEM=[];
 /* App: the phone keeps its own copy of each photo (for fast saving). Copies no site uses any
    more are removed: at once when a photo / site is deleted or retaken, and on start-up for
    anything left over that is over a day old. Unsure what is in use = remove nothing. */
-const nidsOf=j=>{if(!j)return [];const r=j.rawNid||{};return [j.beforeNid,j.afterNid,r.b,r.a,...(j.extras||[]).map(x=>x.nid)].filter(Boolean);};
+const nidsOf=j=>{if(!j)return [];const r=j.rawNid||{};return [j.beforeNid,j.afterNid,r.b,r.a,...(j.extras||[]).map(x=>x.nid),...candsOf(j).flatMap(c=>[c.nid,c.rawNid])].filter(Boolean);};
+const candsOf=j=>j&&j.cand?[...(j.cand.b||[]),...(j.cand.a||[])]:[];
 function allJobsSafe(){return new Promise(res=>{if(!IDB)return res(null);try{const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);}catch(e){res(null);}});}
 async function photoGC(drop){
  if(!window.AndroidApp||!window.AndroidApp.cleanPhotos)return;
@@ -1021,11 +1053,14 @@ let delArm=false;
 let withLabels=true, layout="h";
 try{withLabels=localStorage.getItem("ba-labels")!=="0";layout=localStorage.getItem("ba-lay")==="v"?"v":"h";}catch(e){}
 function setSlot(slot,blob,at){
- const s=$(slot);s.querySelectorAll("img,.ph,.dt").forEach(x=>x.remove());
+ const s=$(slot);s.querySelectorAll("img,.ph,.dt,.cbadge").forEach(x=>x.remove());
  s.querySelectorAll(".tmask").forEach(x=>x.remove());
  if(blob){s.classList.add("has");const i=document.createElement("img");i.alt="";i.src=blobUrl(blob);s.appendChild(i);
   if(slot==="sB"&&job.mask)i.onload=()=>{const m=document.createElement("div");m.className="tmask";m.innerHTML="<span>比べない</span>";s.appendChild(m);placeBox(m,job.mask,i.naturalWidth,i.naturalHeight,s.clientWidth,s.clientHeight);};
-  const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);}
+  const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);
+  const k=slot==="sB"?"b":"a", n=((job.cand&&job.cand[k])||[]).length;
+  if(n){const c=document.createElement("button");c.className="cbadge";c.innerHTML='<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></svg>候補 '+n+'枚';
+   c.setAttribute("aria-label","ほかの候補 "+n+"枚から選ぶ");c.onclick=e=>{e.stopPropagation();candOpen(k);};s.appendChild(c);}}
  else{s.classList.remove("has");const p=document.createElement("span");p.className="ph";p.innerHTML='<span class="pi">'+CAM_SVG+'</span>'+(slot==="sB"||job.before?"タップして撮影":"施工前の<br>あとに撮れます");s.appendChild(p);}
 }
 function openJob(j){
@@ -1109,7 +1144,7 @@ function noCam(){camFail=true;$("nativeBtns").hidden=false;$("nExtra").hidden=fa
 let reArm=false,reT=0;
 $("bBefore").onclick=()=>{
  if(job&&job.before&&!reArm){ // retaking 施工前 always asks once (施工後 retakes at once)
-  reArm=true;setTx("bBefore","もう一度押すと 撮り直し");$("bBefore").classList.add("arm");toast((job.savedB||[]).length?"前の施工前の写真は、スマホからも消えます":"前の施工前の写真は消えます");
+  reArm=true;setTx("bBefore","もう一度押すと 撮り直し");$("bBefore").classList.add("arm");toast("前の写真は候補に残ります(あとで選び直せます)");
   clearTimeout(reT);reT=setTimeout(()=>{reArm=false;setTx("bBefore","撮り直す");$("bBefore").classList.remove("arm");},4000);return;}
  reArm=false;clearTimeout(reT);setTx("bBefore","撮り直す");$("bBefore").classList.remove("arm");startCam("before");};
 $("bAfter").onclick=()=>startCam("after");
@@ -1162,7 +1197,8 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
  $("cam").classList.toggle("judging",after&&$("tDiff").classList.contains("on"));
  setFrame("na","比べています…");lvlShown=null;
  $("camMask").hidden=true;
- shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");
+ shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");$("cCancel").classList.remove("fin");
+ camSess={mode,n:0,had:mode!=="extra"&&!!(mode==="before"?job.before:job.after),got:Promise.resolve()};
  if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();$("pipImg").src=photoSrc;
   setTimeout(()=>{if(camMode==="after"&&job&&job.before)outlineSrc().catch(()=>{});},1200);}
  pipShow();
@@ -1184,6 +1220,7 @@ function fitStage(){
 }
 window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
 function stopCam(){
+ const sess=camSess;camSess=null;
  camSeq++;if(natOpenEnd)natOpenEnd({stale:true}); // a camera still starting is cancelled
  $("camLoad").hidden=true;
  setSideUI(0);
@@ -1192,6 +1229,7 @@ function stopCam(){
  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
  if(NATIVE){natGen++;natFrame=null;natPlace="";window.AndroidCam.close();document.documentElement.classList.remove("natcam");}
  $("cam").style.display="none";
+ if(sess&&sess.n&&sess.mode!=="extra")camDone(sess);
 }
 $("cCancel").onclick=stopCam;
 $("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
@@ -1263,7 +1301,7 @@ function pipFit(){
 $("pipImg").addEventListener("load",()=>pipFit());
 $("pipT").onclick=e=>{e.stopPropagation();pipOn=!pipOn;try{localStorage.setItem("ba-pip",pipOn?"1":"0");}catch(err){}pipShow();};
 
-let shotCount=0;
+let shotCount=0, camSess=null;
 // The moment the picture is really taken: white flash + short buzz.
 function buzz(ms){try{if(window.AndroidApp&&window.AndroidApp.vibrate)window.AndroidApp.vibrate(ms);else if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
 function shotMoment(){const fl=$("flash");fl.classList.add("on");requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));buzz(40);}
@@ -1295,12 +1333,25 @@ $("cShot").onclick=async()=>{
   await shotDone(b,shotCount+"枚目を撮影しました",650);shooting=false;
   return;
  }
- const got=gotPhoto(mode,b,o,true,g); // under the camera screen, meanwhile
- await shotDone(b,name+"を撮影しました",700);shooting=false;
- stopCam();await got;
- if(mode==="before"&&maskAfterShot&&$("med").hidden)openMaskEditor(); // waits until the camera has closed
- justShot(mode==="before"?"sB":"sA");
+ // 施工前・施工後: the camera stays open so a few can be taken; each new one is used and the
+ // ones before it stay as 候補. 完了 closes the camera; with 2 or more, the choosing screen follows.
+ const s=camSess;if(!s){shooting=false;return;}
+ shotCount++;s.n=shotCount;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
+ setTx("cCancel","完了");$("cCancel").classList.add("fin");
+ s.got=s.got.then(()=>gotPhoto(mode,b,o,true,g)).catch(()=>{}); // under the camera screen, one after another
+ await shotDone(b,name+(shotCount>1?" "+shotCount+"枚目":"")+"を撮影しました",700);shooting=false;
 };
+// After the camera closes (完了, back button or the app going to the background).
+async function camDone(s){
+ const j=job;await s.got;if(!j||job!==j)return;
+ const k=s.mode==="before"?"b":"a", n=((j.cand&&j.cand[k])||[]).length, q=quietSaved;quietSaved=null;
+ if(s.n>=2&&n)await candOpen(k);
+ else if(s.had&&n)toast("前の写真は候補に残しました(「候補」から選び直せます)");
+ else if(q)toast(q+"をスマホに保存しました");
+ if(job!==j)return;
+ if(s.mode==="before"&&maskAfterShot&&$("med").hidden&&!j.mask)openMaskEditor();
+ justShot(s.mode==="before"?"sB":"sA");
+}
 
 /* ---------- holding the phone sideways ---------- */
 // With the screen staying portrait, a phone held sideways gives sideways camera frames.
@@ -1623,6 +1674,7 @@ async function gotPhoto(mode,blob,o,shot,g){
  const lk=mode==="before"?"b":"a";
  // the previous shot's save may still be running: wait, so where it went is known and can be deleted
  if(autoPend[lk])await autoPend[lk];
+ const prev=snapOf(lk);
  const oldNids=[mode==="before"?job.beforeNid:job.afterNid,job.rawNid&&job.rawNid[lk]], SK=lk==="b"?"savedB":"savedA", oldSaved=job[SK]||[];job[SK]=[];job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
  job.rawNid=job.rawNid||{};
  job.grav[lk]=g||null;job.rot[lk]=0;
@@ -1638,6 +1690,8 @@ async function gotPhoto(mode,blob,o,shot,g){
   // (starting where the last frame was), off = no frame
   if(job.mask)maskSeed=job.mask;job.mask=null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
+ if(prev)oldNids.push(...candKeep(lk,prev)); // the photo it replaces stays as a 候補
+ job.cmpSavedAt=null;
  // show it at once; writing it into the phone's storage follows
  refreshDetail();
  $("result").style.display="none";
@@ -1648,7 +1702,7 @@ async function gotPhoto(mode,blob,o,shot,g){
  if(shot)autoSaveBA(lk,job.rot[lk],oldSaved);
  else if(oldSaved.length)dropFromPhone(oldSaved);
  make();
- if(mode==="before"&&maskAfterShot&&$("cam").style.display!=="flex"&&$("med").hidden)openMaskEditor();
+ if(!shot&&mode==="before"&&maskAfterShot&&$("cam").style.display!=="flex"&&$("med").hidden)openMaskEditor();
 }
 
 /* ---------- place (city / ward of the current position) ---------- */
@@ -2082,8 +2136,94 @@ $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crop
 $("adjOk").onclick=async()=>{if(trimOn)trimSet(false);$("adjEd").hidden=true;if(adjSnap()!==adjOld){await saveJob();make();}};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
 
+/* ---------- 候補 (施工前・施工後) ---------- */
+// A retaken / newer photo doesn't throw the one before away: it is kept as a 候補 (job.cand.b / .a,
+// up to CAND_MAX each, oldest dropped) and can be chosen again later. Only the chosen photo goes
+// into the phone's photos. A 候補 keeps its own tilt, photo as taken and 比べない frame.
+const CAND_MAX=5;
+function snapOf(k){
+ const b=k==="b"?job.before:job.after;if(!b)return null;
+ const g=(o,d)=>{const v=(job[o]||{})[k];return v==null?d:v;};
+ return {blob:b,at:k==="b"?job.beforeAt:job.afterAt,ori:(k==="b"?job.beforeOri:job.afterOri)||null,nid:(k==="b"?job.beforeNid:job.afterNid)||null,
+  raw:g("raw",null),rawNid:g("rawNid",null),rot:g("rot",0),auto:g("auto",null),grav:g("grav",null),lvBg:g("lvBg",null),mask:k==="b"?(job.mask||null):null};
+}
+// adds c; returns the phone copies of the 候補 it pushes out
+function candKeep(k,c){
+ job.cand=job.cand||{};const L=job.cand[k]=(job.cand[k]||[]).concat([c]);
+ L.sort((x,y)=>x.at-y.at);const out=L.splice(0,Math.max(0,L.length-CAND_MAX));
+ return out.flatMap(x=>[x.nid,x.rawNid]).filter(Boolean);
+}
+async function candAdopt(k,c){
+ if(autoPend[k])await autoPend[k];
+ const L=(job.cand&&job.cand[k])||[], i=L.indexOf(c);if(i<0)return;
+ const cur=snapOf(k);L.splice(i,1);if(cur)L.push(cur);L.sort((x,y)=>x.at-y.at);
+ if(c.blob.nid==null&&c.nid)c.blob.nid=c.nid;
+ if(k==="b"){job.before=c.blob;job.beforeAt=c.at;job.beforeOri=c.ori;job.beforeNid=c.nid||null;job.mask=c.mask||null;}
+ else{job.after=c.blob;job.afterAt=c.at;job.afterOri=c.ori;job.afterNid=c.nid||null;}
+ ["raw","rawNid","rot","auto","grav","lvBg"].forEach(o=>{job[o]=job[o]||{};});
+ job.raw[k]=c.raw||null;job.rawNid[k]=c.rawNid||null;job.rot[k]=c.rot||0;job.auto[k]=c.auto==null?null:c.auto;job.grav[k]=c.grav||null;
+ if(c.lvBg)job.lvBg[k]=c.lvBg;else delete job.lvBg[k];
+ if(!job.raw[k]&&job.rawNid[k])rawFetch(job,k,job.rawNid[k]);
+ if(job.adj)job.adj[k]={s:1,x:0,y:0};job.crop=null;job.crops=null;job.cmpSavedAt=null;
+ const SK=k==="b"?"savedB":"savedA", old=job[SK]||[];job[SK]=[];
+ refreshDetail();$("result").style.display="none";
+ await saveJob();make();
+ // the phone's photos: the chosen one goes in, the one it replaces comes out once that is saved
+ if(window.AndroidApp)autoSaveBA(k,job.rot[k],old);
+ toast((k==="b"?"施工前":"施工後")+"の写真を入れ替えました");
+}
+let cd=null;
+// Shows the photo in use and its 候補, oldest first. Resolves when it closes.
+function candOpen(k){
+ if(!job)return Promise.resolve();
+ if(cd)candClose();
+ return new Promise(res=>{
+  cd={k,i:0,done:res,list:[],delArm:false};candBuild(true);
+  if(cd.list.length<2){candClose();return;}
+  $("cdT").textContent=(k==="b"?"施工前":"施工後")+"の写真を選ぶ";$("cand").classList.toggle("a",k==="a");
+  $("cand").hidden=false;candShow();
+ });
+}
+function candBuild(toCur){
+ const cur=snapOf(cd.k);cd.list=[...((job.cand&&job.cand[cd.k])||[]).map(c=>({c,cur:false})),...(cur?[{c:cur,cur:true}]:[])].sort((x,y)=>x.c.at-y.c.at);
+ cd.urls=cd.list.map(e=>blobUrl(e.c.blob));
+ if(toCur)cd.i=Math.max(0,cd.list.findIndex(e=>e.cur));
+ cd.i=Math.min(cd.i,cd.list.length-1);
+}
+const fmtDT=t=>{const d=new Date(t);return fmtD(t)+" "+d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");};
+function candShow(){
+ if(!cd)return;const e=cd.list[cd.i];
+ $("cdImg").src=cd.urls[cd.i];$("cdNo").textContent=(cd.i+1)+" / "+cd.list.length;$("cdDt").textContent=fmtDT(e.c.at);
+ $("cdCur").hidden=!e.cur;$("cdP").disabled=cd.i===0;$("cdN").disabled=cd.i===cd.list.length-1;
+ setTx2("cdOk",e.cur?"この写真のまま":"この写真を採用");
+ $("cdDel").hidden=e.cur;cd.delArm=false;setTx("cdDel","この候補を削除");$("cdDel").classList.remove("arm");
+ const S=$("cdStrip");
+ if(S.childElementCount!==cd.list.length||S.dataset.sig!==cd.list.map(x=>x.c.at).join()){
+  S.dataset.sig=cd.list.map(x=>x.c.at).join();
+  S.innerHTML=cd.list.map((x,i)=>'<button data-i="'+i+'" aria-label="'+(i+1)+'枚目"><img src="'+cd.urls[i]+'" alt="" decoding="async"></button>').join("");}
+ S.querySelectorAll("button").forEach((b,i)=>{b.classList.toggle("on",i===cd.i);b.classList.toggle("cur",cd.list[i].cur);});
+ const on=S.children[cd.i];if(on)on.scrollIntoView({block:"nearest",inline:"center"});
+}
+function candGo(d){if(!cd)return;const i=Math.max(0,Math.min(cd.list.length-1,cd.i+d));if(i!==cd.i){cd.i=i;candShow();}}
+function candClose(){if(!cd)return;const r=cd.done;cd=null;$("cand").hidden=true;$("cdImg").removeAttribute("src");$("cdStrip").innerHTML="";$("cdStrip").dataset.sig="";r();}
+$("cdP").onclick=()=>candGo(-1);$("cdN").onclick=()=>candGo(1);
+$("cdStrip").addEventListener("click",e=>{const b=e.target.closest("[data-i]");if(b&&cd){cd.i=+b.dataset.i;candShow();}});
+{let sx=null,sy=0;const V=$("cdView");
+ V.addEventListener("pointerdown",e=>{if(e.target.closest(".cdnav"))return;sx=e.clientX;sy=e.clientY;});
+ V.addEventListener("pointerup",e=>{if(sx==null)return;const dx=e.clientX-sx, dy=e.clientY-sy;sx=null;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy))candGo(dx<0?1:-1);});
+ V.addEventListener("pointercancel",()=>{sx=null;});}
+$("cdX").onclick=candClose;
+$("cdOk").onclick=async()=>{if(!cd)return;const e=cd.list[cd.i], k=cd.k;
+ if(e.cur){candClose();return;}
+ $("cdOk").disabled=true;try{await candAdopt(k,e.c);}finally{$("cdOk").disabled=false;}candClose();};
+$("cdDel").onclick=async()=>{if(!cd)return;const e=cd.list[cd.i];if(e.cur)return;
+ if(!cd.delArm){cd.delArm=true;setTx("cdDel","もう一度押すと削除");$("cdDel").classList.add("arm");return;}
+ const L=job.cand[cd.k], i=L.indexOf(e.c);if(i>=0)L.splice(i,1);
+ await saveJob();photoGC([e.c.nid,e.c.rawNid]);refreshDetail();toast("候補を削除しました");
+ candBuild(false);if(cd.list.length<2){candClose();return;}candShow();};
+
 /* ---------- 施工前・施工後: into the phone's photos as soon as they are taken ---------- */
-const autoPend={};
+const autoPend={};let quietSaved=null; // saved while the camera was still open (said when it closes)
 function autoSaveBA(k,deg,old){const p=autoSaveRun(k,deg,old||[]);autoPend[k]=p;p.finally(()=>{if(autoPend[k]===p)autoPend[k]=null;});return p;}
 async function autoSaveRun(k,deg,old){
  if(!window.AndroidApp)return;
@@ -2098,7 +2238,8 @@ async function autoSaveRun(k,deg,old){
  if(!still){dropFromPhone([uriR(r)]);return;} // retaken / re-levelled meanwhile
  keepUri(j,k==="b"?"savedB":"savedA",r);putJob(j);
  if(old.length)dropFromPhone(old);
- if(j===job)toast(kind+"をスマホに保存しました");
+ if(j===job){if($("cam").style.display!=="flex")toast(kind+"をスマホに保存しました");
+  else{quietSaved=kind;$("shotN").textContent=shotCount+"枚 保存しました";}} // not over the camera while taking more
 }
 
 /* ---------- 傾き補正 (施工前・施工後) ---------- */
@@ -2759,6 +2900,7 @@ $("svA").onclick=async()=>{if(job.after){keepUri(job,"savedA",await saveBlob(job
 /* ---------- Android app hooks ---------- */
 // Back button: close the camera, then go back to the site list. Returns true when handled.
 window.appBack=()=>{
+ if(!$("cand").hidden){candClose();return true;}
  if(!$("tfs").hidden){tfsClose(false);return true;}
  if(!$("lvEd").hidden){lvClose();return true;}
  if(!$("adjEd").hidden){adjClose();return true;}
