@@ -467,9 +467,9 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvrow{display:grid;grid-template-columns:1fr;gap:10px}
 /* 補正: 傾き / 明るさ tabs; both sets of controls take the same place, so the photo keeps its size */
 .lvhd{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.lvtabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.08);flex:none}
-.lvtabs button{min-height:40px;padding:0 16px;border-radius:999px;font-size:16px;font-weight:800;color:#CBD5E1}
-.lvtabs button.on{background:#fff;color:#101828}
+.lvtabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28);flex:none}
+.lvtabs button{min-height:46px;padding:0 20px;border-radius:999px;font-size:18px;font-weight:800;color:#F2F4F7}
+.lvtabs button.on{background:#fff;color:#101828;box-shadow:0 0 0 3px #9C36B5}
 .lvpanes{display:grid}
 .lvpane{grid-area:1/1;display:flex;flex-direction:column;gap:10px;min-width:0}
 .lvpane.off{visibility:hidden;pointer-events:none}
@@ -2444,14 +2444,15 @@ async function autoTilt(blob,g){
 // App: the phone turns its own copy of the photo (about 3x quicker than doing it in the page).
 let lvReq=0;const lvWait=new Map();
 window.onAppLevel=(req,r)=>{const f=lvWait.get(req);if(f){lvWait.delete(req);f(r);}};
-function natLevel(id,deg,bg){return new Promise(res=>{const req="l"+(++lvReq);lvWait.set(req,res);
+function natLevel(id,deg,bg,tn){return new Promise(res=>{const req="l"+(++lvReq);lvWait.set(req,res);
  setTimeout(()=>{if(lvWait.has(req)){lvWait.delete(req);res("error:timeout");}},15000);
- try{if(window.AndroidApp.levelColor)window.AndroidApp.levelColor(req,id,deg,bg||"white");else window.AndroidApp.level(req,id,deg);}catch(e){lvWait.delete(req);res("error");}});}
+ try{if(toneOn(tn))window.AndroidApp.levelTone(req,id,deg,bg||"white",tn.br|0,tn.ct|0);else if(window.AndroidApp.levelColor)window.AndroidApp.levelColor(req,id,deg,bg||"white");else window.AndroidApp.level(req,id,deg);}catch(e){lvWait.delete(req);res("error");}});}
 // bg: colour of the corners the turn leaves ("white" / "black")
 async function levelBlob(raw,deg,nid,bg,tn){
  if(!deg&&!toneOn(tn))return raw;
- if(!toneOn(tn)&&nid&&window.AndroidApp&&window.AndroidApp.level&&(bg!=="black"||window.AndroidApp.levelColor)){
-  const r=await natLevel(nid,deg,bg);
+ // App: the phone turns (and tones) its own copy in one pass, well under a second
+ if(nid&&window.AndroidApp&&window.AndroidApp.level&&(bg!=="black"||window.AndroidApp.levelColor)&&(!toneOn(tn)||window.AndroidApp.levelTone)){
+  const r=await natLevel(nid,deg,bg,tn);
   if(r.startsWith("ok:"))try{const id=r.slice(3), q=await fetch("/cam/shot/"+id,{cache:"no-store"});if(q.ok){const b=await q.blob();b.nid=id;return b;}}catch(e){}
  }
  const im=await createImageBitmap(raw), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
