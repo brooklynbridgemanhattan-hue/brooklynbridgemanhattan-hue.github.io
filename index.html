@@ -161,6 +161,8 @@ input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgb
 .shotok b{color:#fff;font-size:21px;font-weight:800;text-align:center;text-wrap:balance}
 @keyframes okIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 .camload{position:absolute;left:0;right:0;top:38%;z-index:26;display:flex;flex-direction:column;align-items:center;gap:14px;color:#fff;font-size:18px;font-weight:800;pointer-events:none}
+.busy{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:85;display:flex;align-items:center;gap:12px;padding:16px 26px;border-radius:18px;background:rgba(16,24,40,.88);color:#fff;font-size:18px;font-weight:800;pointer-events:none}
+.busy .sp{width:26px;height:26px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin .9s linear infinite}
 .camload .sp{width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin .9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .cam.loading .bar>*:not(.shoot),.cam.loading #tFlash{visibility:hidden}.cam.loading #cShot{opacity:.35}
@@ -757,6 +759,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" enterkeyhint="done" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
+<div class="busy" id="busy" hidden role="status"><span class="sp"></span>保存中…</div>
 <div class="adj" id="adjEd" hidden>
  <div class="adjhd"><b>写真の位置・大きさを調整</b><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
  <div class="adjstage" id="adjStage"><div class="adjwrap"><canvas id="adjC"></canvas><div class="trimov" id="trimOv"></div></div></div>
@@ -1203,10 +1206,10 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("detail
 // Photos just taken are still being put in (and saved): leave only once they are in, so none is
 // lost or lands in another site.
 let leaving=false;
-$("dBack").onclick=async()=>{if(leaving)return;leaving=true;try{await camGot;if(job&&(job.before||job.site))await saveJob();await showHome();}finally{leaving=false;}};
+$("dBack").onclick=async()=>{if(leaving)return;leaving=true;try{await busyWait(camGot);if(job&&(job.before||job.site))await saveJob();await showHome();}finally{leaving=false;}};
 $("bDel").onclick=async()=>{
  if(!delArm){delArm=true;setTx("bDel","もう一度押すと削除(スマホの写真からも消えます)");return;}
- await camGot;if(!job)return;
+ await busyWait(camGot);if(!job)return;
  const gone=nidsOf(job), dn=dropFromPhone(savedUris(job));await delJob(job.id);job=null;showHome();photoGC(gone);
  if(dn)toast("現場を削除しました(スマホの写真からも削除)");
 };
@@ -1230,12 +1233,16 @@ async function askOri(){try{if(typeof DeviceOrientationEvent!=="undefined"&&Devi
 
 let camStarting=false, camSeq=0;
 let camGot=Promise.resolve(); // the photos of the last camera still being put in
+// Waits for p; if that takes a moment, 保存中… shows meanwhile (so the tap doesn't look ignored).
+let busyN=0;
+async function busyWait(p){let shown=false;const t=setTimeout(()=>{shown=true;busyN++;$("busy").hidden=false;},300);
+ try{return await p;}catch(e){}finally{clearTimeout(t);if(shown&&--busyN<=0){busyN=0;$("busy").hidden=true;}}}
 async function startCam(mode){
  // pressed again while the camera is still starting: ignore (it used to start a second one)
  if(camStarting||$("cam").style.display==="flex")return;
  camStarting=true;const seq=++camSeq;
  // the last camera's photos first (the 施工後 camera shows the 施工前 just chosen)
- try{await camGot;}catch(e){}
+ await busyWait(camGot);
  try{await startCamRun(mode,seq);}
  finally{camStarting=false;$("camLoad").hidden=true;$("cam").classList.remove("loading");}
 }
@@ -1298,11 +1305,15 @@ function fitStage(){
  natLayout();
 }
 window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
-let stopWanted=false;
-function stopCam(){
- // pressed while a picture is being taken: close once it is in (it used to be thrown away)
- if(shooting&&camSess&&$("cam").style.display==="flex"){stopWanted=true;setTx("cCancel","閉じています…");return;}
- stopWanted=false;
+let stopWanted=false, stopT=0;
+function stopCam(force){
+ // pressed while a picture is being taken: close once it is in (it used to be thrown away), but
+ // wait 3 s at most (a camera that stopped answering would otherwise hold it for 20 s)
+ if(!force&&shooting&&camSess&&$("cam").style.display==="flex"){
+  if(!stopWanted){stopWanted=true;setTx("cCancel","閉じています…");
+   clearTimeout(stopT);stopT=setTimeout(()=>{if(stopWanted&&shooting){const s=camSess;if(s)s.cut=true;shooting=false;stopCam(true);toast("カメラが応答しないため閉じました",true);}},3000);}
+  return;}
+ clearTimeout(stopT);stopWanted=false;
  const sess=camSess;camSess=null;pinchPts.clear();pinch0=null;
  camSeq++;if(natOpenEnd)natOpenEnd({stale:true}); // a camera still starting is cancelled
  $("camLoad").hidden=true;
@@ -1314,7 +1325,7 @@ function stopCam(){
  $("cam").style.display="none";
  if(sess&&sess.n&&sess.mode!=="extra")camDone(sess);
 }
-$("cCancel").onclick=stopCam;
+$("cCancel").onclick=()=>stopCam();
 $("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
 $("tGrid").onclick=()=>{$("tGrid").classList.toggle("on");$("grid").classList.toggle("on");};
 $("tGhost").onclick=()=>{$("tGhost").classList.toggle("on");ghostLook();};
@@ -1441,7 +1452,7 @@ function shotDone(blob,text,ms){
 // Back on the site page: the new photo glows so it is plain it is there.
 function justShot(id){const el=$(id);if(!el)return;el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);}
 let shooting=false;
-function shotEnd(){shooting=false;if(stopWanted){stopWanted=false;stopCam();}}
+function shotEnd(){shooting=false;if(stopWanted){stopWanted=false;stopCam(true);}}
 $("cShot").onclick=async()=>{
  if(!camReady()||shooting)return;
  const s=camSess;if(!s)return;
@@ -1451,6 +1462,10 @@ $("cShot").onclick=async()=>{
  // come when the picture is really taken (shotMoment), then a big "撮れました" with the photo
  $("cShot").classList.add("busy");setTx2("cShot","撮影中…");$("holdStill").style.transform="translateX(-50%)"+(sideDeg?" rotate("+sideDeg+"deg)":"");$("holdStill").style.top=sideDeg?"45%":"";$("holdStill").hidden=false;
  let b=null;try{b=await grab();}finally{$("holdStill").hidden=true;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
+ if(s.cut){ // the camera was closed while waiting for it: keep it if it came after all
+  if(b&&mode!=="extra"){s.n++;s.got=camGot=s.got.then(()=>gotPhoto(mode,b,o,true,g)).then(()=>{if(job)justShot(mode==="before"?"sB":"sA");}).catch(()=>{});}
+  else if(b)s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true)).catch(()=>{});
+  return;}
  if(!b){const st=!!stream&&!stopWanted;shotEnd();if(st)toast("撮影できませんでした。もう一度押してください");return;}
  const name={before:"施工前",after:"施工後",extra:"写真"}[mode];
  if(mode==="extra"){
@@ -2422,7 +2437,9 @@ async function autoSaveRun(k,deg,old){
  // the site may have been reopened meanwhile (a fresh copy of it is in use) or deleted
  const t=job&&job.id===j.id?job:j;
  if(goneIds.has(j.id)){if(okR(r))dropFromPhone([uriR(r)]);return;}
- const still=(k==="b"?t.beforeAt:t.afterAt)===at&&(k==="b"?t.before:t.after)===b;
+ // reopened site: its photo is a fresh copy read back (not the same object), so it is told by time and id
+ const cb=k==="b"?t.before:t.after, cn=(k==="b"?t.beforeNid:t.afterNid)||null;
+ const still=(k==="b"?t.beforeAt:t.afterAt)===at&&(cb===b||(t!==j&&!!nid&&cn===nid));
  if(!okR(r)){
   // not saved: keep the previous photo in the phone rather than lose both
   if(old.length){const K=k==="b"?"savedB":"savedA";t[K]=(t[K]||[]).concat(old);putJob(t);}
@@ -2608,7 +2625,7 @@ $("lvOk").onclick=async()=>{
  if(deg===lv.old&&bg===lv.oldBg&&lv.tn.br===lv.oldTn.br&&lv.tn.ct===lv.oldTn.ct&&job.raw[k]){lvClose();return;}
  const ok=$("lvOk");ok.disabled=true;setTx2("lvOk","補正中…");lvBusy=true;
  try{
-  if(autoPend[k])await autoPend[k]; // the photo it replaces is still being saved to the phone
+  if(autoPend[k])await busyWait(autoPend[k]); // the photo it replaces is still being saved to the phone
   job.rawNid=job.rawNid||{};
   const was=k==="b"?job.beforeNid:job.afterNid, rn=job.raw[k]?job.rawNid[k]:was;
   const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null,bg,tn);
