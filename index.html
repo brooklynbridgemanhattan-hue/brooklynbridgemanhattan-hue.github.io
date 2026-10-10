@@ -556,8 +556,11 @@ html.natcam #vid,html.app #vid{display:none}
 .cam:not(.judging) .flab{display:none}
 /* after camera: the before photo small in the bottom-left corner, for lining up */
 .pip{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:auto}
-.pipbox{position:relative;border-radius:10px;overflow:hidden;box-shadow:0 0 0 2px #fff,0 4px 14px rgba(0,0,0,.5);background:#000;line-height:0}
+.pipbox{touch-action:none;cursor:move;position:relative;border-radius:10px;overflow:hidden;box-shadow:0 0 0 2px #fff,0 4px 14px rgba(0,0,0,.5);background:#000;line-height:0}
 .pipbox img{display:block;width:var(--pipw,130px);height:auto;max-width:none}
+.pipsz{position:absolute;right:0;top:0;width:34px;height:34px;touch-action:none;cursor:nesw-resize}
+.pipsz::after{content:"";position:absolute;right:4px;top:4px;width:14px;height:14px;border-right:3px solid #fff;border-top:3px solid #fff;border-radius:0 4px 0 0;filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
+.pip.moving .pipbox{box-shadow:0 0 0 3px #FACC15,0 4px 14px rgba(0,0,0,.5)}
 .piptag{position:absolute;left:5px;top:5px;font-size:12px;font-weight:800;line-height:1;padding:4px 8px;border-radius:999px;background:var(--before);color:#fff}
 .piptg{display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:999px;background:rgba(20,22,28,.78);color:#fff;font-size:14px;font-weight:800;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
 .pip.off .pipbox{display:none}
@@ -781,7 +784,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <div class="pill shotn" id="shotN" hidden></div>
   <div class="pill sidew" id="sideW" hidden>横向きで保存</div>
   <div class="frame" id="frame"><span class="flab" id="fLabel"></span></div>
-  <div class="pip" id="pip" hidden><div class="pipbox" id="pipBox"><img id="pipImg" alt="施工前の写真"><span class="piptag">施工前</span></div><button class="piptg" id="pipT"><span class="tx">非表示</span></button></div>
+  <div class="pip" id="pip" hidden><div class="pipbox" id="pipBox"><img id="pipImg" alt="施工前の写真" draggable="false"><span class="piptag">施工前</span><i class="pipsz" id="pipSz" aria-hidden="true"></i></div><button class="piptg" id="pipT"><span class="tx">非表示</span></button></div>
  </div></div>
  <div class="camhud" id="camHud" hidden><div class="hudcol" id="hudCol"><div class="hudshot" id="hudShot"></div></div></div>
  <div class="bar">
@@ -1312,9 +1315,49 @@ function pipFit(){
  let w=side?Math.min(260,hud.clientWidth*0.24):Math.min(220,st.clientWidth*0.34);
  // sideways the space above the controls is low: keep photo + button inside it
  if(side){const room=hud.clientHeight-$("cam").querySelector(".bar").offsetHeight-10-12-34-6;w=Math.max(70,Math.min(w,room*ar));}
+ // moved / resized by hand (kept per phone, upright and sideways each): size x pipSt.k, place pipSt.u / .s
+ const box=side?hud:st, cw=box.clientWidth, ch=box.clientHeight;
+ pipBase=w;
+ const lo=side?$("cam").querySelector(".bar").offsetHeight:0; // sideways: not over the controls
+ if(cw&&ch){w=Math.max(60,Math.min(w*pipSt.k,cw*0.92,(ch-lo-46)*0.92*ar));}
  pip.style.setProperty("--pipw",Math.round(w)+"px");
- pip.style.bottom=side?($("cam").querySelector(".bar").offsetHeight+10)+"px":"";
+ const at=pipSt[side?"s":"u"];
+ if(!cw||!ch){pip.style.left="";pip.style.bottom=side?($("cam").querySelector(".bar").offsetHeight+10)+"px":"";return;}
+ // always kept inside the picture (sideways: the turned panel)
+ const pw=pip.offsetWidth, ph=pip.offsetHeight, l=at?at.l*cw:10, b=at?at.b*ch:side?$("cam").querySelector(".bar").offsetHeight+10:10;
+ pip.style.left=Math.round(Math.max(0,Math.min(cw-pw,l)))+"px";pip.style.bottom=Math.round(Math.max(lo,Math.min(ch-ph,b)))+"px";
 }
+let pipBase=0; // the inset's width before its own size (pipSt.k)
+// The 施工前 inset: drag to move, pinch (or the corner mark) to resize, double tap = back to where it was.
+let pipSt={k:1,u:null,s:null};try{const o=JSON.parse(localStorage.getItem("ba-pippos")||"null");if(o&&o.k>0)pipSt={k:o.k,u:o.u||null,s:o.s||null};}catch(e){}
+function pipSave(){try{localStorage.setItem("ba-pippos",JSON.stringify(pipSt));}catch(e){}}
+{const B=$("pipBox"), pts=new Map();let g=null, lastTap=0;
+ // screen movement -> movement inside the (possibly turned) panel
+ const loc=(dx,dy)=>{const a=sideDeg*Math.PI/180, c=Math.cos(a), s=Math.sin(a);return {x:dx*c+dy*s,y:-dx*s+dy*c};};
+ const start=()=>{const pip=$("pip"), side=!!sideDeg, box=side?$("camHud"):$("stage"), cw=box.clientWidth, ch=box.clientHeight;
+  const l=pip.offsetLeft, b=ch-pip.offsetTop-pip.offsetHeight, P=[...pts.values()];
+  const iw=$("pipImg").offsetWidth;
+  g={side,cw,ch,l,b,k:pipBase?iw/pipBase:pipSt.k,w:iw,mode:g&&g.mode==="size"&&pts.size===1?"size":(pts.size>1?"pinch":g?g.mode:"move"),
+   x:P.reduce((v,q)=>v+q.x,0)/P.length,y:P.reduce((v,q)=>v+q.y,0)/P.length,d:P.length>1?Math.hypot(P[0].x-P[1].x,P[0].y-P[1].y):0,moved:false};};
+ B.addEventListener("pointerdown",e=>{e.stopPropagation();e.preventDefault();try{B.setPointerCapture(e.pointerId);}catch(err){}
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});g=pts.size===1?{mode:e.target.closest(".pipsz")?"size":"move"}:g;start();$("pip").classList.add("moving");});
+ B.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId)||!g)return;e.stopPropagation();pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const P=[...pts.values()], mx=P.reduce((v,q)=>v+q.x,0)/P.length, my=P.reduce((v,q)=>v+q.y,0)/P.length, m=loc(mx-g.x,my-g.y);
+  if(Math.hypot(m.x,m.y)>6)g.moved=true;
+  const key=g.side?"s":"u";
+  if(g.mode==="size"){const nw=g.w+Math.max(m.x,-m.y);pipSt.k=Math.max(0.4,g.k*nw/g.w);pipSt[key]={l:g.l/g.cw,b:g.b/g.ch};}
+  else{if(g.mode==="pinch"&&P.length>1&&g.d){const d=Math.hypot(P[0].x-P[1].x,P[0].y-P[1].y);pipSt.k=Math.max(0.4,g.k*d/g.d);g.moved=true;}
+   pipSt[key]={l:(g.l+m.x)/g.cw,b:(g.b-m.y)/g.ch};}
+  pipFit();});
+ const end=e=>{if(!pts.has(e.pointerId))return;e.stopPropagation();pts.delete(e.pointerId);
+  if(pts.size){g.mode="move";start();return;}
+  $("pip").classList.remove("moving");
+  if(g&&!g.moved){const now=Date.now();if(now-lastTap<350){pipSt={k:1,u:null,s:null};lastTap=0;pipFit();toast("施工前の写真を元の位置・大きさに戻しました");}else lastTap=now;}
+  // keep what is really shown (after clamping) so it doesn't jump next time
+  else{const pip=$("pip"), side=!!sideDeg, box=side?$("camHud"):$("stage");pipSt[side?"s":"u"]={l:pip.offsetLeft/box.clientWidth,b:(box.clientHeight-pip.offsetTop-pip.offsetHeight)/box.clientHeight};}
+  g=null;pipSave();};
+ B.addEventListener("pointerup",end);B.addEventListener("pointercancel",end);
+ B.addEventListener("contextmenu",e=>e.preventDefault());}
 $("pipImg").addEventListener("load",()=>pipFit());
 $("pipT").onclick=e=>{e.stopPropagation();pipOn=!pipOn;try{localStorage.setItem("ba-pip",pipOn?"1":"0");}catch(err){}pipShow();};
 
