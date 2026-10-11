@@ -1186,7 +1186,7 @@ async function showHome(){
    '<div class="jd">'+(n===P.length?'施工前 '+fmtD(Math.min(...bs))+' ・ 施工後 '+fmtD(Math.max(...as)):'施工後 '+n+' / '+P.length+'か所')+'</div>';};
  const card=j=>{const p=pairsOf(j)[0];return '<button class="job'+(jobDone(j)?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'')+'</span>'+
   '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
-  (pairsOf(j).length>1?spotsTx(j):'<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div>')+'</div>'+CHEV_SVG+'</button>';};
+  (pairsOf(j).length>1||(spotList(j)&&spotList(j)[0].name)?spotsTx(j):'<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div>')+'</div>'+CHEV_SVG+'</button>';};
  const w=js.filter(j=>!jobDone(j)), d=js.filter(jobDone);
  $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">施工後待ちの現場はありません</p>';
  $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">完了した現場はまだありません</p>';
@@ -1390,7 +1390,7 @@ function openJob(j){
  job=j;setPref("ba-open",j.id);$("home").hidden=true;$("detail").hidden=false;
  $("site").value=bareName(j.site);$("memo").value=j.memo||"";
  $("result").style.display="none";$("saveMsg").textContent="";delArm=false;setTx("bDel","この現場を削除");
- refreshDetail();make();window.scrollTo(0,0);startGlow();
+ refreshDetail();make();window.scrollTo(0,0);startGlow();spotHintWant=false;if(jobDone(j))spotHint();
 }
 // Points at something: it slowly swells with a yellow ring (n times, 3 if not given),
 // with a short note above it (below when there is no room above) while it does.
@@ -1463,11 +1463,21 @@ function spotPre(){try{const a=JSON.parse(getPref("ba-spotpre")||"null");if(Arra
 const OK_SVG='<svg class="ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
 let spotBusy=false, spotGen=0;
 function spotShow(){
- const L=spotList(job), bar=$("spotBar");
- const add='<button class="spadd" id="spotAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'+(L?'箇所を追加':'箇所を追加(コンロ・レンジフードなど)')+'</button>';
- bar.innerHTML=(L?L.map((x,i)=>{const p=x.live?job:x;return '<button class="spb'+(x.live?" on":"")+'" data-spot="'+i+'"><i>'+(i+1)+'</i>'+esc(spotName(job,i))+(p.after?OK_SVG:'')+(x.live?'<svg class="ed" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/></svg>':'')+'</button>';}).join(""):"")+add;
+ const L=spotList(job), bar=$("spotBar"), one=!L||L.length===1;
+ const ED='<svg class="ed" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/></svg>';
+ // a place without a name: 「箇所名を選ぶ」while it is the only one, 「1か所目」… once there are more
+ const lab=i=>(L&&L[i]&&L[i].name)?esc(L[i].name):one?"箇所名を選ぶ":esc(spotName(job,i));
+ const add='<button class="spadd" id="spotAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>箇所を追加</button>';
+ bar.innerHTML=(L||[{live:true}]).map((x,i)=>{const p=x.live?job:x;return '<button class="spb'+(x.live?" on":"")+'" data-spot="'+i+'"><i>'+(i+1)+'</i>'+lab(i)+(p.after&&!one?OK_SVG:'')+(x.live?ED:'')+'</button>';}).join("")+add;
  const on=bar.querySelector(".spb.on");if(on)on.scrollIntoView({block:"nearest",inline:"nearest"});
 }
+// ＋箇所を追加 swells like the photo tiles when a place is done (its comparison saved, or a finished site
+// opened): as soon as the bar is on the screen, scrolled so the button shows.
+let spotHintWant=false;
+function spotHint(){spotHintWant=true;setTimeout(()=>{const r=$("spotBar").getBoundingClientRect();if(r.top>=0&&r.bottom<=innerHeight)spotHintGo();},400);}
+function spotHintGo(){if(!spotHintWant||!job||$("detail").hidden||!$("bkDlg").hidden||!$("spotAdd"))return;spotHintWant=false;
+ const b=$("spotBar");b.scrollLeft=b.scrollWidth;glow($("spotAdd"),3,"ほかの箇所もここから撮れます");}
+new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))spotHintGo();},{threshold:[1]}).observe($("spotBar"));
 $("spotBar").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;
  if(b.id==="spotAdd")spotAddAsk();else{const i=+b.dataset.spot;if(b.classList.contains("on"))spotEdit(i);else spotGo(i);}});
 // the open place's photos go into job.spots, and the chosen place's come out onto the site
@@ -1506,8 +1516,8 @@ function spotFormWire(){
 const spotNmVal=()=>String(($("spotNm")||{}).value||"").trim().slice(0,20);
 async function spotAddAsk(){
  if(spotBusy||!job)return;
- const first=!spotList(job);
- const p=bkDialog("箇所を追加",spotForm("",first?'<p style="margin:12px 0 0">今の写真は「1か所目」になります(名前はあとで付けられます)。</p>':''),"追加する","やめる");
+ const L0=spotList(job), first=!L0||!L0[spotIdx(job)].name&&L0.length===1;
+ const p=bkDialog("箇所を追加",spotForm("",first?'<p style="margin:12px 0 0">今の写真は「1か所目」になります(名前は「1」のボタンで付けられます)。</p>':''),"追加する","やめる");
  spotFormWire();if(!await p||!job)return;
  const name=spotNmVal();
  if(!job.spots||!job.spots.length)job.spots=[{name:"",live:true}];
@@ -1517,14 +1527,16 @@ async function spotAddAsk(){
  window.scrollTo({top:Math.max(0,$("spotBar").getBoundingClientRect().top+window.scrollY-$("detail").querySelector(".topbar").offsetHeight-10),behavior:"smooth"});
 }
 async function spotEdit(i){
- if(spotBusy||!job)return;const L=spotList(job);if(!L)return;
- const del=L.length>1?'<button type="button" class="spdel" id="spotDel">この箇所を削除</button>':'';
- const p=bkDialog((i+1)+"か所目の名前",spotForm(L[i].name||"",del),"決定","やめる");
+ if(spotBusy||!job)return;let L=spotList(job);
+ const del=L&&L.length>1?'<button type="button" class="spdel" id="spotDel">この箇所を削除</button>':'';
+ const p=bkDialog(L&&L.length>1?(i+1)+"か所目の名前":"箇所の名前",spotForm(L?L[i].name||"":"",del),"決定","やめる");
  spotFormWire();let wantDel=false;
  if($("spotDel"))$("spotDel").onclick=()=>{wantDel=true;if(bkDlgEnd)bkDlgEnd();};
  const ok=await p;if(!job||spotList(job)!==L)return;
  if(wantDel){await spotDel(i);return;}
- if(ok){L[i].name=spotNmVal();await saveJob();spotShow();}
+ if(!ok)return;
+ if(!L){if(!spotNmVal())return;job.spots=L=[{name:"",live:true}];} // the only place gets a name
+ L[i].name=spotNmVal();await saveJob();spotShow();
 }
 async function spotDel(i){
  const L=spotList(job);if(!L||L.length<2||!L[i])return;
@@ -3135,8 +3147,8 @@ async function rpPhoto(x,blob,at,X,Y,w,h,kind){
  x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(X,by,w,h);
  if(at)rpText(x,"撮影 "+fmtFull(at)+" "+new Date(at).getHours()+":"+String(new Date(at).getMinutes()).padStart(2,"0"),X,by+h+36,24,600,"#475467");
 }
-async function rpPages(j,co,tel){
- const P=pairsOf(j).map((p,i)=>({p,i})).filter(o=>o.p.before||o.p.after), multi=pairsOf(j).length>1;
+async function rpPages(j,co,tel,staff){
+ const P=pairsOf(j).map((p,i)=>({p,i})).filter(o=>o.p.before||o.p.after), multi=pairsOf(j).length>1, named=!!(spotList(j)&&spotList(j)[0].name);
  const W=RP.W,H=RP.H,M=RP.M,CW=W-2*M, bw=(CW-30)/2, bh=330, SEC=56+52+bh+44+30, BOTTOM=H-84;
  const ats=P.flatMap(o=>[o.p.beforeAt,o.p.afterAt]).filter(Boolean).sort((a,b)=>a-b);
  const cs=[];let x=null, y=0;
@@ -3149,11 +3161,12 @@ async function rpPages(j,co,tel){
  // to: the customer (left) / from: the company (right)
  rpText(x,custName(j)||"お客様",M,y+200,40,800);x.fillStyle="#101828";x.fillRect(M,y+214,520,3);
  if(co)rpText(x,co,W-M,y+192,30,800,"#101828","right");
- if(tel)rpText(x,"TEL "+tel,W-M,y+232,24,600,"#344054","right");
+ let ry=y+192;if(tel){ry+=40;rpText(x,"TEL "+tel,W-M,ry,24,600,"#344054","right");}
+ if(staff){ry+=38;rpText(x,"施工担当者 "+staff,W-M,ry,24,600,"#344054","right");}
  // the details table
  const rows=[["施工場所",(j.place&&j.place.text)||"―"],["施工日",ats.length?(fmtFull(ats[0])+(fmtFull(ats[ats.length-1])!==fmtFull(ats[0])?" 〜 "+fmtFull(ats[ats.length-1]):"")):"―"],["施工内容",j.memo||"―"]];
- if(multi)rows.push(["施工箇所",pairsOf(j).map((p,i)=>spotName(j,i)).join("・")]);
- let ty=y+262;x.font="600 26px "+rpFont();
+ if(multi||named)rows.push(["施工箇所",pairsOf(j).map((p,i)=>spotName(j,i)).join("・")]);
+ let ty=Math.max(y+262,ry+34);x.font="600 26px "+rpFont();
  for(const [k,v] of rows){const L=rpLines(x,v,CW-210,2), rh=26+L.length*38;
   x.fillStyle="#F2F4F7";x.fillRect(M,ty,190,rh);x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(M,ty,CW,rh);x.beginPath();x.moveTo(M+190,ty);x.lineTo(M+190,ty+rh);x.stroke();
   rpText(x,k,M+95,ty+rh/2+9,24,800,"#344054","center");L.forEach((l,n)=>rpText(x,l,M+210,ty+46+n*38,26,600));ty+=rh;}
@@ -3161,7 +3174,7 @@ async function rpPages(j,co,tel){
  // the places, as many to a page as fit
  for(const o of P){
   if(y+SEC-30>BOTTOM)page();
-  const hd=multi?(o.i+1)+". "+spotName(j,o.i):"施工箇所";
+  const hd=multi?(o.i+1)+". "+spotName(j,o.i):named?spotName(j,0):"施工箇所";
   x.fillStyle="#3B5BDB";x.fillRect(M,y+8,8,36);rpText(x,hd,M+22,y+38,32,800);
   await rpPhoto(x,o.p.before,o.p.beforeAt,M,y+56,bw,bh,"b");
   await rpPhoto(x,o.p.after,o.p.afterAt,M+bw+30,y+56,bw,bh,"a");
@@ -3209,12 +3222,13 @@ $("bReport").onclick=async()=>{
  if(!hasPhotos(job)){toast("写真がまだありません。施工前・施工後を撮ってから作ってください。",true);return;}
  const ask=bkDialog("施工報告書(PDF)",'<label class="rplab" for="rpCo">会社名(任意)</label><input class="rpin" id="rpCo" maxlength="40" placeholder="例:山田設備" value="'+esc(getPref("ba-company"))+'">'+
   '<label class="rplab" for="rpTel">電話番号(任意)</label><input class="rpin" id="rpTel" maxlength="20" inputmode="tel" placeholder="例:03-1234-5678" value="'+esc(getPref("ba-tel"))+'">'+
-  '<p style="margin:6px 0 0;font-size:14px;color:var(--sub)">入力した会社名・電話番号は、次回からも入ります。</p>',"作る","やめる");
+  '<label class="rplab" for="rpStaff">施工担当者 氏名(任意)</label><input class="rpin" id="rpStaff" maxlength="30" placeholder="例:山田 太郎" value="'+esc(getPref("ba-staff"))+'">'+
+  '<p style="margin:6px 0 0;font-size:14px;color:var(--sub)">入力した会社名・電話番号・担当者は、次回からも入ります。</p>',"作る","やめる");
  if(!await ask||!job)return;
- const co=String($("rpCo").value||"").trim().slice(0,40), tel=String($("rpTel").value||"").trim().slice(0,20);
- setPref("ba-company",co);setPref("ba-tel",tel);
+ const co=String($("rpCo").value||"").trim().slice(0,40), tel=String($("rpTel").value||"").trim().slice(0,20), staff=String($("rpStaff").value||"").trim().slice(0,30);
+ setPref("ba-company",co);setPref("ba-tel",tel);setPref("ba-staff",staff);
  rpBusy=true;const j=job;let pdf=null;
- try{bkProg("施工報告書を作っています");pdf=rpPdf(await rpPages(j,co,tel));}
+ try{bkProg("施工報告書を作っています");pdf=rpPdf(await rpPages(j,co,tel,staff));}
  catch(e){toast("報告書を作れませんでした。もう一度お試しください。",true);}
  finally{bkProgEnd();rpBusy=false;}
  if(!pdf||job!==j)return;
@@ -3621,7 +3635,7 @@ async function saveBlob(blob,kind,t,tag){
 $("bSave").onclick=async()=>{buzz(30);await makeDone;if(!imgs.b)return;const g=spotGen, r=await saveBlob(await fullBlob(),"施工前後",Date.now());
  if(g!==spotGen)return; // another place was opened meanwhile
  keepUri(job,"savedC",r);
- if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();await saveJob();showNext();}};
+ if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();await saveJob();showNext();spotHint();}};
 // 送る: the comparison photo goes straight to LINE, mail … through the phone's share menu.
 // list = [{blob,name}]
 async function shareFiles(list,title){
