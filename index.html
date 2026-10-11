@@ -56,8 +56,13 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .newjob .nt{flex:1;display:flex;flex-direction:column;line-height:1.35}
 .newjob b{font-size:20px}
 .newjob small{font-size:14px;opacity:.9}
+.jstat{display:inline-flex;align-items:center;gap:5px;margin-bottom:3px;padding:2px 9px;border-radius:999px;font-size:13px;font-weight:800;line-height:1.5}
+.jstat::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.jstat.w{background:#FFF4DB;color:#9A5B00}
+.jstat.d{background:#E3F5E8;color:#1E7B34}
+.hithead{margin:0 0 10px;font-size:15px;font-weight:800;color:var(--sub)}
+.hithead b{color:var(--ink);font-size:17px}
 .empty.hnohit{display:block;width:100%;line-height:1.6;word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
-button.empty.hnohit{color:#2563EB;font-weight:700;border-style:solid;border-color:#BFD3FB}
 .hsearch{position:relative;display:flex;align-items:center;margin:-8px 0 12px}
 .hsearch svg.i{position:absolute;left:14px;width:20px;height:20px;color:var(--sub);pointer-events:none}
 .hsearch input{width:100%;min-height:50px;padding:0 48px 0 44px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);font-size:17px;color:var(--ink);-webkit-appearance:none;appearance:none}
@@ -687,6 +692,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <div class="hsearch"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hSearch" type="search" placeholder="お客様名・場所・メモ・日付で探す" enterkeyhint="search" autocomplete="off" aria-label="現場を探す"><button id="hSearchX" hidden aria-label="検索をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="tabs" role="tablist"><button id="tabW" class="on" role="tab"><span class="dot wait"></span>施工後待ち<b id="nW">0</b></button><button id="tabD" role="tab"><span class="dot done"></span>完了<b id="nD">0</b></button></div>
   <div class="list" id="lWait"></div><div class="list" id="lDone" hidden></div>
+  <div id="lHit" hidden><p class="hithead" id="hitHead"></p><div class="list" id="hitList"></div></div>
   <p class="note"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>写真はこのスマホのブラウザの中に保存されます(ネットには上がりません)。ブラウザのデータを消すと写真も消えるので、大事な写真は「保存」でスマホにも残してください。</span></p>
  </main>
 </div>
@@ -1098,8 +1104,8 @@ async function showHome(){
  window.scrollTo(0,0);
  // sites from before thumbnails existed get theirs once, one by one, filled in as they come
  (async()=>{for(const j of js){if((j.before&&!j.thB)||(j.after&&!j.thA)){if($("home").hidden)return;
-  await ensureThumbs(j);const card=document.querySelector('[data-job="'+j.id+'"]');
-  if(card)card.querySelectorAll("img[data-th]").forEach(im=>{const t=im.dataset.th==="b"?j.thB:j.thA;if(t)im.src=t;});}}})();
+  await ensureThumbs(j);
+  document.querySelectorAll('[data-job="'+j.id+'"]').forEach(card=>card.querySelectorAll("img[data-th]").forEach(im=>{const t=im.dataset.th==="b"?j.thB:j.thA;if(t)im.src=t;}));}}})();
 }
 /* ---------- 現場を探す ---------- */
 // お客様名・場所・メモの文字、または日付(施工前・施工後の日。年・月・日のどれでも)で絞り込む。
@@ -1122,21 +1128,20 @@ function hitWord(j,w){
  return false;
 }
 function hFilter(){
- const q=z2h($("hSearch").value).trim().toLowerCase(), words=q.split(/\s+/).filter(Boolean);
+ const raw=$("hSearch").value.trim(), words=z2h(raw).toLowerCase().split(/\s+/).filter(Boolean), on=words.length>0;
  $("hSearchX").hidden=!$("hSearch").value;
- const tabs=[["lWait","nW","施工後待ち","w"],["lDone","nD","完了","d"]], got={};
- tabs.forEach(([lid,nid])=>{const L=$(lid);let n=0;
-  L.querySelectorAll("[data-job]").forEach(b=>{const j=homeJobs.get(b.dataset.job), hit=!j||words.every(w=>hitWord(j,w));b.hidden=!hit;if(hit)n++;});
-  $(nid).textContent=n;got[lid]=n;});
- // nothing here: say so, and if the other tab has some, point there (a tap switches to it)
- tabs.forEach(([lid,,name],i)=>{const L=$(lid), [olid,,oname,okey]=tabs[1-i];
-  L.querySelectorAll(".hnohit").forEach(x=>x.remove());
-  L.querySelectorAll(".empty").forEach(x=>x.hidden=!!words.length&&!!got[olid]); // 「…はありません」 gives way to the pointer
-  if(!words.length||got[lid]||(!L.querySelector("[data-job]")&&!got[olid]))return;
-  const e=document.createElement(got[olid]?"button":"p");e.className="empty hnohit";
-  e.textContent=got[olid]?name+"にはありません。"+oname+"に"+got[olid]+"件あります(押すと表示)":"「"+$("hSearch").value.trim()+"」に当てはまる現場はありません";
-  if(got[olid])e.onclick=()=>{homeTab=okey;showTab();};
-  L.appendChild(e);});
+ // searching: one list of the sites from both tabs, the tabs set aside meanwhile
+ document.querySelector("#home .tabs").hidden=on;$("lHit").hidden=!on;
+ if(!on){showTab();$("hitList").innerHTML="";return;}
+ $("lWait").hidden=$("lDone").hidden=true;
+ const hits=[...homeJobs.values()].filter(j=>words.every(w=>hitWord(j,w))).sort((x,y)=>y.created-x.created);
+ const L=$("hitList");L.innerHTML="";
+ hits.forEach(j=>{const src=document.querySelector('#lWait [data-job="'+j.id+'"],#lDone [data-job="'+j.id+'"]');if(!src)return;
+  const c=src.cloneNode(true);c.classList.remove("on");const st=document.createElement("span");
+  st.className="jstat "+(j.after?"d":"w");st.textContent=j.after?"完了":"施工後待ち";c.querySelector(".jbody").prepend(st);L.appendChild(c);});
+ const nw=hits.filter(j=>!j.after).length, nd=hits.length-nw;
+ $("hitHead").innerHTML=hits.length?'検索結果 <b>'+hits.length+'件</b>(施工後待ち '+nw+'・完了 '+nd+')':"";
+ if(!hits.length){const e=document.createElement("p");e.className="empty hnohit";e.textContent="「"+raw+"」に当てはまる現場はありません";L.appendChild(e);}
 }
 $("hSearch").addEventListener("input",()=>{if(hSel.size)hSelClear();hFilter();});
 $("hSearch").addEventListener("keydown",e=>{if(doneKey(e)){e.preventDefault();$("hSearch").blur();}}); // ✓ / 検索 closes the keyboard
