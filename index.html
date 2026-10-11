@@ -157,6 +157,13 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .spnm{width:100%;height:48px;margin:8px 0 10px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
 .sppre{display:flex;flex-wrap:wrap;gap:8px}
 .sppre button{height:38px;padding:0 12px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:700}
+.rplab{display:block;margin-top:8px;font-size:14px;font-weight:700;color:var(--sub)}
+.rpin{width:100%;height:46px;margin:4px 0 6px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
+.rpgo{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.rpgo button{height:52px;border-radius:14px;font-size:17px;font-weight:800}
+.rpgo .s1{background:#3B5BDB;color:#fff}
+.rpgo .s2{background:#EDF2FF;color:#3B5BDB}
+#bkDlg.rpd #bkDYes{background:var(--fill);color:#344054;box-shadow:none}
 .spdel{display:block;width:100%;margin-top:14px;height:44px;border-radius:12px;color:#E03131;font-size:15px;font-weight:800;box-shadow:inset 0 0 0 1.5px #FFC9C9;background:#FFF5F5}
 .steps li{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border-radius:999px;background:var(--card);color:#98A2B3;font-size:15px;font-weight:700;box-shadow:inset 0 0 0 1.5px var(--line)}
 .steps li i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--fill)}
@@ -819,7 +826,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </section>
 
 
- <button class="linkrow" id="bReport"><span class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span><span class="tx">施工完了報告書に添付する</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+ <button class="linkrow" id="bReport"><span class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span><span class="tx">施工報告書(PDF)を作る</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
  <p class="msg" id="saveMsg"></p>
  <button class="btn t-danger full" id="bDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この現場を削除</span></button>
  <input type="file" class="vh" id="fBefore" accept="image/*" capture="environment" tabindex="-1">
@@ -3080,7 +3087,121 @@ $("bAll").onclick=async()=>{
 };
 
 /* ---------- completion report (link added later) ---------- */
-$("bReport").onclick=()=>toast("報告書への添付は準備中です");
+// 施工報告書 (PDF): the site's details and, place by place, 施工前・施工後 side by side.
+// Each A4 page is drawn on a canvas (150 dpi) and goes into the PDF as one JPEG, so the
+// Japanese text needs no font inside the file. 会社名・電話番号 are kept for next time.
+const RP={W:1240,H:1754,M:90};
+const rpFont=()=>getComputedStyle(document.body).fontFamily;
+function rpText(x,t,X,Y,size,weight,color,align){x.font=(weight||400)+" "+size+"px "+rpFont();x.fillStyle=color||"#101828";x.textAlign=align||"left";x.fillText(t,X,Y);}
+// cuts text into lines that fit maxW (at most n lines, the last one ends with … when cut)
+function rpLines(x,t,maxW,n){const out=[];let cur="";
+ for(const ch of String(t||"").replace(/\s+/g," ")){if(x.measureText(cur+ch).width>maxW){out.push(cur);cur=ch;if(out.length===n)break;}else cur+=ch;}
+ if(out.length<n&&cur)out.push(cur);
+ if(out.length===n&&out.join("").length<String(t||"").replace(/\s+/g," ").length){let l=out[n-1];while(l&&x.measureText(l+"…").width>maxW)l=l.slice(0,-1);out[n-1]=l+"…";}
+ return out;}
+function rpRound(x,X,Y,w,h,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();}
+// one photo, whole, in its box, with its 施工前 / 施工後 label and when it was taken
+async function rpPhoto(x,blob,at,X,Y,w,h,kind){
+ const blue=kind==="b";rpRound(x,X,Y,108,40,20);x.fillStyle=blue?"#3B5BDB":"#F59F00";x.fill();
+ rpText(x,blue?"施工前":"施工後",X+54,Y+29,24,800,"#fff","center");
+ const by=Y+52;x.fillStyle="#F2F4F7";x.fillRect(X,by,w,h);
+ if(blob){let im=null;try{im=await decode(blob);const r=Math.min(w/im.width,h/im.height), iw=im.width*r, ih=im.height*r;
+   x.imageSmoothingQuality="high";x.drawImage(im,X+(w-iw)/2,by+(h-ih)/2,iw,ih);}catch(e){}finally{if(im&&im.close)im.close();}}
+ else rpText(x,"(まだ撮影していません)",X+w/2,by+h/2,26,600,"#98A2B3","center");
+ x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(X,by,w,h);
+ if(at)rpText(x,"撮影 "+fmtFull(at)+" "+new Date(at).getHours()+":"+String(new Date(at).getMinutes()).padStart(2,"0"),X,by+h+36,24,600,"#475467");
+}
+async function rpPages(j,co,tel){
+ const P=pairsOf(j).map((p,i)=>({p,i})).filter(o=>o.p.before||o.p.after), multi=pairsOf(j).length>1;
+ const W=RP.W,H=RP.H,M=RP.M,CW=W-2*M, bw=(CW-30)/2, bh=330, SEC=56+52+bh+44+30, BOTTOM=H-84;
+ const ats=P.flatMap(o=>[o.p.beforeAt,o.p.afterAt]).filter(Boolean).sort((a,b)=>a-b);
+ const cs=[];let x=null, y=0;
+ const page=()=>{const c=document.createElement("canvas");c.width=W;c.height=H;cs.push(c);x=c.getContext("2d");
+  x.fillStyle="#fff";x.fillRect(0,0,W,H);x.textBaseline="alphabetic";y=M;};
+ page();
+ rpText(x,"施工報告書",W/2,y+64,64,800,"#101828","center");
+ x.fillStyle="#3B5BDB";x.fillRect(W/2-150,y+88,300,5);
+ rpText(x,"作成日 "+fmtFull(Date.now()),W-M,y+140,24,600,"#475467","right");
+ // to: the customer (left) / from: the company (right)
+ rpText(x,custName(j)||"お客様",M,y+200,40,800);x.fillStyle="#101828";x.fillRect(M,y+214,520,3);
+ if(co)rpText(x,co,W-M,y+192,30,800,"#101828","right");
+ if(tel)rpText(x,"TEL "+tel,W-M,y+232,24,600,"#344054","right");
+ // the details table
+ const rows=[["施工場所",(j.place&&j.place.text)||"―"],["施工日",ats.length?(fmtFull(ats[0])+(fmtFull(ats[ats.length-1])!==fmtFull(ats[0])?" 〜 "+fmtFull(ats[ats.length-1]):"")):"―"],["施工内容",j.memo||"―"]];
+ if(multi)rows.push(["施工箇所",pairsOf(j).map((p,i)=>spotName(j,i)).join("・")]);
+ let ty=y+262;x.font="600 26px "+rpFont();
+ for(const [k,v] of rows){const L=rpLines(x,v,CW-210,2), rh=26+L.length*38;
+  x.fillStyle="#F2F4F7";x.fillRect(M,ty,190,rh);x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(M,ty,CW,rh);x.beginPath();x.moveTo(M+190,ty);x.lineTo(M+190,ty+rh);x.stroke();
+  rpText(x,k,M+95,ty+rh/2+9,24,800,"#344054","center");L.forEach((l,n)=>rpText(x,l,M+210,ty+46+n*38,26,600));ty+=rh;}
+ y=ty+40;
+ // the places, as many to a page as fit
+ for(const o of P){
+  if(y+SEC-30>BOTTOM)page();
+  const hd=multi?(o.i+1)+". "+spotName(j,o.i):"施工箇所";
+  x.fillStyle="#3B5BDB";x.fillRect(M,y+8,8,36);rpText(x,hd,M+22,y+38,32,800);
+  await rpPhoto(x,o.p.before,o.p.beforeAt,M,y+56,bw,bh,"b");
+  await rpPhoto(x,o.p.after,o.p.afterAt,M+bw+30,y+56,bw,bh,"a");
+  y+=SEC;
+ }
+ // footer: the page and who made it
+ const out=[];
+ for(let pi=0;pi<cs.length;pi++){const c=cs[pi], g=c.getContext("2d");
+  g.fillStyle="#D0D5DD";g.fillRect(M,H-70,CW,2);
+  rpText(g,(pi+1)+" / "+cs.length,W/2,H-34,22,700,"#667085","center");
+  if(co)rpText(g,co,M,H-34,22,600,"#667085");
+  const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.88));c.width=c.height=0;
+  out.push(new Uint8Array(await blob.arrayBuffer()));}
+ return out;
+}
+// the PDF itself: one page per JPEG, A4
+function rpPdf(jpgs){
+ const enc=new TextEncoder(), parts=[], offs=[];let len=0;
+ const add=v=>{const b=typeof v==="string"?enc.encode(v):v;parts.push(b);len+=b.length;};
+ const obj=(n,f)=>{offs[n]=len;add(n+" 0 obj\n");f();add("\nendobj\n");};
+ add("%PDF-1.4\n");add(new Uint8Array([37,226,227,207,211,10]));
+ const N=jpgs.length, kids=jpgs.map((_,i)=>(3+i*3)+" 0 R").join(" ");
+ obj(1,()=>add("<< /Type /Catalog /Pages 2 0 R >>"));
+ obj(2,()=>add("<< /Type /Pages /Kids ["+kids+"] /Count "+N+" >>"));
+ jpgs.forEach((b,i)=>{const pn=3+i*3, cn=pn+1, im=pn+2, cs="q 595.28 0 0 841.89 0 0 cm /Im0 Do Q";
+  obj(pn,()=>add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 "+im+" 0 R >> >> /Contents "+cn+" 0 R >>"));
+  obj(cn,()=>add("<< /Length "+cs.length+" >>\nstream\n"+cs+"\nendstream"));
+  obj(im,()=>{add("<< /Type /XObject /Subtype /Image /Width "+RP.W+" /Height "+RP.H+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+b.length+" >>\nstream\n");add(b);add("\nendstream");});});
+ const n=2+N*3, x0=len;
+ add("xref\n0 "+(n+1)+"\n0000000000 65535 f \n");for(let i=1;i<=n;i++)add(String(offs[i]).padStart(10,"0")+" 00000 n \n");
+ add("trailer\n<< /Size "+(n+1)+" /Root 1 0 R >>\nstartxref\n"+x0+"\n%%EOF\n");
+ return new Blob(parts,{type:"application/pdf"});
+}
+async function rpSave(blob,name){
+ if(window.AndroidApp&&window.AndroidApp.saveDownload){
+  const r=String(window.AndroidApp.saveDownload(await b64Of(blob),name,"application/pdf"));
+  toast(okR(r)?"スマホの「ダウンロード」に保存しました":"保存できませんでした。もう一度お試しください。",!okR(r));return;}
+ const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+ toast("保存しました");
+}
+let rpBusy=false;
+$("bReport").onclick=async()=>{
+ if(rpBusy||!job)return;
+ await busyWait(Promise.all([camGot,autoPend.b,autoPend.a,rawPend.b,rawPend.a]));if(!job)return;
+ if(!hasPhotos(job)){toast("写真がまだありません。施工前・施工後を撮ってから作ってください。",true);return;}
+ const ask=bkDialog("施工報告書(PDF)",'<label class="rplab" for="rpCo">会社名(任意)</label><input class="rpin" id="rpCo" maxlength="40" placeholder="例:山田設備" value="'+esc(getPref("ba-company"))+'">'+
+  '<label class="rplab" for="rpTel">電話番号(任意)</label><input class="rpin" id="rpTel" maxlength="20" inputmode="tel" placeholder="例:03-1234-5678" value="'+esc(getPref("ba-tel"))+'">'+
+  '<p style="margin:6px 0 0;font-size:14px;color:var(--sub)">入力した会社名・電話番号は、次回からも入ります。</p>',"作る","やめる");
+ if(!await ask||!job)return;
+ const co=String($("rpCo").value||"").trim().slice(0,40), tel=String($("rpTel").value||"").trim().slice(0,20);
+ setPref("ba-company",co);setPref("ba-tel",tel);
+ rpBusy=true;const j=job;let pdf=null;
+ try{bkProg("施工報告書を作っています");pdf=rpPdf(await rpPages(j,co,tel));}
+ catch(e){toast("報告書を作れませんでした。もう一度お試しください。",true);}
+ finally{bkProgEnd();rpBusy=false;}
+ if(!pdf||job!==j)return;
+ const name="施工報告書_"+(custName(j)?custName(j).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40)+"_":"")+stamp(Date.now())+".pdf";
+ let pick=null;
+ const done=bkDialog("施工報告書ができました",'<p style="margin:0">'+esc(name)+'</p><div class="rpgo"><button type="button" class="s1" id="rpSend">送る(LINE・メールなど)</button><button type="button" class="s2" id="rpKeep">スマホに保存</button></div>',"閉じる");
+ $("rpSend").onclick=()=>{pick="send";if(bkDlgEnd)bkDlgEnd();};$("rpKeep").onclick=()=>{pick="keep";if(bkDlgEnd)bkDlgEnd();};
+ $("bkDlg").classList.add("rpd");await done;$("bkDlg").classList.remove("rpd"); // 閉じる quieter than 送る / 保存
+ if(pick==="send")await shareFiles([{blob:pdf,name}],"施工報告書を送る");
+ else if(pick==="keep")await rpSave(pdf,name);
+};
 
 /* ---------- "don't compare" box editor ---------- */
 let mEdit=null, mDrag=null;
