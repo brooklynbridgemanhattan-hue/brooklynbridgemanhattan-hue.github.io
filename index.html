@@ -106,6 +106,7 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .list{display:flex;flex-direction:column;gap:10px}
 .job{display:flex;align-items:center;gap:14px;width:100%;padding:12px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);text-align:left;color:var(--ink)}
 .jimg{display:flex;flex:none}
+.jspn{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#344054}
 .jspot{display:inline-block;margin-right:6px;padding:0 7px;border-radius:8px;background:#EDF2FF;color:#3B5BDB;font-weight:800;font-size:12px;line-height:20px}
 .jimg img{width:56px;height:70px;object-fit:cover;background:#E4E7EC;border:2px solid var(--card)}
 .job{content-visibility:auto;contain-intrinsic-size:auto 98px}
@@ -157,6 +158,10 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .spnm{width:100%;height:48px;margin:8px 0 10px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
 .sppre{display:flex;flex-wrap:wrap;gap:8px}
 .sppre button{height:38px;padding:0 12px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:700}
+.sppre .ppadd{background:#EDF2FF;color:#3B5BDB;box-shadow:inset 0 0 0 1.5px #91A7FF}
+.sppre .ppdel{background:#fff;color:#E03131;box-shadow:inset 0 0 0 1.5px #FFC9C9}
+.sppre.del [data-pi]{background:#FFF5F5;color:#E03131}
+.spphint{min-height:20px;margin:8px 0 0;font-size:14px;color:var(--sub)}
 .rplab{display:block;margin-top:8px;font-size:14px;font-weight:700;color:var(--sub)}
 .rpin{width:100%;height:46px;margin:4px 0 6px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
 .rpgo{display:flex;flex-direction:column;gap:10px;margin-top:12px}
@@ -1175,10 +1180,12 @@ async function showHome(){
  $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
  // several places: the first place's photos, and how many places are done
- const spotsTx=j=>{const P=pairsOf(j), n=P.filter(p=>p.after).length;return '<span class="jspot">'+P.length+'か所</span>'+(n===P.length?'すべて施工後済み':'施工後 '+n+' / '+P.length+'か所');};
+ const spotsTx=j=>{const P=pairsOf(j), n=P.filter(p=>p.after).length, bs=P.map(p=>p.beforeAt).filter(Boolean), as=P.map(p=>p.afterAt).filter(Boolean);
+  return '<div class="jd"><span class="jspot">'+P.length+'か所</span><span class="jspn">'+P.map((p,i)=>esc(spotName(j,i))).join("・")+'</span></div>'+
+   '<div class="jd">'+(n===P.length?'施工前 '+fmtD(Math.min(...bs))+' ・ 施工後 '+fmtD(Math.max(...as)):'施工後 '+n+' / '+P.length+'か所')+'</div>';};
  const card=j=>{const p=pairsOf(j)[0];return '<button class="job'+(jobDone(j)?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'')+'</span>'+
   '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
-  '<div class="jd">'+(pairsOf(j).length>1?spotsTx(j):'施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):''))+'</div></div>'+CHEV_SVG+'</button>';};
+  (pairsOf(j).length>1?spotsTx(j):'<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div>')+'</div>'+CHEV_SVG+'</button>';};
  const w=js.filter(j=>!jobDone(j)), d=js.filter(jobDone);
  $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">施工後待ちの現場はありません</p>';
  $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">完了した現場はまだありません</p>';
@@ -1450,12 +1457,13 @@ let leaving=false;
 $("dBack").onclick=async()=>{if(leaving)return;leaving=true;try{await busyWait(camGot);if(job&&(hasPhotos(job)||job.site||spotList(job)))await saveJob();await showHome();}finally{leaving=false;}};
 /* ---------- 複数か所 ---------- */
 // The bar above 1-2-3: one button per place (tap = open it, tap the open one = name / delete) and ＋.
-const SPOT_PRE=["キッチン","浴室","トイレ","洗面所","リビング","玄関","外壁","屋根"];
+const SPOT_PRE0=["ビルトインコンロ","レンジフード","給湯器"]; // the ready names until the person changes them
+function spotPre(){try{const a=JSON.parse(getPref("ba-spotpre")||"null");if(Array.isArray(a))return a.filter(x=>typeof x==="string"&&x.trim()).slice(0,40);}catch(e){}return SPOT_PRE0.slice();}
 const OK_SVG='<svg class="ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
 let spotBusy=false, spotGen=0;
 function spotShow(){
  const L=spotList(job), bar=$("spotBar");
- const add='<button class="spadd" id="spotAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'+(L?'箇所を追加':'箇所を追加(キッチン・浴室など)')+'</button>';
+ const add='<button class="spadd" id="spotAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'+(L?'箇所を追加':'箇所を追加(コンロ・レンジフードなど)')+'</button>';
  bar.innerHTML=(L?L.map((x,i)=>{const p=x.live?job:x;return '<button class="spb'+(x.live?" on":"")+'" data-spot="'+i+'"><i>'+(i+1)+'</i>'+esc(spotName(job,i))+(p.after?OK_SVG:'')+(x.live?'<svg class="ed" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/></svg>':'')+'</button>';}).join(""):"")+add;
  const on=bar.querySelector(".spb.on");if(on)on.scrollIntoView({block:"nearest",inline:"nearest"});
 }
@@ -1477,8 +1485,23 @@ async function spotGo(i){
   return true;
  }finally{spotBusy=false;}
 }
-const spotForm=(v,note)=>'<input class="spnm" id="spotNm" maxlength="20" placeholder="例:キッチン" value="'+esc(v)+'"><div class="sppre">'+SPOT_PRE.map(n=>'<button type="button" data-pre="'+n+'">'+n+'</button>').join("")+'</div>'+(note||"");
-function spotFormWire(){document.querySelectorAll("#bkDB [data-pre]").forEach(b=>b.onclick=()=>{$("spotNm").value=b.dataset.pre;});}
+const spotForm=(v,note)=>'<input class="spnm" id="spotNm" maxlength="20" placeholder="例:ビルトインコンロ" value="'+esc(v)+'"><div class="sppre" id="spotPre"></div><p class="spphint" id="sppHint"></p>'+(note||"");
+// tap a name = put it in the box; ＋追加 = keep what is in the box as a ready name; 削除 = tap names to remove them
+function spotFormWire(){
+ let list=spotPre(), del=false;const box=$("spotPre"), hint=t=>{$("sppHint").textContent=t||"";};
+ const draw=()=>{box.classList.toggle("del",del);
+  box.innerHTML=list.map((n,i)=>'<button type="button" data-pi="'+i+'">'+esc(n)+(del?' ×':'')+'</button>').join("")+
+   (del?'':'<button type="button" class="ppadd" id="ppAdd">＋追加</button>')+(list.length||del?'<button type="button" class="ppdel" id="ppDel">'+(del?'削除をやめる':'削除')+'</button>':'');
+  box.querySelectorAll("[data-pi]").forEach(b=>b.onclick=()=>{const n=list[+b.dataset.pi];
+   if(del){list.splice(+b.dataset.pi,1);setPref("ba-spotpre",JSON.stringify(list));hint("「"+n+"」を消しました");if(!list.length)del=false;draw();}
+   else{$("spotNm").value=n;hint("");}});
+  if($("ppAdd"))$("ppAdd").onclick=()=>{const v=spotNmVal();
+   if(!v){hint("上の欄に名前を入れてから「＋追加」を押してください");$("spotNm").focus();return;}
+   if(list.includes(v)){hint("「"+v+"」はもうあります");return;}
+   list.push(v);setPref("ba-spotpre",JSON.stringify(list));hint("「"+v+"」を追加しました(次回からも出ます)");draw();};
+  if($("ppDel"))$("ppDel").onclick=()=>{del=!del;hint(del?"消したい名前を押してください":"");draw();};};
+ draw();
+}
 const spotNmVal=()=>String(($("spotNm")||{}).value||"").trim().slice(0,20);
 async function spotAddAsk(){
  if(spotBusy||!job)return;
