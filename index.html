@@ -198,9 +198,10 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .field:last-child{margin-bottom:0}
 .fl-l{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--sub);margin-bottom:6px}
 .fl-l svg.i{width:17px;height:17px}
-input.t{width:100%;font:inherit;font-size:17px;padding:13px 14px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--fill);color:var(--ink);outline:none}
+input.t,textarea.t{width:100%;font:inherit;font-size:17px;padding:13px 14px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--fill);color:var(--ink);outline:none}
 .sama{position:relative;display:block}.sama input.t{padding-right:44px}.sama .suf{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:17px;font-weight:700;color:var(--sub);pointer-events:none}
-input.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+textarea.t{display:block;resize:none;line-height:1.5} /* 施工内容: 2 lines, ✓ closes the keyboard */
+input.t:focus,textarea.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .place{display:flex;gap:8px}
 .pv{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:13px 14px;border-radius:var(--r-s);background:var(--fill);border:1.5px solid var(--line);font-size:17px;font-weight:700}
 .pv span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -771,7 +772,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><span class="sama"><input class="t" id="site" type="text" placeholder="例:山田" enterkeyhint="done" autocomplete="off"><span class="suf" aria-hidden="true">様</span></span></label>
   <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
    <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
-  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" enterkeyhint="done" placeholder="例:旧機種 → 新機種"></label>
+  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>施工内容</span><textarea class="t" id="memo" rows="2" enterkeyhint="done" placeholder="例:ビルトインコンロ交換・レンジフード交換"></textarea></label>
  </section>
 
  <div class="spots" id="spotBar"></div>
