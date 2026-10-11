@@ -56,6 +56,33 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .newjob .nt{flex:1;display:flex;flex-direction:column;line-height:1.35}
 .newjob b{font-size:20px}
 .newjob small{font-size:14px;opacity:.9}
+/* バックアップ */
+.bkwarn{display:flex;align-items:center;gap:10px;width:100%;margin:-8px 0 14px;padding:12px 14px;border-radius:14px;background:#FFF4DB;color:#7A4A00;font-size:14px;font-weight:800;text-align:left;box-shadow:inset 0 0 0 1.5px #F5C451}
+.bkwarn svg.i{width:22px;height:22px;flex:none}
+.bkwarn span{flex:1;word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
+.bkwarn u{white-space:nowrap}
+.bkcard{margin:22px 0 4px;padding:16px;border-radius:var(--r);background:var(--card);box-shadow:0 1px 3px rgba(16,24,40,.08)}
+.bkhd{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:800}
+.bkhd svg.i{width:22px;height:22px;color:#2563EB}
+.bkst{margin:8px 0 4px;font-size:15px;font-weight:700}
+.bkst.none{color:#B54708}
+.bkst small{display:block;font-size:13px;font-weight:600;color:var(--sub)}
+.bkhint{margin:0 0 12px;font-size:13px;color:var(--sub);line-height:1.6}
+.bkbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bkbtns button{min-height:50px;border-radius:14px;font-size:14px;font-weight:800;background:var(--fill);color:var(--ink);padding:4px 6px;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}
+.bkbtns .bkmain{background:#2563EB;color:#fff}
+.bkov{position:fixed;inset:0;z-index:90;background:rgba(16,24,40,.6);display:grid;place-items:center;padding:20px}
+.bkbox{width:100%;max-width:400px;background:var(--card);border-radius:20px;padding:22px 20px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.bkbox .sp{width:40px;height:40px;border-radius:50%;border:4px solid #DCE5FD;border-top-color:#2563EB;animation:spin .9s linear infinite}
+.bkbox>b{font-size:18px}
+.bkbox .bkp{font-size:15px;color:var(--sub);font-weight:700;font-variant-numeric:tabular-nums}
+.bkbox .bknote{font-size:13px;color:var(--sub)}
+.bkdlg{align-items:stretch;text-align:left}
+.bkdlg>b{font-size:19px}
+.bkdlg .bkbody{font-size:15px;line-height:1.7}
+.bkdlg .bkbody ul{margin:6px 0 0;padding-left:20px}
+.bkdlg .bkbtns{margin-top:6px}
+.bkdlg.one .bkbtns{grid-template-columns:1fr}
 .jstat{display:inline-flex;align-items:center;gap:5px;margin-bottom:3px;padding:2px 9px;border-radius:999px;font-size:13px;font-weight:800;line-height:1.5}
 .jstat::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
 .jstat.w{background:#FFF4DB;color:#9A5B00}
@@ -689,10 +716,17 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <header class="hbar"><div class="logo"><svg viewBox="0 0 108 108" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M28 42V34a6 6 0 0 1 6-6h8M66 28h8a6 6 0 0 1 6 6v8M80 66v8a6 6 0 0 1-6 6h-8M42 80h-8a6 6 0 0 1-6-6v-8"/><circle cx="48" cy="50" r="13" stroke-opacity=".55"/></g><circle cx="58" cy="58" r="13" fill="#fff"/><circle cx="58" cy="58" r="5" fill="#2563EB"/><circle cx="72" cy="38" r="4" fill="#BEF264"/></svg></div><div><h1>施工前後カメラ</h1><p>同じ角度で、施工前と施工後を撮影</p></div></header>
  <main class="wrap">
   <button class="newjob" id="hNew"><span class="ni"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="nt"><b>新しい現場を始める</b><small>まず施工前の写真を撮ります</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+  <button class="bkwarn" id="bkWarn" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><span id="bkWarnT">まだバックアップがありません</span><u>今すぐ作る</u></button>
   <div class="hsearch"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hSearch" type="search" placeholder="お客様名・場所・メモ・日付で探す" enterkeyhint="search" autocomplete="off" aria-label="現場を探す"><button id="hSearchX" hidden aria-label="検索をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="tabs" role="tablist"><button id="tabW" class="on" role="tab"><span class="dot wait"></span>施工後待ち<b id="nW">0</b></button><button id="tabD" role="tab"><span class="dot done"></span>完了<b id="nD">0</b></button></div>
   <div class="list" id="lWait"></div><div class="list" id="lDone" hidden></div>
   <div id="lHit" hidden><p class="hithead" id="hitHead"></p><div class="list" id="hitList"></div></div>
+  <section class="bkcard" id="bkCard" hidden>
+   <div class="bkhd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9H7z"/><path d="m9 13 3-3 3 3M12 10v7"/></svg>データのバックアップ</div>
+   <p class="bkst" id="bkSt"></p>
+   <p class="bkhint">機種変更や故障に備えて、すべての現場と写真(候補・撮ったままの写真を含む)を1つのファイルに保存します。Googleドライブに保存しておくと、新しいスマホで「バックアップから戻す」で引き継げます。</p>
+   <div class="bkbtns"><button class="bkmain" id="bkMake">バックアップを作る</button><button id="bkLoad">バックアップから戻す</button></div>
+  </section>
   <p class="note"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>写真はこのスマホのブラウザの中に保存されます(ネットには上がりません)。ブラウザのデータを消すと写真も消えるので、大事な写真は「保存」でスマホにも残してください。</span></p>
  </main>
 </div>
@@ -775,6 +809,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 
 <div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" enterkeyhint="done" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
+<div class="bkov" id="bkOv" hidden role="status"><div class="bkbox"><span class="sp"></span><b id="bkT"></b><span class="bkp" id="bkP"></span><span class="bknote">終わるまでアプリを閉じないでください</span></div></div>
+<div class="bkov" id="bkDlg" hidden role="dialog" aria-modal="true"><div class="bkbox bkdlg"><b id="bkDT"></b><div class="bkbody" id="bkDB"></div><div class="bkbtns"><button id="bkDNo"></button><button class="bkmain" id="bkDYes"></button></div></div></div>
 <div class="waitnote" id="busy" hidden role="status"><span class="sp"></span>保存中…</div>
 <div class="adj" id="adjEd" hidden>
  <div class="adjhd"><b>写真の位置・大きさを調整</b><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
@@ -1100,13 +1136,113 @@ async function showHome(){
  $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">施工後待ちの現場はありません</p>';
  $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">完了した現場はまだありません</p>';
  $("nW").textContent=w.length;$("nD").textContent=d.length;showTab();hSelShow();
- homeJobs=new Map(js.map(j=>[j.id,j]));hFilter();
+ homeJobs=new Map(js.map(j=>[j.id,j]));hFilter();bkShow();
  window.scrollTo(0,0);
  // sites from before thumbnails existed get theirs once, one by one, filled in as they come
  (async()=>{for(const j of js){if((j.before&&!j.thB)||(j.after&&!j.thA)){if($("home").hidden)return;
   await ensureThumbs(j);
   document.querySelectorAll('[data-job="'+j.id+'"]').forEach(card=>card.querySelectorAll("img[data-th]").forEach(im=>{const t=im.dataset.th==="b"?j.thB:j.thA;if(t)im.src=t;}));}}})();
 }
+/* ---------- バックアップ・戻す ---------- */
+// すべての現場と、その写真(候補・撮ったままの写真を含む)を1つのファイルに。作るのも、確かめるのも、
+// 戻すのもスマホ側(Backup.java):書いたファイルはその場で読み直して全部確かめ、戻す前にも全部確かめる。
+// 戻すとき、今あるものは消さない(同じ現場は新しいほうを残す)。
+const bkWait=new Map();let bkSeq=0, bkBusy=false;
+window.onAppBackup=(req,json)=>{const w=bkWait.get(req);if(!w)return;let o={};try{o=JSON.parse(json);}catch(e){}
+ if("ok" in o){bkWait.delete(req);w.done(o);}else if(w.step)w.step(o);};
+function bkCall(method,args,step){return new Promise(done=>{const req="b"+(++bkSeq);bkWait.set(req,{done,step});
+ try{window.AndroidApp[method](req,...args);}catch(e){bkWait.delete(req);done({ok:false,error:String(e)});}});}
+function bkProg(title,o){$("bkOv").hidden=false;$("bkT").textContent=title;
+ $("bkP").textContent=o&&o.total?(o.stage==="check"?"確かめています ":o.stage==="restore"?"戻しています ":"書き出しています ")+o.done+" / "+o.total:"";}
+function bkProgEnd(){$("bkOv").hidden=true;}
+// a small window: title, body (html), buttons; resolves true for the main button
+function bkDialog(title,html,yes,no){return new Promise(res=>{$("bkDT").textContent=title;$("bkDB").innerHTML=html;
+ setTx("bkDYes",yes);$("bkDNo").hidden=!no;if(no)setTx("bkDNo",no);$("bkDlg").querySelector(".bkdlg").classList.toggle("one",!no);
+ $("bkDlg").hidden=false;const end=v=>{$("bkDlg").hidden=true;$("bkDYes").onclick=$("bkDNo").onclick=null;bkDlgEnd=null;res(v);};
+ bkDlgEnd=()=>end(false);$("bkDYes").onclick=()=>end(true);$("bkDNo").onclick=()=>end(false);});}
+let bkDlgEnd=null;
+const bkMB=b=>b>=1e9?(b/1e9).toFixed(1)+"GB":Math.max(1,Math.round(b/1e6))+"MB";
+function bkErr(o){const e=String(o.error||"");
+ if(/space/.test(e))return "スマホの空き容量が足りません。不要な写真やアプリを消して、空きを増やしてからもう一度お試しください。";
+ if(/memory/.test(e))return "スマホのメモリが足りませんでした。ほかのアプリを閉じて、もう一度お試しください。";
+ if(/newer version/.test(e))return "新しいバージョンのアプリで作られたバックアップです。アプリを最新にしてから戻してください。";
+ if(/not a backup/.test(e))return "このアプリのバックアップファイルではありません。「施工前後カメラ_バックアップ_…」という名前のファイルを選んでください。";
+ if(/broken|size differs|missing in the file|counts differ|not listed|unexpected/.test(e))return "このバックアップファイルは壊れています(途中までしか保存されていない可能性があります)。別のバックアップファイルを選んでください。";
+ if(/missing photos/.test(e))return "一部の写真がスマホの中に見つかりませんでした。";
+ return "うまくいきませんでした。もう一度お試しください。("+esc(e)+")";}
+// the settings this page keeps (the phone's own settings are added by the app)
+function bkSettings(){const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^ba-/.test(k))o[k]=localStorage.getItem(k);}}catch(e){}return JSON.stringify(o);}
+const bkPairs=j=>{const r=j.raw||{}, rn=j.rawNid||{};return [[j.before,"beforeNid",j],[j.after,"afterNid",j],[r.b,"b",rn],[r.a,"a",rn],...(j.extras||[]).map(x=>[x.blob,"nid",x]),...candsOf(j).flatMap(c=>[[c.blob,"nid",c],[c.raw,"rawNid",c]])];};
+// every site handed to the phone with a kept copy of every photo; returns the photo ids, or throws
+async function bkPrepare(){
+ await mirrorQ;await mirrorOld();await mirrorQ;
+ const js=(await allJobsSafe())||[];
+ for(const j of js){let changed=false;
+  if(j.rawNid===undefined&&j.raw)j.rawNid={};
+  for(const [blob,key,o] of bkPairs(j)){if(!o)continue;const id=o[key];
+   if(id&&!window.AndroidApp.hasPhoto(id)&&blob){try{const nid=window.AndroidApp.putPhoto(await b64Of(blob));if(nid){o[key]=nid;changed=true;}}catch(e){}}}
+  if(changed){await putJobDB(j);if(job&&job.id===j.id)Object.assign(job,{beforeNid:j.beforeNid,afterNid:j.afterNid,rawNid:j.rawNid});}
+  mirror(j);} // copies any photo the phone doesn't have yet (without changing when the site was last changed)
+ await mirrorQ;
+ const pj=phoneJobs();if(!pj||pj.bad)throw new Error("一部の現場の情報が読めません");
+ const on=new Set(pj.map(j=>j.id)), lost=js.filter(j=>!on.has(j.id));if(lost.length)throw new Error(lost.length+"件の現場をスマホに渡せませんでした");
+ // a photo already gone from the phone (and not in the page either) can't be saved any more: the rest
+ // is saved and the person is told, rather than no backup ever being made
+ const all=[...new Set(pj.flatMap(nidsOf))], ids=all.filter(id=>window.AndroidApp.hasPhoto(id));
+ return {ids,jobs:pj.length,missing:all.length-ids.length};
+}
+async function bkMake(){
+ if(bkBusy||!NJ()||!window.AndroidApp.backupCreate)return;bkBusy=true;
+ try{
+  bkProg("バックアップの準備をしています…");
+  let prep;try{prep=await bkPrepare();}catch(e){bkProgEnd();await bkDialog("バックアップを作れませんでした",esc(e.message)+"<br>アプリを一度閉じて開き直してから、もう一度お試しください。","閉じる");return;}
+  bkProgEnd();
+  const d=new Date(), p2=n=>String(n).padStart(2,"0"), name="施工前後カメラ_バックアップ_"+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+"_"+p2(d.getHours())+p2(d.getMinutes())+".zip";
+  // the phone asks where to save (e.g. Google Drive); the file is then written and read back
+  const o=await bkCall("backupCreate",[JSON.stringify(prep.ids),bkSettings(),name],st=>bkProg(st.stage==="check"?"保存したファイルを確かめています…":"バックアップを作っています…",st));
+  bkProgEnd();bkShow();
+  if(o.canceled)return;
+  if(o.ok)await bkDialog("バックアップを保存しました","<b>現場 "+o.jobs+"件・写真 "+o.photos+"枚</b>(約"+bkMB(o.bytes)+")<br>保存したファイルを読み直して、すべて正しく読めることを確かめました。"+(o.name?"<br><small>ファイル名:"+esc(o.name)+"</small>":"")+""+(prep.missing?"<br><b style='color:#B54708'>"+prep.missing+"枚の写真は、スマホの中にもう無いため入っていません。</b>":"")+"<ul><li>新しいスマホでは、このアプリを入れて「バックアップから戻す」でこのファイルを選びます。</li><li>スマホが壊れたときに備えて、Googleドライブなどスマホの外に保存しておくと安心です。</li></ul>","OK");
+  else await bkDialog("バックアップを作れませんでした",bkErr(o)+"<br><small>途中までのファイルは残していません。</small>","閉じる");
+ }finally{bkBusy=false;bkProgEnd();}
+}
+async function bkLoad(){
+ if(bkBusy||!NJ()||!window.AndroidApp.restorePick)return;bkBusy=true;
+ try{
+  // 1) choose the file; it is read through and checked before anything is put back
+  const c=await bkCall("restorePick",[],st=>bkProg("バックアップファイルを確かめています…",st));
+  bkProgEnd();
+  if(c.canceled)return;
+  if(!c.ok){await bkDialog("このファイルからは戻せません",bkErr(c),"閉じる");return;}
+  const go=await bkDialog("このバックアップを戻しますか?",
+   "<b>"+fmtDT(c.createdAt)+" に作ったバックアップ</b><br>現場 "+c.jobs+"件・写真 "+c.photos+"枚(約"+bkMB(c.bytes)+")<br><small>ファイルは最後まで読んで、壊れていないことを確かめました。</small><ul><li>今このスマホにある現場や写真は消えません。</li><li>同じ現場がある場合は、新しいほうを残します。</li></ul>","戻す","やめる");
+  if(!go)return;
+  // 2) put back
+  bkProg("バックアップから戻しています…");
+  const r=await bkCall("restoreApply",[],st=>bkProg("バックアップから戻しています…",st));
+  if(!r.ok){bkProgEnd();await bkDialog("戻せませんでした",bkErr(r)+"<br><small>今あるデータは消えていません。</small>","閉じる");return;}
+  // the page's own settings: only those not set here
+  try{const st=JSON.parse(r.settings||"{}");for(const k in st)if(/^ba-/.test(k)&&localStorage.getItem(k)==null)localStorage.setItem(k,st[k]);}catch(e){}
+  // sites deleted earlier in this session but put back now must show again
+  (r.ids||[]).forEach(id=>goneIds.delete(id));
+  bkProg("現場の一覧を作り直しています…");
+  await restoreJobs();await showHome();bkProgEnd();
+  await bkDialog("バックアップから戻しました","追加した現場 <b>"+r.added+"件</b>"+(r.updated?"・新しくした現場 <b>"+r.updated+"件</b>":"")+(r.kept?"<br><small>このスマホに同じか新しい内容があるので、そのままにした現場:"+r.kept+"件</small>":"")+"<br>写真 "+(r.photosWritten+r.photosThere)+"枚"+(r.photosThere?"(うち "+r.photosThere+"枚はもともとありました)":""),"OK");
+ }finally{bkBusy=false;bkProgEnd();}
+}
+// the card at the bottom of the list, and a warning at the top when there is no recent backup
+function bkShow(){
+ const app=NJ()&&!!window.AndroidApp.backupCreate;$("bkCard").hidden=!app;
+ let rec=null;try{rec=JSON.parse(getPref("ba-lastbackup")||"null");}catch(e){}
+ const n=homeJobs.size, changed=rec&&[...homeJobs.values()].some(j=>(j.upd||0)>rec.at);
+ const st=$("bkSt");st.classList.toggle("none",!rec);
+ st.innerHTML=rec?"最終バックアップ:"+fmtDT(rec.at)+"<small>現場 "+rec.jobs+"件・写真 "+rec.photos+"枚"+(changed?"・そのあと変更があります":"")+"</small>":"まだバックアップがありません";
+ const old=rec&&Date.now()-rec.at>7*864e5;
+ $("bkWarn").hidden=!app||!n||(rec&&!old);
+ $("bkWarnT").textContent=rec?"最後のバックアップから7日以上たっています":"まだバックアップがありません";
+}
+$("bkMake").onclick=bkMake;$("bkWarn").onclick=bkMake;$("bkLoad").onclick=bkLoad;
+
 /* ---------- 現場を探す ---------- */
 // お客様名・場所・メモの文字、または日付(施工前・施工後の日。年・月・日のどれでも)で絞り込む。
 // 1文字ごとにその場で絞り込む。スペースで区切ると「全部に当てはまる」現場。
@@ -3233,6 +3369,8 @@ $("svA").onclick=async()=>{if(job.after){keepUri(job,"savedA",await saveBlob(job
 /* ---------- Android app hooks ---------- */
 // Back button: close the camera, then go back to the site list. Returns true when handled.
 window.appBack=()=>{
+ if(!$("bkOv").hidden)return true; // making / putting back a backup: wait for it
+ if(!$("bkDlg").hidden){if(bkDlgEnd)bkDlgEnd();return true;}
  if(!$("cand").hidden){if(cd&&cd.pick)cdSelEnd();else candClose();return true;}
  if(!$("tfs").hidden){tfsClose(false);return true;}
  if(!$("lvEd").hidden){if(!lvBusy)lvClose();return true;}
