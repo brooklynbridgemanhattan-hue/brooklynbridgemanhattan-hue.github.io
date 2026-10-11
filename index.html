@@ -254,6 +254,9 @@ label.btn{cursor:pointer}
 .cmpsave .tx2{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3}
 .cmpsave b{font-size:19px;font-weight:800}
 .cmpsave small{font-size:14px;font-weight:600;opacity:.92}
+.cmpshare{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:52px;margin-top:10px;padding:8px 16px;border-radius:14px;background:#fff;color:#6741D9;border:2px solid #B197FC;font-size:17px;font-weight:800}
+.cmpshare svg.i{width:22px;height:22px}
+.cmpshare small{font-size:13px;font-weight:600;color:#7950F2}
 .labbox{margin-top:10px;padding:4px;background:var(--fill);border-radius:16px}
 .switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:50px;padding:0 10px 0 12px;font-size:16px;font-weight:700;cursor:pointer}
 .labseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:2px}
@@ -786,6 +789,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <label class="chk" id="labDateRow" for="cDate"><input type="checkbox" id="cDate" checked><i><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></i><span>文字の横に日付を入れる</span><span class="ex" id="dateEx">2026.10.05</span></label>
   </div>
   <button class="cmpsave" id="bSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
+  <button class="cmpshare" id="bShare"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg><span>比較写真を送る <small>LINE・メールなど</small></span></button>
  </section>
 
  <section class="card c-extra">
@@ -3367,6 +3371,23 @@ async function saveBlob(blob,kind,t,tag){
 }
 $("bSave").onclick=async()=>{buzz(30);await makeDone;if(!imgs.b)return;keepUri(job,"savedC",await saveBlob(await fullBlob(),"施工前後",Date.now()));
  if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();await saveJob();showNext();}};
+// 送る: the comparison photo goes straight to LINE, mail … through the phone's share menu.
+// list = [{blob,name}]
+async function shareFiles(list,title){
+ const ng=()=>toast("送れませんでした。もう一度お試しください。",true);
+ if(window.AndroidApp&&window.AndroidApp.shareFiles){
+  try{const arr=[];for(const f of list)arr.push({b64:await b64Of(f.blob),name:f.name,type:f.blob.type||"image/jpeg"});
+   if(!okR(String(window.AndroidApp.shareFiles(JSON.stringify(arr),title))))ng();}catch(e){ng();}
+  return;
+ }
+ const files=list.map(f=>new File([f.blob],f.name,{type:f.blob.type||"image/jpeg"}));
+ if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share({files});}catch(e){if(!(e&&e.name==="AbortError"))ng();}return;}
+ toast("この端末ではここから送れません。保存してから送ってください。",true);
+}
+let shareBusy=false;
+$("bShare").onclick=async()=>{if(shareBusy)return;shareBusy=true;buzz(30);
+ try{await makeDone;if(!imgs.b)return;await shareFiles([{blob:await fullBlob(),name:photoName("施工前後",Date.now())}],"比較写真を送る");}
+ finally{shareBusy=false;}};
 $("svB").onclick=async()=>{if(job.before){keepUri(job,"savedB",await saveBlob(job.before,"施工前",job.beforeAt));saveJob();}};
 $("svA").onclick=async()=>{if(job.after){keepUri(job,"savedA",await saveBlob(job.after,"施工後",job.afterAt));saveJob();}};
 
