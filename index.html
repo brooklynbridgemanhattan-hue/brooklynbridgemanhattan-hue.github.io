@@ -106,6 +106,7 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .list{display:flex;flex-direction:column;gap:10px}
 .job{display:flex;align-items:center;gap:14px;width:100%;padding:12px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);text-align:left;color:var(--ink)}
 .jimg{display:flex;flex:none}
+.jspot{display:inline-block;margin-right:6px;padding:0 7px;border-radius:8px;background:#EDF2FF;color:#3B5BDB;font-weight:800;font-size:12px;line-height:20px}
 .jimg img{width:56px;height:70px;object-fit:cover;background:#E4E7EC;border:2px solid var(--card)}
 .job{content-visibility:auto;contain-intrinsic-size:auto 98px}
 .jimg img:first-child{border-radius:12px 0 0 12px}
@@ -141,6 +142,22 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .dwrap{padding-top:4px;padding-bottom:130px}
 /* where you are: 施工前 -> 施工後 -> 比較写真 */
 .steps{display:flex;align-items:center;gap:6px;list-style:none;margin:0 0 14px;padding:0}
+/* 複数か所: the places of this site, side by side (scrolls sideways when many) */
+.spots{display:flex;gap:8px;margin:0 -16px 12px;padding:2px 16px 4px;overflow-x:auto;scrollbar-width:none}
+.spots::-webkit-scrollbar{display:none}
+.spb{flex:none;display:flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 8px;border-radius:999px;background:var(--card);color:#475467;font-size:15px;font-weight:700;box-shadow:inset 0 0 0 1.5px #D0D5DD}
+.spb i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--fill)}
+.spb.on{background:#3B5BDB;color:#fff;box-shadow:0 4px 12px rgba(59,91,219,.3)}
+.spb.on i{background:rgba(255,255,255,.25)}
+.spb .ok{width:18px;height:18px;stroke:#12B886;stroke-width:3;fill:none}
+.spb.on .ok{stroke:#B2F2BB}
+.spb .ed{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;opacity:.85}
+.spadd{flex:none;display:flex;align-items:center;gap:4px;height:44px;padding:0 14px;border-radius:999px;background:#EDF2FF;color:#3B5BDB;font-size:15px;font-weight:800;border:1.5px dashed #91A7FF}
+.spadd svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none}
+.spnm{width:100%;height:48px;margin:8px 0 10px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
+.sppre{display:flex;flex-wrap:wrap;gap:8px}
+.sppre button{height:38px;padding:0 12px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:700}
+.spdel{display:block;width:100%;margin-top:14px;height:44px;border-radius:12px;color:#E03131;font-size:15px;font-weight:800;box-shadow:inset 0 0 0 1.5px #FFC9C9;background:#FFF5F5}
 .steps li{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border-radius:999px;background:var(--card);color:#98A2B3;font-size:15px;font-weight:700;box-shadow:inset 0 0 0 1.5px var(--line)}
 .steps li i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--fill)}
 .steps li.done{color:var(--ok);box-shadow:inset 0 0 0 1.5px #B7E4C0;background:var(--ok-soft)}
@@ -745,6 +762,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>メモ(任意)</span><input class="t" id="memo" type="text" enterkeyhint="done" placeholder="例:旧機種 → 新機種"></label>
  </section>
 
+ <div class="spots" id="spotBar"></div>
  <ol class="steps" id="steps"><li data-s="b"><i>1</i>施工前</li><li data-s="a"><i>2</i>施工後</li><li data-s="c"><i>3</i>比較写真</li></ol>
 
  <section class="card c-shot">
@@ -1050,8 +1068,10 @@ async function ensureThumbs(j){
  try{for(const k of ["b","a"]){const b=k==="b"?j.before:j.after, K=k==="b"?"thB":"thA";
   if(!b){if(j[K]){j[K]=null;j[K+"k"]=null;changed=true;}continue;}
   const key=thKey(j,k);if(j[K]&&j[K+"k"]===key)continue;
-  try{j[K]=await thumbOf(b);j[K+"k"]=key;changed=true;}catch(e){}}
-  if(changed){if(job&&job!==j&&job.id===j.id){["thB","thBk","thA","thAk"].forEach(x=>job[x]=j[x]);j=job;}await putJobDB(j);mirror(j);}
+  try{const t=await thumbOf(b);if((k==="b"?j.before:j.after)!==b)continue; // another place opened meanwhile
+   j[K]=t;j[K+"k"]=key;changed=true;}catch(e){}}
+  if(changed){if(job&&job!==j&&job.id===j.id){if(spotList(job)||spotList(j))return changed; // several places: made again when next put
+   ["thB","thBk","thA","thAk"].forEach(x=>job[x]=j[x]);j=job;}await putJobDB(j);mirror(j);}
  }finally{thBusy.delete(j.id);}
  return changed;
 }
@@ -1067,11 +1087,13 @@ function mirror(j){if(NJ()&&j&&!goneIds.has(j.id))mirrorQ=mirrorQ.then(()=>mirro
 async function mirrorJob(j){
  const put=async b=>{try{return b&&window.AndroidApp.putPhoto?(window.AndroidApp.putPhoto(await b64Of(b))||null):null;}catch(e){return null;}};
  // the photo may be replaced while it is being copied: keep the id only for the photo it belongs to
- if(j.before&&!j.beforeNid){const b=j.before, id=await put(b);if(j.before===b&&!j.beforeNid)j.beforeNid=id;}
- if(j.after&&!j.afterNid){const b=j.after, id=await put(b);if(j.after===b&&!j.afterNid)j.afterNid=id;}
- if(j.raw){j.rawNid=j.rawNid||{};for(const k of ["b","a"]){const r=j.raw[k];if(r&&!j.rawNid[k]){const cur=k==="b"?j.before:j.after, id=r===cur?(k==="b"?j.beforeNid:j.afterNid):await put(r);if(j.raw[k]===r&&!j.rawNid[k])j.rawNid[k]=id;}}}
+ for(const p of pairsOf(j)){
+  if(p.before&&!p.beforeNid){const b=p.before, id=await put(b);if(p.before===b&&!p.beforeNid)p.beforeNid=id;}
+  if(p.after&&!p.afterNid){const b=p.after, id=await put(b);if(p.after===b&&!p.afterNid)p.afterNid=id;}
+  if(p.raw){p.rawNid=p.rawNid||{};for(const k of ["b","a"]){const r=p.raw[k];if(r&&!p.rawNid[k]){const cur=k==="b"?p.before:p.after, id=r===cur?(k==="b"?p.beforeNid:p.afterNid):await put(r);if(p.raw[k]===r&&!p.rawNid[k])p.rawNid[k]=id;}}}
+  for(const c of candsOf(p)){if(c.blob&&!c.nid)c.nid=await put(c.blob);if(c.raw&&!c.rawNid)c.rawNid=c.raw===c.blob?c.nid:await put(c.raw);}
+ }
  for(const x of j.extras||[])if(x.blob&&!x.nid)x.nid=await put(x.blob);
- for(const c of candsOf(j)){if(c.blob&&!c.nid)c.nid=await put(c.blob);if(c.raw&&!c.rawNid)c.rawNid=c.raw===c.blob?c.nid:await put(c.raw);}
  if(goneIds.has(j.id))return;
  window.AndroidApp.saveJobData(j.id,JSON.stringify(j,(k,v)=>v instanceof Blob?undefined:v));
 }
@@ -1086,13 +1108,15 @@ async function restoreJobs(){
  for(const j of list){
   const cur=have.get(j.id);
   if(cur){if((cur.upd||0)>=(j.upd||0))continue;}
-  j.before=await file(j.beforeNid);j.after=await file(j.afterNid);
-  const rn=j.rawNid||{};j.raw={b:rn.b?(rn.b===j.beforeNid?j.before:await file(rn.b)):null,a:rn.a?(rn.a===j.afterNid?j.after:await file(rn.a)):null};
+  for(const p of pairsOf(j)){
+   p.before=await file(p.beforeNid);p.after=await file(p.afterNid);
+   const rn=p.rawNid||{};p.raw={b:rn.b?(rn.b===p.beforeNid?p.before:await file(rn.b)):null,a:rn.a?(rn.a===p.afterNid?p.after:await file(rn.a)):null};
+   if(p.cand)for(const k of ["b","a"]){const L=p.cand[k]||[];
+    for(const c of L){c.blob=await file(c.nid);c.raw=c.rawNid?(c.rawNid===c.nid?c.blob:await file(c.rawNid)):null;}
+    p.cand[k]=L.filter(c=>c.blob);}
+  }
   for(const x of j.extras||[])x.blob=await file(x.nid);
   j.extras=(j.extras||[]).filter(x=>x.blob);
-  if(j.cand)for(const k of ["b","a"]){const L=j.cand[k]||[];
-   for(const c of L){c.blob=await file(c.nid);c.raw=c.rawNid?(c.rawNid===c.nid?c.blob:await file(c.rawNid)):null;}
-   j.cand[k]=L.filter(c=>c.blob);}
   await putJobDB(j);
  }
 }
@@ -1108,7 +1132,17 @@ let MEM=[];
 /* App: the phone keeps its own copy of each photo (for fast saving). Copies no site uses any
    more are removed: at once when a photo / site is deleted or retaken, and on start-up for
    anything left over that is over a day old. Unsure what is in use = remove nothing. */
-const nidsOf=j=>{if(!j)return [];const r=j.rawNid||{};return [j.beforeNid,j.afterNid,r.b,r.a,...(j.extras||[]).map(x=>x.nid),...candsOf(j).flatMap(c=>[c.nid,c.rawNid])].filter(Boolean);};
+/* 複数か所: a site can have several places (キッチン, 浴室 …), each with its own 施工前・施工後.
+   The open place's photos are on the site itself, as before (so a one-place site is unchanged);
+   the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}]. */
+const PAIR_KEYS=["before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","raw","rawNid","cand","mask","tone","lvBg","rot","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
+const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
+const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
+const jobDone=j=>pairsOf(j).every(p=>!!p.after);
+const spotIdx=j=>{const L=spotList(j);return L?Math.max(0,L.findIndex(s=>s.live)):0;};
+const spotName=(j,i)=>{const L=spotList(j), x=L&&L[i];return (x&&x.name)||(i+1)+"か所目";};
+const pairNids=p=>{const r=p.rawNid||{};return [p.beforeNid,p.afterNid,r.b,r.a,...candsOf(p).flatMap(c=>[c.nid,c.rawNid])];};
+const nidsOf=j=>{if(!j)return [];return [...pairsOf(j).flatMap(pairNids),...(j.extras||[]).map(x=>x.nid)].filter(Boolean);};
 const candsOf=j=>j&&j.cand?[...(j.cand.b||[]),...(j.cand.a||[])]:[];
 function allJobsSafe(){return new Promise(res=>{if(!IDB)return res(null);try{const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);}catch(e){res(null);}});}
 async function photoGC(drop){
@@ -1133,17 +1167,19 @@ async function showHome(){
  document.querySelectorAll(".hint").forEach(x=>x.remove());
  $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
- const card=j=>'<button class="job'+(j.after?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(j.before?'<img'+(j.thB?' src="'+j.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(j.after?'<img'+(j.thA?' src="'+j.thA+'"':'')+' data-th="a" alt="" decoding="async">':'')+'</span>'+
+ // several places: the first place's photos, and how many places are done
+ const spotsTx=j=>{const P=pairsOf(j), n=P.filter(p=>p.after).length;return '<span class="jspot">'+P.length+'か所</span>'+(n===P.length?'すべて施工後済み':'施工後 '+n+' / '+P.length+'か所');};
+ const card=j=>{const p=pairsOf(j)[0];return '<button class="job'+(jobDone(j)?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'')+'</span>'+
   '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
-  '<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div></div>'+CHEV_SVG+'</button>';
- const w=js.filter(j=>!j.after), d=js.filter(j=>j.after);
+  '<div class="jd">'+(pairsOf(j).length>1?spotsTx(j):'施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):''))+'</div></div>'+CHEV_SVG+'</button>';};
+ const w=js.filter(j=>!jobDone(j)), d=js.filter(jobDone);
  $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">施工後待ちの現場はありません</p>';
  $("lDone").innerHTML=d.length?d.map(card).join(""):'<p class="empty">完了した現場はまだありません</p>';
  $("nW").textContent=w.length;$("nD").textContent=d.length;showTab();hSelShow();
  homeJobs=new Map(js.map(j=>[j.id,j]));hFilter();bkShow();
  window.scrollTo(0,0);
  // sites from before thumbnails existed get theirs once, one by one, filled in as they come
- (async()=>{for(const j of js){if((j.before&&!j.thB)||(j.after&&!j.thA)){if($("home").hidden)return;
+ (async()=>{for(const j of js){if(!spotList(j)&&((j.before&&!j.thB)||(j.after&&!j.thA))){if($("home").hidden)return;
   await ensureThumbs(j);
   document.querySelectorAll('[data-job="'+j.id+'"]').forEach(card=>card.querySelectorAll("img[data-th]").forEach(im=>{const t=im.dataset.th==="b"?j.thB:j.thA;if(t)im.src=t;}));}}})();
 }
@@ -1176,13 +1212,13 @@ function bkErr(o){const e=String(o.error||"");
  return "うまくいきませんでした。もう一度お試しください。("+esc(e)+")";}
 // the settings this page keeps (the phone's own settings are added by the app)
 function bkSettings(){const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^ba-/.test(k))o[k]=localStorage.getItem(k);}}catch(e){}return JSON.stringify(o);}
-const bkPairs=j=>{const r=j.raw||{}, rn=j.rawNid||{};return [[j.before,"beforeNid",j],[j.after,"afterNid",j],[r.b,"b",rn],[r.a,"a",rn],...(j.extras||[]).map(x=>[x.blob,"nid",x]),...candsOf(j).flatMap(c=>[[c.blob,"nid",c],[c.raw,"rawNid",c]])];};
+const bkPairs=j=>[...pairsOf(j).flatMap(p=>{const r=p.raw||{}, rn=p.rawNid||{};return [[p.before,"beforeNid",p],[p.after,"afterNid",p],[r.b,"b",rn],[r.a,"a",rn],...candsOf(p).flatMap(c=>[[c.blob,"nid",c],[c.raw,"rawNid",c]])];}),...(j.extras||[]).map(x=>[x.blob,"nid",x])];
 // every site handed to the phone with a kept copy of every photo; returns the photo ids, or throws
 async function bkPrepare(){
  await mirrorQ;await mirrorOld();await mirrorQ;
  const js=(await allJobsSafe())||[];
  for(const j of js){let changed=false;
-  if(j.rawNid===undefined&&j.raw)j.rawNid={};
+  for(const p of pairsOf(j))if(p.rawNid===undefined&&p.raw)p.rawNid={};
   for(const [blob,key,o] of bkPairs(j)){if(!o)continue;const id=o[key];
    if(id&&!window.AndroidApp.hasPhoto(id)&&blob){try{const nid=window.AndroidApp.putPhoto(await b64Of(blob));if(nid){o[key]=nid;changed=true;}}catch(e){}}}
   if(changed){await putJobDB(j);if(job&&job.id===j.id)Object.assign(job,{beforeNid:j.beforeNid,afterNid:j.afterNid,rawNid:j.rawNid});}
@@ -1252,10 +1288,10 @@ $("bkMake").onclick=bkMake;$("bkWarn").onclick=bkMake;$("bkLoad").onclick=bkLoad
 // 1文字ごとにその場で絞り込む。スペースで区切ると「全部に当てはまる」現場。
 let homeJobs=new Map();
 const z2h=t=>String(t||"").replace(/[０-９Ａ-Ｚａ-ｚ／－．]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/　/g," ");
-function jobDays(j){const t=[j.beforeAt,j.afterAt].filter(Boolean);if(!t.length&&j.created)t.push(j.created);return t.map(x=>new Date(x));}
+function jobDays(j){const t=pairsOf(j).flatMap(p=>[p.beforeAt,p.afterAt]).filter(Boolean);if(!t.length&&j.created)t.push(j.created);return t.map(x=>new Date(x));}
 // one word: true when the site has it in its text, or on one of its dates
 function hitWord(j,w){
- const text=z2h(custName(j)+" "+((j.place&&j.place.text)||"")+" "+(j.memo||"")).toLowerCase();
+ const text=z2h(custName(j)+" "+((j.place&&j.place.text)||"")+" "+(j.memo||"")+" "+(spotList(j)||[]).map(x=>x.name||"").join(" ")).toLowerCase();
  if(text.includes(w))return true;
  const ds=jobDays(j), on=f=>ds.some(f);let m;
  if((m=w.match(/^(\d{4})年?$/)))return on(d=>d.getFullYear()==m[1]);
@@ -1278,8 +1314,8 @@ function hFilter(){
  const L=$("hitList");L.innerHTML="";
  hits.forEach(j=>{const src=document.querySelector('#lWait [data-job="'+j.id+'"],#lDone [data-job="'+j.id+'"]');if(!src)return;
   const c=src.cloneNode(true);c.classList.remove("on");const st=document.createElement("span");
-  st.className="jstat "+(j.after?"d":"w");st.textContent=j.after?"完了":"施工後待ち";c.querySelector(".jbody").prepend(st);L.appendChild(c);});
- const nw=hits.filter(j=>!j.after).length, nd=hits.length-nw;
+  st.className="jstat "+(jobDone(j)?"d":"w");st.textContent=jobDone(j)?"完了":"施工後待ち";c.querySelector(".jbody").prepend(st);L.appendChild(c);});
+ const nw=hits.filter(j=>!jobDone(j)).length, nd=hits.length-nw;
  $("hitHead").innerHTML=hits.length?'検索結果 <b>'+hits.length+'件</b>(施工後待ち '+nw+'・完了 '+nd+')':"";
  if(!hits.length){const e=document.createElement("p");e.className="empty hnohit";e.textContent="「"+raw+"」に当てはまる現場はありません";L.appendChild(e);}
 }
@@ -1363,7 +1399,7 @@ function refreshDetail(){
  $("sA").parentNode.classList.toggle("off",!job.before);
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
  $("lvB").hidden=!job.before;$("lvA").hidden=!job.after;
- showPlace();renderThumbs();$("dTitle").textContent=custName(job)||"現場の詳細";
+ showPlace();renderThumbs();spotShow();$("dTitle").textContent=custName(job)||"現場の詳細";
  $("bMask").disabled=!job.before;$("bMask").hidden=!job.before;setTx("bMask",job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)");
  const n=$("camNote");
  if(camFail){n.textContent="カメラを使う許可がないため、この画面の中では撮れません。ブラウザの設定でカメラを許可するか、下のボタンでスマホのカメラを使ってください(その場合、撮影中の色の判定は出ません)。";n.hidden=false;}
@@ -1397,13 +1433,79 @@ $("site").addEventListener("input",()=>{const n=bareName($("site").value);$("dTi
 const doneKey=e=>e.key==="Enter"&&!e.isComposing&&e.keyCode!==229;
 ["site","memo"].forEach(id=>$(id).addEventListener("keydown",e=>{if(doneKey(e)){e.preventDefault();$(id).blur();}}));
 $("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
-const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||job.before||job.after||(job.extras||[]).length);
+const hasPhotos=j=>pairsOf(j).some(p=>p.before||p.after);
+const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||hasPhotos(job)||(job.extras||[]).length||spotList(job));
 let typeT=0;["site","memo"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(typeT);typeT=setTimeout(()=>{if(worthKeeping())saveJob();},500);}));
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("detail").hidden&&worthKeeping()){clearTimeout(typeT);saveJob();}});
 // Photos just taken are still being put in (and saved): leave only once they are in, so none is
 // lost or lands in another site.
 let leaving=false;
-$("dBack").onclick=async()=>{if(leaving)return;leaving=true;try{await busyWait(camGot);if(job&&(job.before||job.site))await saveJob();await showHome();}finally{leaving=false;}};
+$("dBack").onclick=async()=>{if(leaving)return;leaving=true;try{await busyWait(camGot);if(job&&(hasPhotos(job)||job.site||spotList(job)))await saveJob();await showHome();}finally{leaving=false;}};
+/* ---------- 複数か所 ---------- */
+// The bar above 1-2-3: one button per place (tap = open it, tap the open one = name / delete) and ＋.
+const SPOT_PRE=["キッチン","浴室","トイレ","洗面所","リビング","玄関","外壁","屋根"];
+const OK_SVG='<svg class="ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
+let spotBusy=false, spotGen=0;
+function spotShow(){
+ const L=spotList(job), bar=$("spotBar");
+ const add='<button class="spadd" id="spotAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'+(L?'箇所を追加':'箇所を追加(キッチン・浴室など)')+'</button>';
+ bar.innerHTML=(L?L.map((x,i)=>{const p=x.live?job:x;return '<button class="spb'+(x.live?" on":"")+'" data-spot="'+i+'"><i>'+(i+1)+'</i>'+esc(spotName(job,i))+(p.after?OK_SVG:'')+(x.live?'<svg class="ed" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/></svg>':'')+'</button>';}).join(""):"")+add;
+ const on=bar.querySelector(".spb.on");if(on)on.scrollIntoView({block:"nearest",inline:"nearest"});
+}
+$("spotBar").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;
+ if(b.id==="spotAdd")spotAddAsk();else{const i=+b.dataset.spot;if(b.classList.contains("on"))spotEdit(i);else spotGo(i);}});
+// the open place's photos go into job.spots, and the chosen place's come out onto the site
+function spotSwap(j,i){const L=j.spots, cur=L.findIndex(x=>x.live), out={name:L[cur].name||""};
+ for(const k of PAIR_KEYS)if(k in j){out[k]=j[k];delete j[k];}
+ const x=L[i];for(const k of PAIR_KEYS)if(k in x)j[k]=x[k];
+ L[cur]=out;L[i]={name:x.name||"",live:true};spotGen++;}
+// waits for the photos just taken (and their saving) to land in the place they belong to
+async function spotGo(i){
+ if(spotBusy||!job)return false;const j=job, L=spotList(j);if(!L||!L[i]||L[i].live)return false;
+ spotBusy=true;
+ try{await busyWait(Promise.all([camGot,autoPend.b,autoPend.a,rawPend.b,rawPend.a]));
+  if(job!==j||!L[i]||L[i].live)return false;
+  spotSwap(j,i);await saveJob();
+  $("result").style.display="none";$("saveMsg").textContent="";refreshDetail();make();startGlow();
+  return true;
+ }finally{spotBusy=false;}
+}
+const spotForm=(v,note)=>'<input class="spnm" id="spotNm" maxlength="20" placeholder="例:キッチン" value="'+esc(v)+'"><div class="sppre">'+SPOT_PRE.map(n=>'<button type="button" data-pre="'+n+'">'+n+'</button>').join("")+'</div>'+(note||"");
+function spotFormWire(){document.querySelectorAll("#bkDB [data-pre]").forEach(b=>b.onclick=()=>{$("spotNm").value=b.dataset.pre;});}
+const spotNmVal=()=>String(($("spotNm")||{}).value||"").trim().slice(0,20);
+async function spotAddAsk(){
+ if(spotBusy||!job)return;
+ const first=!spotList(job);
+ const p=bkDialog("箇所を追加",spotForm("",first?'<p style="margin:12px 0 0">今の写真は「1か所目」になります(名前はあとで付けられます)。</p>':''),"追加する","やめる");
+ spotFormWire();if(!await p||!job)return;
+ const name=spotNmVal();
+ if(!job.spots||!job.spots.length)job.spots=[{name:"",live:true}];
+ job.spots.push({name});
+ if(!await spotGo(job.spots.length-1)){await saveJob();spotShow();}
+ // the bar just under the top bar, with the new place's empty photos below it
+ window.scrollTo({top:Math.max(0,$("spotBar").getBoundingClientRect().top+window.scrollY-$("detail").querySelector(".topbar").offsetHeight-10),behavior:"smooth"});
+}
+async function spotEdit(i){
+ if(spotBusy||!job)return;const L=spotList(job);if(!L)return;
+ const del=L.length>1?'<button type="button" class="spdel" id="spotDel">この箇所を削除</button>':'';
+ const p=bkDialog((i+1)+"か所目の名前",spotForm(L[i].name||"",del),"決定","やめる");
+ spotFormWire();let wantDel=false;
+ if($("spotDel"))$("spotDel").onclick=()=>{wantDel=true;if(bkDlgEnd)bkDlgEnd();};
+ const ok=await p;if(!job||spotList(job)!==L)return;
+ if(wantDel){await spotDel(i);return;}
+ if(ok){L[i].name=spotNmVal();await saveJob();spotShow();}
+}
+async function spotDel(i){
+ const L=spotList(job);if(!L||L.length<2||!L[i])return;
+ const x=L[i], P=x.live?job:x, n=[P.before,P.after].filter(Boolean).length;
+ if(!await bkDialog("「"+spotName(job,i)+"」を削除しますか?",n?'この箇所の写真('+n+'枚。候補の写真も含む)も削除します。スマホの写真に保存したものも消えます。':'この箇所には、まだ写真がありません。',"削除する","やめる"))return;
+ if(!job||job.spots!==L)return;
+ if(x.live&&!await spotGo(i>0?i-1:1))return; // open another place first (its entry is then L[i] again)
+ const y=L[i];if(!y||y.live||job.spots!==L)return;
+ const gone=pairNids(y).filter(Boolean), dn=dropFromPhone(pairUris(y));
+ L.splice(i,1);await saveJob();spotShow();photoGC(gone);
+ toast(dn?"箇所を削除しました(スマホの写真からも削除)":"箇所を削除しました");
+}
 $("bDel").onclick=async()=>{
  if(!delArm){delArm=true;setTx("bDel","もう一度押すと削除(スマホの写真からも消えます)");return;}
  await busyWait(camGot);if(!job)return;
@@ -3329,14 +3431,16 @@ window.addEventListener("resize",()=>{if(!$("viewer").hidden)vFit(false);});
 $("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(await fullBlob()));};
 
 function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
-function photoName(kind,t,tag){const site=custName(job).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40);return kind+"_"+(site?site+"_":"")+stamp(t)+(tag?"_"+tag:"")+".jpg";}
+function photoName(kind,t,tag){const site=custName(job).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40), sp=spotList(job)?spotName(job,spotIdx(job)).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,20):"";
+ return kind+"_"+(site?site+"_":"")+(sp?sp+"_":"")+stamp(t)+(tag?"_"+tag:"")+".jpg";}
 /* Saving answers "ok:<where it went in the phone's photos>". The app remembers it with the
    photo, so deleting the photo in the app also deletes it from the phone (Google Photos /
    the phone's photo app). Android lets the app delete what it saved itself without asking. */
 const okR=r=>typeof r==="string"&&(r==="ok"||r.startsWith("ok:"));
 const uriR=r=>okR(r)&&r.length>3?r.slice(3):null;
 function keepUri(o,key,r){const u=uriR(r);if(u&&o){(o[key]=o[key]||[]).push(u);}}
-function savedUris(j){if(!j)return [];return [...(j.savedB||[]),...(j.savedA||[]),...(j.savedC||[]),...(j.extras||[]).flatMap(x=>x.saved||[])];}
+const pairUris=p=>[...(p.savedB||[]),...(p.savedA||[]),...(p.savedC||[])];
+function savedUris(j){if(!j)return [];return [...pairsOf(j).flatMap(pairUris),...(j.extras||[]).flatMap(x=>x.saved||[])];}
 function dropFromPhone(uris){uris=(uris||[]).filter(Boolean);if(!uris.length||!window.AndroidApp||!window.AndroidApp.deleteFromGallery)return 0;
  try{return window.AndroidApp.deleteFromGallery(JSON.stringify(uris))|0;}catch(e){return 0;}}
 // App only: writes the photo into the phone's DCIM/Camera. Returns true when saved.
@@ -3369,7 +3473,9 @@ async function saveBlob(blob,kind,t,tag){
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
  saved(true,"保存しました");return "ok";
 }
-$("bSave").onclick=async()=>{buzz(30);await makeDone;if(!imgs.b)return;keepUri(job,"savedC",await saveBlob(await fullBlob(),"施工前後",Date.now()));
+$("bSave").onclick=async()=>{buzz(30);await makeDone;if(!imgs.b)return;const g=spotGen, r=await saveBlob(await fullBlob(),"施工前後",Date.now());
+ if(g!==spotGen)return; // another place was opened meanwhile
+ keepUri(job,"savedC",r);
  if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();await saveJob();showNext();}};
 // 送る: the comparison photo goes straight to LINE, mail … through the phone's share menu.
 // list = [{blob,name}]
