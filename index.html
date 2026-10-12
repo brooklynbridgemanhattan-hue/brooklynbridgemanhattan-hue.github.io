@@ -175,11 +175,16 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .rpxh b{flex:1;font-size:16px}
 .rpxh button{height:32px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:800;background:var(--fill);color:#344054}
 .rpxs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.rpxc{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#E4E7EC;opacity:.45;box-shadow:inset 0 0 0 2px #D0D5DD}
+.rpxc{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#E4E7EC;box-shadow:inset 0 0 0 2px #D0D5DD;cursor:pointer}
+.rpxc img{filter:grayscale(.7) brightness(.75)}
+.rpxc.on img{filter:none}
 .rpxc.on{opacity:1;box-shadow:0 0 0 3px #3B5BDB}
 .rpxc img{width:100%;height:100%;object-fit:cover;display:block}
 .rpxk{position:absolute;top:4px;right:4px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);color:#98A2B3;font-size:20px;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .rpxc.on .rpxk{background:#3B5BDB;color:#fff}
+.rpxk{display:grid;place-items:center;pointer-events:none}
+.rpxz{position:absolute;left:4px;bottom:4px;width:38px;height:38px;border-radius:50%;background:rgba(16,24,40,.72);display:grid;place-items:center}
+.rpxz svg{width:20px;height:20px;stroke:#fff;stroke-width:2.4;fill:none}
 .rpxcnt{margin:10px 0 0;font-size:15px;font-weight:800;color:#3B5BDB}
 .rpxv{position:fixed;inset:0;z-index:95;background:rgba(5,8,15,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
 .rpxv img{max-width:100%;max-height:70vh;border-radius:8px}
@@ -2313,8 +2318,8 @@ $("selDel").onclick=async()=>{
 // Full-screen gallery: kind "extra" = other photos (save / delete), "pair" = 施工前 / 施工後 (save).
 let gal=null, galDelArm=false;
 function galItems(kind){
- if(kind==="pair")return [job.before&&{blob:job.before,at:job.beforeAt,name:"施工前"},job.after&&{blob:job.after,at:job.afterAt,name:"施工後"}].filter(Boolean);
- return (job.extras||[]).map((x,i)=>({blob:x.blob,at:x.at,name:"写真"+(i+1)}));
+ if(kind==="pair")return [job.before&&{blob:job.before,at:job.beforeAt,name:"施工前",nid:job.beforeNid},job.after&&{blob:job.after,at:job.afterAt,name:"施工後",nid:job.afterNid}].filter(Boolean);
+ return (job.extras||[]).map((x,i)=>({blob:x.blob,at:x.at,name:"写真"+(i+1),nid:x.nid}));
 }
 function openGallery(i,kind){
  kind=kind||"extra";const xs=galItems(kind);if(!xs.length){closeViewer();return;}
@@ -2322,7 +2327,7 @@ function openGallery(i,kind){
  $("vDel").hidden=kind!=="extra";
  noteEnd(true);$("vNote").hidden=kind!=="extra";cur=-1;clearTimeout(noteMsgT);$("vNoteL").parentNode.classList.remove("msg");
  $("vBar").hidden=false;$("vCnt").hidden=false;$("viewer").classList.add("gal");$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
- const pv=gPrevDone.get(xs[i].blob);
+ const pv=gPrevDone.get(xs[i].blob)||galNative(xs[i].nid); // app: the phone's copy, at once
  if(pv&&pv.w)openViewer(pv.u,null,{w:pv.w,h:pv.h,full:galUrl(xs[i].blob)});else openViewer(galUrl(xs[i].blob));
  if(!vSwapping)galPreload();
  tagShow();noteUI();if(kind==="extra")ensureNid(job.extras[i]);
@@ -2334,26 +2339,40 @@ function galUrl(b){if(!gUrls.has(b))gUrls.set(b,blobUrl(b));return gUrls.get(b);
 // For sliding, a screen-size copy of each photo: a 12-megapixel photo coming onto the screen
 // showed dark for a moment while the phone got it ready; a small one is ready at once.
 let gPrev=new WeakMap(), gPrevDone=new WeakMap();
-function galPrev(b){
- if(!gPrev.has(b))gPrev.set(b,(async()=>{let o={u:galUrl(b),w:0,h:0};
-  try{const bm=await createImageBitmap(b), bw=bm.width, bh=bm.height, W=innerWidth||400, H=innerHeight||800, k=Math.min(1,Math.max(W,H)*Math.min(2,window.devicePixelRatio||1)/Math.max(bm.width,bm.height));
-   const c=document.createElement("canvas");c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext("2d").drawImage(bm,0,0,c.width,c.height);if(bm.close)bm.close();
-   const sb=await new Promise(r=>c.toBlob(r,"image/jpeg",0.88));if(sb)o={u:blobUrl(sb),w:bw,h:bh};}catch(e){}
+// App: the phone makes the copy from its own copy of the photo (smooth, and off the page's
+// thread, so sliding never waits for it). Elsewhere the browser scales it down (high quality).
+// One at a time, so making copies never holds up the sliding.
+let gQ=Promise.resolve();
+const galPx=()=>Math.round(Math.max(innerWidth||400,innerHeight||800)*Math.min(2,window.devicePixelRatio||1));
+function galNative(nid){const A=window.AndroidApp;
+ if(!nid||!A||!A.photoSize||!A.hasPhoto||!A.hasPhoto(nid))return null;
+ const d=String(A.photoSize(nid)).split(",").map(Number);return d[0]>0&&d[1]>0?{u:"/cam/view/"+galPx()+"/"+nid,w:d[0],h:d[1]}:null;}
+function galPrev(b,nid){
+ if(!gPrev.has(b))gPrev.set(b,gQ=gQ.then(async()=>{let o={u:galUrl(b),w:0,h:0};
+  const px=galPx();
+  try{
+   const nv=galNative(nid);
+   if(nv)o=nv;
+   else{const t=new Image();t.src=o.u;await t.decode();const w=t.naturalWidth, h=t.naturalHeight, k=Math.min(1,px/Math.max(w,h));
+    if(k<1){const bm=await createImageBitmap(b,{resizeWidth:Math.round(w*k),resizeHeight:Math.round(h*k),resizeQuality:"high"});
+     const c=document.createElement("canvas");c.width=bm.width;c.height=bm.height;c.getContext("2d").drawImage(bm,0,0);if(bm.close)bm.close();
+     const sb=await new Promise(r=>c.toBlob(r,"image/jpeg",0.9));if(sb)o={u:blobUrl(sb),w,h};}}
+  }catch(e){}
   const im=new Image();im.src=o.u;try{if(im.decode)await im.decode();}catch(e){}
-  gPrevDone.set(b,o);return o;})());
+  gPrevDone.set(b,o);return o;}));
  return gPrev.get(b);}
 function galPreload(){
  const xs=gal?galItems(gal.kind):[];
- // the ones next to these too, so quick slides one after another find them ready
- if(gal)[0,-2,2].forEach(d=>{const it=xs[gal.i+d];if(it)galPrev(it.blob);});
  [["vPrev",-1],["vNext",1]].forEach(([id,d])=>{const el=$(id), it=xs[gal?gal.i+d:-1];el.classList.remove("anim");el.style.transform="";
   if(!it){el.hidden=true;el.dataset.for="";return;}const im=el.firstChild, key=gal.kind+":"+(gal.i+d)+":"+it.at;
   const put=u=>{if(el.dataset.for===key&&im.getAttribute("src")!==u){im.src=u;if(im.decode)im.decode().catch(()=>{});}};
   el.dataset.for=key;
   // the small copy when it is ready (made in the background); meanwhile the photo itself
   const ready=gPrevDone.get(it.blob);put(ready?ready.u:galUrl(it.blob));
-  if(!ready)galPrev(it.blob).then(o=>{if(!vw.sw&&!vSwapping)put(o.u);});
+  if(!ready)galPrev(it.blob,it.nid).then(o=>{if(!vw.sw&&!vSwapping)put(o.u);});
   el.hidden=false;el.style.transform="translateX("+d*(vSize()[0]+16)+"px)";});
+ // then the ones two away (and the one shown), so quick slides one after another find them ready
+ if(gal)[2,-2,0].forEach(d=>{const it=xs[gal.i+d];if(it)galPrev(it.blob,it.nid);});
 }
 let vSaving=false;
 $("vSave").onclick=async()=>{if(!gal||vSaving)return;const x=galItems(gal.kind)[gal.i], j=job;if(!x)return;
@@ -3302,17 +3321,18 @@ async function rpPick(j){
  if(!P.length)return true;
  const multi=pairsOf(j).length>1||!!(spotList(j)&&spotList(j)[0].name), out=new Set();
  P.forEach(o=>o.p.extras.forEach(x=>{if(x.noRep)out.add(x);}));
- const html='<p class="rpxn">写真を押すと大きく見られます。右上の ✓ で、入れる・外すを切り替えます。</p>'+
+ const html='<p class="rpxn">写真を押すと、入れる・外すが切り替わります(何度でも)。左下の虫めがねで大きく見られます。</p>'+
   P.map(o=>'<div class="rpxh"><b>'+esc(multi?(o.i+1)+". "+spotName(j,o.i):"その他の写真")+'</b><button type="button" data-all="'+o.i+'">全部入れる</button><button type="button" data-none="'+o.i+'">全部外す</button></div><div class="rpxs">'+
-   o.p.extras.map((x,k)=>x.blob?'<div class="rpxc" data-s="'+o.i+'" data-k="'+k+'"><img src="'+blobUrl(x.blob)+'" alt=""><button type="button" class="rpxk" aria-label="入れる・外す">✓</button></div>':'').join("")+'</div>').join("")+
+   o.p.extras.map((x,k)=>x.blob?'<div class="rpxc" data-s="'+o.i+'" data-k="'+k+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="rpxk" aria-hidden="true">✓</span><button type="button" class="rpxz" aria-label="大きく見る"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div>':'').join("")+'</div>').join("")+
   '<p class="rpxcnt" id="rpxN"></p><div class="rpxv" id="rpxV" hidden><img id="rpxVi" alt="拡大表示"><p id="rpxVt"></p><button type="button" id="rpxVx">戻る</button></div>';
  const ask=bkDialog("報告書に入れる その他の写真",html,"作る","やめる");$("bkDlg").classList.add("rpx");
  const X=(si,k)=>pairsOf(j)[+si].extras[+k];
  const show=()=>{let n=0,all=0;document.querySelectorAll("#bkDB .rpxc").forEach(c=>{const x=X(c.dataset.s,c.dataset.k), on=!out.has(x);c.classList.toggle("on",on);all++;if(on)n++;});
   $("rpxN").textContent="報告書に入れる写真:"+n+" / "+all+"枚";};
+ // the photo: in / out (again and again); the magnifier: see it big
  document.querySelectorAll("#bkDB .rpxc").forEach(c=>c.onclick=e=>{const x=X(c.dataset.s,c.dataset.k);
-  if(e.target.closest(".rpxk")){if(out.has(x))out.delete(x);else out.add(x);show();return;}
-  $("rpxVi").src=c.querySelector("img").src;$("rpxVt").textContent=notesOf(x).map(n=>n.t).join(" / ");$("rpxV").hidden=false;});
+  if(e.target.closest(".rpxz")){$("rpxVi").src=c.querySelector("img").src;$("rpxVt").textContent=notesOf(x).map(n=>n.t).join(" / ");$("rpxV").hidden=false;return;}
+  if(out.has(x))out.delete(x);else out.add(x);show();});
  document.querySelectorAll("#bkDB [data-all],#bkDB [data-none]").forEach(b=>b.onclick=()=>{const p=pairsOf(j)[+(b.dataset.all||b.dataset.none)];
   (p.extras||[]).forEach(x=>{if(b.dataset.all!=null)out.delete(x);else out.add(x);});show();});
  $("rpxVx").onclick=()=>{$("rpxV").hidden=true;};
