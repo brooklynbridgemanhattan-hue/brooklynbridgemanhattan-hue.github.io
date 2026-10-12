@@ -1561,13 +1561,13 @@ function spotSwap(j,i){const L=j.spots, cur=L.findIndex(x=>x.live), out={name:L[
  const x=L[i];for(const k of PAIR_KEYS)if(k in x)j[k]=x[k];
  L[cur]=out;L[i]={name:x.name||"",live:true};spotGen++;}
 // waits for the photos just taken (and their saving) to land in the place they belong to
-async function spotGo(i){
+async function spotGo(i,quiet){
  if(spotBusy||!job)return false;const j=job, L=spotList(j);if(!L||!L[i]||L[i].live)return false;
  spotBusy=true;
  try{await busyWait(Promise.all([camGot,autoPend.b,autoPend.a,rawPend.b,rawPend.a]));
   if(job!==j||!L[i]||L[i].live)return false;
   spotSwap(j,i);await saveJob();
-  $("result").style.display="none";$("saveMsg").textContent="";refreshDetail();make();startGlow();
+  $("result").style.display="none";$("saveMsg").textContent="";refreshDetail();make();if(!quiet)startGlow(); // quiet: from the checklist card (its 施工前 hint would cover the card)
   return true;
  }finally{spotBusy=false;}
 }
@@ -2399,9 +2399,14 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
 $("nExtra").addEventListener("click",()=>{cklFile=null;});
 // choosing the list: a place whose list is in use (photos / ticks) keeps it, and the other job
 // (給湯器 ⇄ コンロ) becomes a place of its own: its own 施工前・施工後, photos and report section
+// keeps the checklist card where it was on the screen after the place changes under it
+function cklSee(){const c=$("cklCard"), top=$("detail").querySelector(".topbar").offsetHeight;window.scrollTo({top:Math.max(0,c.getBoundingClientRect().top+window.scrollY-top-10)});}
 async function cklTpl(k){
  if(!job||spotBusy)return;const i=spotIdx(job), t=cklTplOf(job,i), v=job.cklv||{};
  if(k===t)return;
+ // another place already doing that job: open it, like its button in the place bar
+ const L0=spotList(job), at=L0&&k!=="none"?L0.findIndex((x,n)=>n!==i&&cklTplOf(job,n)===k):-1;
+ if(at>=0){if(await spotGo(at,true))cklSee();return;}
  const used=!!t&&!!(v.leak||job.before||job.after||(job.extras||[]).some(x=>x.ckl&&(!x.cklT||x.cklT===t)));
  if(!used||k==="none"){
   // an unnamed place takes the job's name (the report's heading)
