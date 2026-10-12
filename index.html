@@ -2332,7 +2332,15 @@ function openGallery(i,kind){
  if(!vSwapping)galPreload();
  tagShow();noteUI();if(kind==="extra")ensureNid(job.extras[i]);
 }
-function galNav(d){if(gal&&galItems(gal.kind)[gal.i+d])openGallery(gal.i+d,gal.kind);}
+let galNavBusy=false;
+async function galNav(d){
+ if(!gal||galNavBusy)return;const xs=galItems(gal.kind), it=xs[gal.i+d], g=gal;if(!it)return;
+ galNavBusy=true;
+ try{const o=gPrevDone.get(it.blob)||galNative(it.nid);
+  if(o){const pre=new Image();pre.src=o.u;if(pre.decode)await pre.decode().catch(()=>{});}
+  if(gal===g)openGallery(g.i+d,g.kind);}
+ finally{galNavBusy=false;}
+}
 let gUrls=new WeakMap();
 function galUrl(b){if(!gUrls.has(b))gUrls.set(b,blobUrl(b));return gUrls.get(b);}
 // the photos either side are put in place (and decoded) ahead, so sliding to them is smooth
@@ -2370,7 +2378,7 @@ function galPreload(){
   // the small copy when it is ready (made in the background); meanwhile the photo itself
   const ready=gPrevDone.get(it.blob);put(ready?ready.u:galUrl(it.blob));
   if(!ready)galPrev(it.blob,it.nid).then(o=>{if(!vw.sw&&!vSwapping)put(o.u);});
-  el.hidden=false;el.style.transform="translateX("+d*(vSize()[0]+16)+"px)";});
+  el.hidden=true;});
  // then the ones two away (and the one shown), so quick slides one after another find them ready
  if(gal)[2,-2,0].forEach(d=>{const it=xs[gal.i+d];if(it)galPrev(it.blob,it.nid);});
 }
@@ -3643,7 +3651,7 @@ const vw={s:1,fit:1,x:0,y:0,nw:1,nh:1,pts:new Map(),pinch:null,pan:null,lastTap:
 // dims (optional): src is a screen-size copy of a photo of dims.w x dims.h; dims.full is the photo
 // itself, put in when zoomed in. Sizes (comments, saving) always go by the photo itself.
 function openViewer(src,topSrc,dims){
- const im=$("vImg"), top=$("vImg2"), st=$("vStage");
+ const im=$("vImg"), top=$("vImg2"), st=$("vStage"), wasOpen=!$("viewer").hidden;
  if(!gal){$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").classList.remove("gal");}
  $("viewer").hidden=false;top.hidden=!topSrc;$("vOp").hidden=!topSrc;
  if(topSrc){top.src=topSrc;$("vOpR").value=50;top.style.opacity=0.5;}
@@ -3654,7 +3662,10 @@ function openViewer(src,topSrc,dims){
   (im.decode?im.decode():Promise.resolve()).then(show,show);};
  im.dataset.want=src;
  if(im.getAttribute("src")===src&&im.complete&&im.naturalWidth){st.style.visibility="";im.onload();return;}
- st.style.visibility="hidden";im.src=src;
+ // moving to the next photo (already got ready): the photo shown stays until the new one is in, so
+ // the screen never goes blank; anything else is hidden until it is ready
+ const keep=!!dims&&wasOpen&&st.style.visibility===""&&im.complete&&im.naturalWidth>0;
+ if(!keep)st.style.visibility="hidden";im.src=src;
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
 let vOnShow=null, vSwapping=false;
@@ -3699,7 +3710,8 @@ $("viewer").addEventListener("pointermove",e=>{
   vw.s=s;vw.x=mx-cx*s;vw.y=my-cy*s;vApply(false);
  }else if(vw.pan){
   const dx=e.clientX-vw.pan.x0, dy=e.clientY-vw.pan.y0;
-  if(!vw.sw&&gal&&!vSwapping&&vw.s<=vw.fit*1.02&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy))swStart(vw.pan.x0,vw.down?vw.down.t:performance.now()); // from where the finger came down: the photo stays under it
+  // (no sliding: in the app the photos turn in the phone's own viewer; here a stroke sideways
+  // changes the photo at once when the finger lets go)
   if(vw.sw){const t=performance.now(), sw=vw.sw, h=sw.h;h.push({x:e.clientX,t});while(h.length>2&&t-h[0].t>100)h.shift(); // the last 0.1 s, for the speed
    // one move per screen frame
    sw.dx=e.clientX-sw.x0;if(!sw.raf)sw.raf=requestAnimationFrame(()=>{sw.raf=0;if(vw.sw===sw)swSet(sw.dx,false);});return;}
@@ -3759,7 +3771,7 @@ function vUp(e){
   if(vw.sw){vw.down=null;swEnd(e);return;}
   const d=vw.down;vw.down=null;
   // Swipe sideways at normal size: next / previous photo.
-  if(gal&&d&&vw.s<=vw.fit*1.02&&Math.abs(e.clientX-d.x)>60&&Math.abs(e.clientX-d.x)>Math.abs(e.clientY-d.y)*1.5){galNav(e.clientX<d.x?1:-1);return;}
+  if(gal&&d&&vw.s<=vw.fit*1.02&&(Math.abs(e.clientX-d.x)>60||(Math.abs(e.clientX-d.x)>30&&performance.now()-d.t<250))&&Math.abs(e.clientX-d.x)>Math.abs(e.clientY-d.y)*1.5){galNav(e.clientX<d.x?1:-1);return;}
   if(d&&Math.hypot(e.clientX-d.x,e.clientY-d.y)<12&&performance.now()-d.t<300){
    const now=performance.now();
    if(now-vw.lastTap<320&&Math.hypot(e.clientX-vw.tapX,e.clientY-vw.tapY)<40){
