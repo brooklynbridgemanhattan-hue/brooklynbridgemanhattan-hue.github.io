@@ -379,6 +379,40 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .allsave small{font-size:14px;font-weight:600;opacity:.92}
 .allsave:disabled{opacity:.8}
 .c-extra .none{margin:4px 2px 0;font-size:14px;color:var(--sub)}
+/* 撮影チェックリスト */
+.c-ckl{--frame:#B7EBC6;padding:6px 16px}
+.c-ckl:has(#cklSw:checked){padding-bottom:14px}
+.cklsw{padding:0 2px;font-size:18px;font-weight:800}
+.cklsw .exsp{margin-left:4px;display:inline-block;white-space:nowrap}
+.ckltp{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
+.ckltp button{min-height:40px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:var(--fill);color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line)}
+.ckltp button.on{background:#E6F6EC;color:#067647;box-shadow:inset 0 0 0 2px #12B76A}
+.cklnone{margin:0 2px 4px;font-size:14px;color:var(--sub)}
+.cklpg{display:flex;align-items:center;gap:10px;margin:0 2px 6px}
+.cklpg .cklbar{flex:1;height:10px;border-radius:99px;background:var(--fill);overflow:hidden}
+.cklpg .cklbar i{display:block;height:100%;background:#12B76A;border-radius:99px}
+.cklpg b{font-size:16px;font-weight:800;white-space:nowrap}
+.cklit{display:flex;flex-wrap:wrap;align-items:center;gap:10px;min-height:60px;padding:6px 6px;border-top:1px solid var(--line)}
+.cklit.cklnx{background:var(--after-soft);border-radius:12px;border-top-color:transparent}
+.cklit .cklmk{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:inset 0 0 0 2px #D0D5DD}
+.cklit .cklmk svg{width:18px;height:18px;stroke:#fff;stroke-width:3.2;fill:none}
+.cklit.ckldone .cklmk{background:#12B76A;box-shadow:none}
+.cklit .cklnm{flex:1;min-width:0;font-size:16px;font-weight:800;line-height:1.35}
+.cklit .cklnm small{display:block;font-size:12px;font-weight:600;color:var(--sub)}
+.cklit.ckldone .cklnm{color:var(--sub)}
+.cklit .cklph{display:flex;gap:6px;flex:none}
+.cklit .cklph button{width:48px;height:48px;padding:0;border-radius:10px;overflow:hidden;background:var(--fill)}
+.cklit .cklph img{width:100%;height:100%;object-fit:cover;display:block}
+.cklit .cklgo{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:800;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.cklit .cklgo svg.i{width:20px;height:20px}
+.cklit.cklnx .cklgo{background:var(--after);color:var(--after-ink)}
+.cklit .cklgo:disabled{opacity:.45}
+.cklit .cklgo.on{background:#E6F6EC;color:#067647}
+.cklair{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;margin:-2px 0 2px 38px}
+.cklair button{min-height:40px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:#fff;color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line)}
+.cklair button.on{background:#E6F6EC;color:#067647;box-shadow:inset 0 0 0 2px #12B76A}
+.cklbd{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:800;vertical-align:2px;background:#E6F6EC;color:#067647}
+.cklbd.ng{background:var(--after-soft);color:var(--after-text)}
 #bDel{margin-top:2px}
 
 /* ---------- full-screen viewer ---------- */
@@ -848,6 +882,11 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <button class="cmpshare" id="bShare"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg><span>比較写真を送る <small>LINE・メールなど</small></span></button>
  </section>
 
+ <section class="card c-ckl" id="cklCard">
+  <label class="switch cklsw" for="cklSw"><span>撮影チェックリスト<span class="exsp" id="cklSpNm"></span></span><input type="checkbox" id="cklSw"><i></i></label>
+  <div id="cklList" hidden></div>
+ </section>
+
  <section class="card c-extra">
   <div class="sh2"><span class="cdot"></span><h2>その他の写真<span class="exsp" id="exSpotNm"></span></h2><button class="addbtn" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>カメラで撮る</span></button></div>
   <label class="btn b-extra full" id="nExtra" for="fExtra" hidden style="margin-bottom:10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで撮る</label>
@@ -1175,7 +1214,7 @@ let MEM=[];
    the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}].
    その他の写真 (extras) belong to a place too; on a site from before that (no exSpot), they were the
    site's and go to 1か所目 when it is next opened. */
-const PAIR_KEYS=["extras","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","raw","rawNid","cand","mask","tone","lvBg","rot","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
+const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","raw","rawNid","cand","mask","tone","lvBg","rot","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
 const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
 const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
 const jobDone=j=>pairsOf(j).every(p=>!!p.after);
@@ -1199,6 +1238,9 @@ function blobUrl(b){const u=URL.createObjectURL(b);urls.push(u);return u;}
 const CAM_SVG='<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
 const CHEV_SVG='<svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
 let homeTab="w";
+// 撮影チェックリスト on: how many of the site's items are done (all places together)
+function cklBadge(j){if(!cklOn())return "";const cs=pairsOf(j).map((p,i)=>cklStat(j,i)).filter(Boolean);if(!cs.length)return "";
+ const n=cs.reduce((a,c)=>a+c.n,0), t=cs.reduce((a,c)=>a+c.ks.length,0);return '<span class="cklbd'+(n<t?" ng":"")+'">チェック '+n+'/'+t+'</span>';}
 function showTab(){$("tabW").classList.toggle("on",homeTab==="w");$("tabD").classList.toggle("on",homeTab==="d");$("lWait").hidden=homeTab!=="w";$("lDone").hidden=homeTab!=="d";}
 $("tabW").onclick=()=>{homeTab="w";hSelClear();showTab();};$("tabD").onclick=()=>{homeTab="d";hSelClear();showTab();};
 async function showHome(){
@@ -1212,7 +1254,7 @@ async function showHome(){
   return '<div class="jd"><span class="jspot">'+P.length+'か所</span><span class="jspn">'+P.map((p,i)=>esc(spotName(j,i))).join("・")+'</span></div>'+
    '<div class="jd">'+(n===P.length?'施工前 '+fmtD(Math.min(...bs))+' ・ 施工後 '+fmtD(Math.max(...as)):'施工後 '+n+' / '+P.length+'か所')+'</div>';};
  const card=j=>{const p=pairsOf(j)[0];return '<button class="job'+(jobDone(j)?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'')+'</span>'+
-  '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
+  '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+cklBadge(j)+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
   (pairsOf(j).length>1||(spotList(j)&&spotList(j)[0].name)?spotsTx(j):'<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div>')+'</div>'+CHEV_SVG+'</button>';};
  const w=js.filter(j=>!jobDone(j)), d=js.filter(jobDone);
  $("lWait").innerHTML=w.length?w.map(card).join(""):'<p class="empty">施工後待ちの現場はありません</p>';
@@ -1569,7 +1611,7 @@ async function spotEdit(i){
  if(wantDel){await spotDel(i);return;}
  if(!ok)return;
  if(!L){if(!spotNmVal())return;job.spots=L=[{name:"",live:true}];job.exSpot=1;} // the only place gets a name
- L[i].name=spotNmVal();await saveJob();spotShow();
+ L[i].name=spotNmVal();await saveJob();spotShow();renderThumbs(); // the checklist follows the name
 }
 async function spotDel(i){
  const L=spotList(job);if(!L||L.length<2||!L[i])return;
@@ -1601,7 +1643,7 @@ $("bBefore").onclick=()=>{
   clearTimeout(reT);reT=setTimeout(()=>{reArm=false;setTx("bBefore","撮り直す");$("bBefore").classList.remove("arm");},4000);return;}
  reArm=false;clearTimeout(reT);setTx("bBefore","撮り直す");$("bBefore").classList.remove("arm");startCam("before");};
 $("bAfter").onclick=()=>startCam("after");
-$("bExtra").onclick=()=>startCam("extra");
+$("bExtra").onclick=()=>{cklNext=null;startCam("extra");};
 let stream=null, camMode=null, ori={beta:null,gamma:null}, oriOK=false, loop=null;
 window.addEventListener("deviceorientation",e=>{if(e.beta!=null){ori={beta:e.beta,gamma:e.gamma};oriOK=true;}});
 async function askOri(){try{if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission();}catch(e){}}
@@ -1622,9 +1664,10 @@ async function startCam(mode){
  finally{camStarting=false;$("camLoad").hidden=true;$("cam").classList.remove("loading");}
 }
 async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(x=>x.remove());
- camMode=mode;
+ camMode=mode;const ckl=mode==="extra"?cklNext:null;cklNext=null; // 撮影チェックリストの項目
+ const lab=ckl?cklCamLab(ckl):{before:"施工前を撮影",after:"施工後を撮影",extra:"その他の写真"}[mode];
  // the camera screen comes up straight away, saying it is starting; やめる works meanwhile
- $("cam").dataset.mode=mode;$("camMode").querySelector("span").textContent={before:"施工前を撮影",after:"施工後を撮影",extra:"その他の写真"}[mode];
+ $("cam").dataset.mode=mode;$("camMode").querySelector("span").textContent=lab;
  $("camLoad").hidden=false;$("cam").classList.add("loading");$("cam").style.display="flex";
  await askOri();
  const v=$("vid");
@@ -1646,7 +1689,7 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
   setupTrack();
  }
  const after=mode==="after";
- $("cam").dataset.mode=mode;$("camMode").querySelector("span").textContent={before:"施工前を撮影",after:"施工後を撮影",extra:"その他の写真"}[mode];
+ $("cam").dataset.mode=mode;$("camMode").querySelector("span").textContent=lab;
  // After camera starts with every overlay off; switch on what is needed.
  if(after){["tGrid","tGhost","tLine","tDiff"].forEach(id=>$(id).classList.remove("on"));$("grid").classList.remove("on");}
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
@@ -1659,7 +1702,7 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
  $("camMask").hidden=true;
  shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");$("cCancel").classList.remove("fin");
  stopWanted=false;
- camSess={mode,n:0,had:mode!=="extra"&&!!(mode==="before"?job.before:job.after),got:Promise.resolve()};camGot=camSess.got;
+ camSess={mode,n:0,had:mode!=="extra"&&!!(mode==="before"?job.before:job.after),got:Promise.resolve(),ckl};camGot=camSess.got;
  if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();$("pipImg").src=photoSrc;
   setTimeout(()=>{if(camMode==="after"&&job&&job.before)outlineSrc().catch(()=>{});},1200);}
  pipShow();
@@ -1838,14 +1881,19 @@ $("cShot").onclick=async()=>{
  let b=null;try{b=await grab();}finally{$("holdStill").hidden=true;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
  if(s.cut){ // the camera was closed while waiting for it: keep it if it came after all
   if(b&&mode!=="extra"){s.n++;s.got=camGot=s.got.then(()=>gotPhoto(mode,b,o,true,g)).then(()=>{if(job)justShot(mode==="before"?"sB":"sA");}).catch(()=>{});}
-  else if(b)s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true)).catch(()=>{});
+  else if(b)s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl&&s.ckl.k)).catch(()=>{});
   return;}
  if(!b){const st=!!stream&&!stopWanted;shotEnd();if(st)toast("撮影できませんでした。もう一度押してください");return;}
  const name={before:"施工前",after:"施工後",extra:"写真"}[mode];
  if(mode==="extra"){
   // Other photos: stay in the camera so several can be taken in a row.
   shotCount++;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
-  s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true)).catch(()=>{});
+  s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl&&s.ckl.k)).catch(()=>{});
+  if(s.ckl){ // a checklist item: back to the list once it has its photo(s); the item glows there
+   const c=s.ckl, last=shotCount>=c.left;
+   await shotDone(b,cklCamLab(c)+(c.left>1?" "+shotCount+"枚目":"")+"を撮影しました",650);shotEnd();
+   if(last&&camSess===s){stopCam();s.got.then(()=>{const el=document.querySelector('#cklList [data-k="'+c.k+'"]');if(el&&!$("detail").hidden){el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);}});}
+   return;}
   await shotDone(b,shotCount+"枚目を撮影しました",650);shotEnd();
   return;
  }
@@ -2188,13 +2236,14 @@ async function grabRaw(){
  return await new Promise(r=>best.toBlob(r,"image/jpeg",0.93));
 }
 $("fBefore").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("before",f,null);};
-$("fExtra").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("extra",f,null);};
+$("fExtra").onchange=async e=>{const f=e.target.files[0], k=cklFile;cklFile=null;e.target.value="";if(f)await gotPhoto("extra",f,null,false,null,k);};
 $("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
-async function gotPhoto(mode,blob,o,shot,g){
+async function gotPhoto(mode,blob,o,shot,g,ckl){
  const now=Date.now();
- if(mode==="extra"){const j=job, ex=blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now};(j.extras=j.extras||[]).push(ex);await saveJob();renderThumbs();
+ if(mode==="extra"){const j=job, ex=blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now};if(ckl)ex.ckl=ckl;(j.extras=j.extras||[]).push(ex);await saveJob();renderThumbs();
   // App: other photos also go straight into the phone's photos (Google Photos), like a camera.
-  const r=!shot||!window.AndroidApp?null:blob.nid&&canNative()?await nativeSave(blob.nid,"","",photoName("写真",now)):await toPhone(blob,"写真",now);
+  const kn=ckl?CKL_LAB[ckl]:"写真";
+  const r=!shot||!window.AndroidApp?null:blob.nid&&canNative()?await nativeSave(blob.nid,"","",photoName(kn,now)):await toPhone(blob,kn,now);
   const ok=r==null?null:okR(r);if(ok){keepUri(ex,"saved",r);if((j.extras||[]).includes(ex)&&!goneIds.has(j.id)){if(j===job)saveJob();else putJob(j);}else dropFromPhone([uriR(r)]);}
   if(stream){if(ok!=null)$("shotN").textContent=shotCount+"枚 "+(ok?"保存しました":"保存できませんでした");}
   else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
@@ -2285,10 +2334,72 @@ $("bPlace").onclick=getPlace;
 function renderThumbs(){
  const xs=(job&&job.extras)||[];
  $("exSpotNm").textContent=job&&spotList(job)?"("+spotName(job,spotIdx(job))+")":"";
- $("thumbs").innerHTML=xs.map((x,i)=>'<button data-x="'+i+'" aria-label="写真 '+(i+1)+(notesOf(x).length?' '+esc(notesOf(x).map(n=>n.t).join(' / ')):'')+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="ck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span>'+(notesOf(x).length?'<span class="cm"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+(notesOf(x).length>1?notesOf(x).length:'')+'</span>':'')+'</button>').join("");
- $("thumbsNone").hidden=xs.length>0;
- selClear();allInfo();
+ $("thumbs").innerHTML=xs.map((x,i)=>cklHides(x)?'':'<button data-x="'+i+'" aria-label="写真 '+(i+1)+(notesOf(x).length?' '+esc(notesOf(x).map(n=>n.t).join(' / ')):'')+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="ck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span>'+(notesOf(x).length?'<span class="cm"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+(notesOf(x).length>1?notesOf(x).length:'')+'</span>':'')+'</button>').join("");
+ $("thumbsNone").hidden=xs.some(x=>!cklHides(x));
+ selClear();allInfo();cklRender();
 }
+/* ---------- 撮影チェックリスト ---------- */
+// On (設定は端末ごと) = a card listing what to photograph at each place, by its name (給湯器 / コンロ)
+// or the list chosen on the card. Its photos are その他の写真 marked with the item (x.ckl), so
+// saving, deleting, the viewer and the backup treat them as before; the list shows them, the
+// その他の写真 grid leaves them out. 施工前 本体 / 施工後 本体 are the place's 施工前 / 施工後 photos.
+// What is ticked by hand (漏水確認) and the chosen 気密試験 way are kept with the place (cklv).
+const CKL_LAB={b_body:"施工前 本体",b_plate:"施工前 銘板",pipe:"配管",line:"ラインマーク",a_body:"施工後 本体",a_plate:"施工後 銘板",a_pipe:"施工後 配管",leak:"漏水確認",air:"気密試験結果"};
+const CKL_T={kyuto:{name:"給湯器",keys:["b_body","b_plate","pipe","line","a_body","a_plate","a_pipe","leak","air"]},
+ konro:{name:"ビルトインコンロ",keys:["b_body","b_plate","pipe","line","a_body","a_plate","a_pipe","air"]}};
+const CKL_AIR={liq:"検知液/検知器",prs:"圧力測定器"}, CKL_PAIR={b_body:"before",a_body:"after"};
+const cklMax=k=>k==="air"?2:k==="leak"?0:1;
+const cklOn=()=>getPref("ba-ckl")==="1";
+function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
+ if(v&&v.tpl)return CKL_T[v.tpl]?v.tpl:null; // chosen on the card ("none" = no list)
+ const L=spotList(j), n=(L&&L[i]&&L[i].name)||"";return /給湯/.test(n)?"kyuto":/コンロ/.test(n)?"konro":null;}
+const cklPh=(p,k)=>(p.extras||[]).filter(x=>x.ckl===k);
+function cklDone(p,k){if(CKL_PAIR[k])return !!p[CKL_PAIR[k]];if(k==="leak")return !!(p.cklv&&p.cklv.leak);return cklPh(p,k).length>0;}
+// place i: its list and how many are done (null = no list there)
+function cklStat(j,i){const t=cklTplOf(j,i);if(!t)return null;const p=pairsOf(j)[i], ks=CKL_T[t].keys;return {t,ks,n:ks.filter(k=>cklDone(p,k)).length,left:ks.filter(k=>!cklDone(p,k))};}
+// a photo the open place's list shows (so the その他の写真 grid leaves it out)
+function cklHides(x){if(!x||!x.ckl||!cklOn()||!job)return false;const t=cklTplOf(job,spotIdx(job));return !!t&&CKL_T[t].keys.includes(x.ckl)&&!CKL_PAIR[x.ckl];}
+const CKL_OK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-9"/></svg>';
+function cklRender(){
+ const on=cklOn(), box=$("cklList");$("cklSw").checked=on;
+ $("cklSpNm").textContent=on&&job&&spotList(job)?"("+spotName(job,spotIdx(job))+")":"";
+ if(!on||!job){box.hidden=true;box.innerHTML="";return;}
+ const i=spotIdx(job), t=cklTplOf(job,i), p=job, v=p.cklv||{};
+ let h='<div class="ckltp">'+Object.keys(CKL_T).map(k=>'<button type="button" data-tpl="'+k+'" class="'+(t===k?"on":"")+'">'+CKL_T[k].name+'</button>').join("")+'<button type="button" data-tpl="none" class="'+(t?"":"on")+'">使わない</button></div>';
+ if(!t){box.innerHTML=h+'<p class="cklnone">この箇所のチェックリストを選んでください(箇所の名前が「給湯器」「〜コンロ」なら自動で出ます)。</p>';box.hidden=false;return;}
+ const st=cklStat(job,i), nx=st.left[0];
+ h+='<div class="cklpg"><span class="cklbar"><i style="width:'+Math.round(100*st.n/st.ks.length)+'%"></i></span><b>'+st.n+' / '+st.ks.length+'</b></div>';
+ for(const k of st.ks){const done=cklDone(p,k);let sub="", ph="", go="";
+  if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];sub=k==="b_body"?"上の施工前の写真":"上の施工後の写真";
+   if(b)ph='<button type="button" data-pair="'+(k==="b_body"||!p.before?0:1)+'"><img src="'+galUrl(b)+'" alt="'+CKL_LAB[k]+'"></button>';
+   else go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="a_body"&&!p.before?' disabled':'')+'>'+CAM_SVG+'撮る</button>';}
+  else if(k==="leak"){sub="写真はいりません";go='<button type="button" class="cklgo'+(done?" on":"")+'" data-tick="leak">'+(done?"確認済み":"確認した")+'</button>';}
+  else{const xs=cklPh(p,k), all=p.extras||[];
+   ph=xs.map(x=>'<button type="button" data-x="'+all.indexOf(x)+'"><img src="'+galUrl(x.blob)+'" alt="'+CKL_LAB[k]+'"></button>').join("");
+   if(k==="air")sub=v.air?"写真2枚まで":"下のどちらかを選んでから撮ります";
+   if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+'撮る</button>';}
+  h+='<div class="cklit'+(done?" ckldone":"")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+CKL_LAB[k]+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph?'<span class="cklph">'+ph+'</span>':'')+go+
+   (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
+ box.innerHTML=h;box.hidden=false;
+}
+$("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)renderThumbs();};
+let cklNext=null, cklFile=null; // the item the next その他の写真 camera / file is for
+async function cklSet(f){if(!job)return;job.cklv=job.cklv||{};f(job.cklv);await saveJob();renderThumbs();}
+$("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;const d=b.dataset;
+ if(d.tpl)cklSet(v=>{v.tpl=d.tpl;});
+ else if(d.tick)cklSet(v=>{if(v.leak)delete v.leak;else v.leak=1;});
+ else if(d.air)cklSet(v=>{v.air=d.air;});
+ else if(d.x!=null)openGallery(+d.x);
+ else if(d.pair!=null)openGallery(+d.pair,"pair");
+ else if(d.go){const k=d.go;
+  if(CKL_PAIR[k]){if(camFail)$(k==="b_body"?"fBefore":"fAfter").click();else $(k==="b_body"?"bBefore":"bAfter").click();return;}
+  const left=cklMax(k)-cklPh(job,k).length;if(left<=0)return;
+  if(camFail){cklFile=k;$("fExtra").click();return;}
+  cklNext={k,left};startCam("extra");}
+});
+$("nExtra").addEventListener("click",()=>{cklFile=null;});
+// the camera's title for an item: 施工前 銘板 / 気密試験結果(圧力測定器)
+const cklCamLab=c=>CKL_LAB[c.k]+(c.k==="air"&&job&&job.cklv&&job.cklv.air?"("+CKL_AIR[job.cklv.air]+")":"");
 // Like Google Photos: tap = full screen; long press = select (then tap picks / un-picks).
 const sel=new Set();let selDelArm=false;
 function selShow(){
@@ -2319,7 +2430,7 @@ $("selDel").onclick=async()=>{
 let gal=null, galDelArm=false;
 function galItems(kind){
  if(kind==="pair")return [job.before&&{blob:job.before,at:job.beforeAt,name:"施工前",nid:job.beforeNid},job.after&&{blob:job.after,at:job.afterAt,name:"施工後",nid:job.afterNid}].filter(Boolean);
- return (job.extras||[]).map((x,i)=>({blob:x.blob,at:x.at,name:"写真"+(i+1),nid:x.nid}));
+ return (job.extras||[]).map((x,i)=>({blob:x.blob,at:x.at,name:x.ckl&&CKL_LAB[x.ckl]?CKL_LAB[x.ckl]:"写真"+(i+1),nid:x.nid}));
 }
 // App: the photos are seen in the phone's own viewer (smooth sliding and zoom like Google Photos).
 // The page keeps gal in step and does what its buttons ask (save / delete / comment).
@@ -3285,30 +3396,42 @@ async function rpPages(j,co,tel,staff){
  // the places, as many to a page as fit
  for(const o of P){
   if(y+SEC-30>BOTTOM)page();
-  const hd=multi?(o.i+1)+". "+spotName(j,o.i):named?spotName(j,0):"施工箇所", xs=rpIn(o.p);
+  const hd=multi?(o.i+1)+". "+spotName(j,o.i):named?spotName(j,0):"施工箇所", ck=rpCkl(j,o.i), xs=rpIn(o.p).filter(e=>!ck||!ck.has.has(e));
   if(o.p.before||o.p.after){
    x.fillStyle="#3B5BDB";x.fillRect(M,y+8,8,36);rpText(x,hd,M+22,y+38,32,800);
    await rpPhoto(x,o.p.before,o.p.beforeAt,M,y+56,bw,bh,"b");
    await rpPhoto(x,o.p.after,o.p.afterAt,M+bw+30,y+56,bw,bh,"a");
    y+=SEC;
   }
+  // 撮影チェックリスト: its photos in order, each with the step above it; then 漏水確認 and the like
+  const top=!!(o.p.before||o.p.after);
+  if(ck){await rpGrid(ck.items,"撮影チェック",hd,top);
+   for(const t of ck.lines){if(y+44>BOTTOM)page();rpText(x,t,M,y+30,24,800,"#067647");y+=44;}
+   if(ck.lines.length)y+=10;}
   // その他の写真: 3 to a row, each with when it was taken and its comments
-  const cw=(CW-40)/3, chh=250, ROW=chh+36+3*28+22;
+  await rpGrid(xs.map(e=>({blob:e.blob,at:e.at,e})),"その他の写真",hd,top||!!(ck&&ck.items.length));
+ }
+ // 3 to a row, each with (cap) its step above it, when it was taken and its comments
+ async function rpGrid(xs,name,hd,shown){
+  const cw=(CW-40)/3, chh=250, CAP=xs.some(e=>e.cap)?40:0, ROW=CAP+chh+36+3*28+22;
   for(let r=0;r<xs.length;r+=3){
    // a label above the first row, and again (続き) above a row that starts a new page
-   let lab=r===0?(o.p.before||o.p.after?"その他の写真":hd+" その他の写真"):"";
-   if(y+(lab?48:0)+ROW-22>BOTTOM){page();if(!lab)lab=hd+" その他の写真(続き)";}
+   let lab=r===0?(shown?name:hd+" "+name):"";
+   if(y+(lab?48:0)+ROW-22>BOTTOM){page();if(!lab)lab=hd+" "+name+"(続き)";}
    if(lab){rpText(x,lab,M,y+32,26,800,"#344054");y+=48;}
+   if(CAP){x.font="800 22px "+rpFont();for(let c=0;c<3&&r+c<xs.length;c++){const t=xs[r+c].cap||"", X=M+c*(cw+20);
+    rpRound(x,X,y,cw,34,8);x.fillStyle="#E6F6EC";x.fill();rpText(x,rpLines(x,t,cw-16,1)[0]||"",X+cw/2,y+25,22,800,"#067647","center");}
+    y+=CAP;}
    for(let c=0;c<3&&r+c<xs.length;c++){const e=xs[r+c], X=M+c*(cw+20);
     x.fillStyle="#F2F4F7";x.fillRect(X,y,cw,chh);
     let im=null;try{im=await decode(e.blob);const k=Math.min(cw/im.width,chh/im.height), iw=im.width*k, ih=im.height*k;
      x.imageSmoothingQuality="high";x.drawImage(im,X+(cw-iw)/2,y+(chh-ih)/2,iw,ih);}catch(err){}finally{if(im&&im.close)im.close();}
     x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(X,y,cw,chh);
     if(e.at)rpText(x,fmtFull(e.at)+" "+new Date(e.at).getHours()+":"+String(new Date(e.at).getMinutes()).padStart(2,"0"),X,y+chh+30,20,600,"#475467");
-    const t=notesOf(e).map(n=>n.t).filter(Boolean).join(" / ");
+    const t=e.e?notesOf(e.e).map(n=>n.t).filter(Boolean).join(" / "):"";
     if(t){x.font="600 22px "+rpFont();rpLines(x,t,cw,3).forEach((l,n)=>rpText(x,l,X,y+chh+60+n*28,22,600,"#101828"));}
    }
-   y+=ROW;
+   y+=ROW-CAP;
   }
  }
  // footer: the page and who made it
@@ -3346,6 +3469,18 @@ async function rpSave(blob,name){
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
  toast("保存しました");
 }
+// 撮影チェックリスト of place i for the report (null = off / no list): the photos in the list's order
+// with their step (施工前 本体 … are the 施工前 / 施工後 photos), and the ticks without a photo
+function rpCkl(j,i){
+ if(!cklOn())return null;const st=cklStat(j,i);if(!st)return null;
+ const p=pairsOf(j)[i], v=p.cklv||{}, items=[], has=new Set(), lines=[];
+ for(const k of st.ks){
+  if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];if(b)items.push({blob:b,at:p[CKL_PAIR[k]+"At"],cap:CKL_LAB[k]});continue;}
+  if(k==="leak"){if(v.leak)lines.push(CKL_LAB[k]+" ✓ 確認済み");continue;}
+  for(const e of cklPh(p,k)){has.add(e);if(e.blob&&!e.noRep)items.push({blob:e.blob,at:e.at,e,cap:CKL_LAB[k]+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":"")});}
+ }
+ return {items,has,lines};
+}
 // which その他の写真 go in: all at first; tap a photo to see it big, ✓ to put it in or take it out.
 // What was taken out stays out next time (x.noRep).
 const rpIn=p=>(p.extras||[]).filter(x=>x.blob&&!x.noRep);
@@ -3381,6 +3516,12 @@ $("bReport").onclick=async()=>{
  if(rpBusy||!job)return;
  await busyWait(Promise.all([camGot,autoPend.b,autoPend.a,rawPend.b,rawPend.a]));if(!job)return;
  if(!hasPhotos(job)){toast("写真がまだありません。施工前・施工後を撮ってから作ってください。",true);return;}
+ // 撮影チェックリスト: what is not done yet, place by place (撮りに戻る = to the list)
+ const miss=cklOn()?pairsOf(job).map((p,i)=>({i,st:cklStat(job,i)})).filter(o=>o.st&&o.st.left.length):[];
+ if(miss.length){const sp=!!spotList(job);
+  const ok=await bkDialog("撮り忘れがあります",'<p style="margin:0 0 8px">撮影チェックリストで、まだのものがあります。</p>'+miss.map(o=>(sp?'<p style="margin:8px 0 2px;font-weight:800">'+esc(spotName(job,o.i))+'</p>':'')+'<ul style="margin:0;padding-left:22px;text-align:left">'+o.st.left.map(k=>'<li>'+CKL_LAB[k]+'</li>').join("")+'</ul>').join(""),"このまま作る","撮りに戻る");
+  if(!job)return;
+  if(!ok){$("cklCard").scrollIntoView({block:"start",behavior:"smooth"});return;}}
  const ask=bkDialog("施工報告書(PDF)",'<label class="rplab" for="rpCo">会社名(任意)</label><input class="rpin" id="rpCo" maxlength="40" placeholder="例:山田設備" value="'+esc(getPref("ba-company"))+'">'+
   '<label class="rplab" for="rpTel">電話番号(任意)</label><input class="rpin" id="rpTel" maxlength="20" inputmode="tel" placeholder="例:03-1234-5678" value="'+esc(getPref("ba-tel"))+'">'+
   '<label class="rplab" for="rpStaff">施工担当者 氏名(任意)</label><input class="rpin" id="rpStaff" maxlength="30" placeholder="例:山田 太郎" value="'+esc(getPref("ba-staff"))+'">'+
@@ -3816,7 +3957,7 @@ window.addEventListener("resize",()=>{if(!$("viewer").hidden){vFit(false);if(gal
 $("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(await fullBlob()));};
 
 function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes());}
-function photoName(kind,t,tag){const site=custName(job).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40), sp=spotList(job)?spotName(job,spotIdx(job)).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,20):"";
+function photoName(kind,t,tag){kind=String(kind).replace(/\s+/g,"_");const site=custName(job).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,40), sp=spotList(job)?spotName(job,spotIdx(job)).replace(/[\\/:*?"<>|\s]+/g,"_").slice(0,20):"";
  return kind+"_"+(site?site+"_":"")+(sp?sp+"_":"")+stamp(t)+(tag?"_"+tag:"")+".jpg";}
 /* Saving answers "ok:<where it went in the phone's photos>". The app remembers it with the
    photo, so deleting the photo in the app also deletes it from the phone (Google Photos /
