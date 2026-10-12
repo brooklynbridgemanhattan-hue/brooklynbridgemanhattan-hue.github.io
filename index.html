@@ -387,7 +387,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 #vStage.anim{transition:transform .22s ease-out}
 #vStage img{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block;-webkit-user-drag:none}
 #vImg2{object-fit:cover}
-.vside{position:absolute;inset:0;pointer-events:none;will-change:transform}
+.vside{position:absolute;inset:0;pointer-events:none;will-change:transform;transform:translate3d(0,0,0);backface-visibility:hidden}
 .vside img{width:100%;height:100%;object-fit:contain;display:block}
 .vside.anim,#vStage.swanim{transition:transform .22s cubic-bezier(.2,.7,.3,1)}
 .vtop{position:absolute;left:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:3;display:flex;align-items:center;gap:12px}
@@ -867,7 +867,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="nextbar" id="nextBar"><button class="next m-before" id="nextBtn"><span id="nextI"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="tx2"><b id="nextT">施工前を撮る</b><small id="nextS"></small></span></button></div>
 </div>
 
-<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vside" id="vPrev" hidden><img alt=""></div><div class="vside" id="vNext" hidden><img alt=""></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" enterkeyhint="enter" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
+<div class="viewer" id="viewer" hidden><div id="vStage"><img id="vImg" alt="拡大表示"><img id="vImg2" alt="" hidden><div id="vTags"></div></div><div class="vside" id="vPrev" hidden><img alt=""></div><div class="vside" id="vCur" hidden><img alt=""></div><div class="vside" id="vNext" hidden><img alt=""></div><div class="vtop"><button class="vback" id="vBack"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><span class="cnt" id="vCnt" hidden></span></div><div class="vbar" id="vBar" hidden><div class="vnote" id="vNote" hidden><div class="hd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="vNoteL">コメント</span><span class="st" id="vNoteS"></span><button class="add" id="vNoteAdd" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>コメント追加</button></div><div class="row"><textarea id="vNoteT" enterkeyhint="enter" rows="1" maxlength="300" placeholder="タップしてコメントを追加"></textarea><button class="ok" id="vNoteOk">OK</button></div></div><div class="btns"><button id="vBack2" class="vb2"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>戻る</button><button id="vSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx">保存</span></button><button id="vDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div></div><button class="vclose" id="vClose" aria-label="閉じる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div class="vop" id="vOp" hidden><span>施工後</span><input type="range" id="vOpR" min="0" max="100" value="50" aria-label="施工前の重ね具合"><span>施工前</span></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="bkov" id="bkOv" hidden role="status"><div class="bkbox"><span class="sp"></span><b id="bkT"></b><span class="bkp" id="bkP"></span><span class="bknote">終わるまでアプリを閉じないでください</span></div></div>
 <div class="bkov" id="bkDlg" hidden role="dialog" aria-modal="true"><div class="bkbox bkdlg"><b id="bkDT"></b><div class="bkbody" id="bkDB"></div><div class="bkbtns"><button id="bkDNo"></button><button class="bkmain" id="bkDYes"></button></div></div></div>
@@ -3658,7 +3658,7 @@ function openViewer(src,topSrc,dims){
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
 let vOnShow=null, vSwapping=false;
-function closeViewer(){$("vPrev").hidden=$("vNext").hidden=true;vw.full=null;vOnShow=null;vSwapping=false;$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function closeViewer(){$("vPrev").hidden=$("vNext").hidden=$("vCur").hidden=true;vw.full=null;vw.sw=vw.swLast=null;$("vStage").style.visibility="";vOnShow=null;vSwapping=false;$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
 function vApply(anim){
@@ -3684,7 +3684,7 @@ $("viewer").addEventListener("pointerdown",e=>{
  if(vw.pts.size===2){
   const [a,b]=[...vw.pts.values()];
   vw.pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,s:vw.s,mx:(a.x+b.x)/2,my:(a.y+b.y)/2,x:vw.x,y:vw.y};vw.pan=null;vw.down=null;
-  if(vw.sw){vw.sw=null;galPreload();vApply(false);} // a second finger: no slide
+  if(vw.sw){const sw=vw.sw;vw.sw=null;if(sw.raf)cancelAnimationFrame(sw.raf);galPreload();swRest();} // a second finger: no slide
  }else if(vw.pts.size===1){
   vw.pan={x0:e.clientX,y0:e.clientY,x:vw.x,y:vw.y};vw.down={x:e.clientX,y:e.clientY,t:performance.now()};
  }
@@ -3699,30 +3699,44 @@ $("viewer").addEventListener("pointermove",e=>{
   vw.s=s;vw.x=mx-cx*s;vw.y=my-cy*s;vApply(false);
  }else if(vw.pan){
   const dx=e.clientX-vw.pan.x0, dy=e.clientY-vw.pan.y0;
-  if(!vw.sw&&gal&&!vSwapping&&vw.s<=vw.fit*1.02&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy))vw.sw={x0:e.clientX,h:[{x:e.clientX,t:performance.now()}]};
-  if(vw.sw){const t=performance.now(), h=vw.sw.h;h.push({x:e.clientX,t});while(h.length>2&&t-h[0].t>100)h.shift(); // the last 0.1 s, for the speed
-   swSet(e.clientX-vw.sw.x0,false);return;}
+  if(!vw.sw&&gal&&!vSwapping&&vw.s<=vw.fit*1.02&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy))swStart(vw.pan.x0,vw.down?vw.down.t:performance.now()); // from where the finger came down: the photo stays under it
+  if(vw.sw){const t=performance.now(), sw=vw.sw, h=sw.h;h.push({x:e.clientX,t});while(h.length>2&&t-h[0].t>100)h.shift(); // the last 0.1 s, for the speed
+   // one move per screen frame
+   sw.dx=e.clientX-sw.x0;if(!sw.raf)sw.raf=requestAnimationFrame(()=>{sw.raf=0;if(vw.sw===sw)swSet(sw.dx,false);});return;}
   vw.x=vw.pan.x+dx;vw.y=vw.pan.y+dy;vApply(false);
  }
 });
-// the slide: the photo moved by dx, its neighbours beside it (pulled less past the first / last)
-function swSet(dx,anim){
- const W=vSize()[0], G=W+16, xs=galItems(gal.kind);
- if((dx>0&&!xs[gal.i-1])||(dx<0&&!xs[gal.i+1]))dx*=0.3;
- const st=$("vStage");st.classList.remove("anim");st.classList.toggle("swanim",!!anim);
- st.style.transform="translate("+(vw.x+dx)+"px,"+vw.y+"px) scale("+vw.s+")";
- [["vPrev",-1],["vNext",1]].forEach(([id,d])=>{const el=$(id);el.classList.toggle("anim",!!anim);el.style.transform="translateX("+(d*G+dx)+"px)";});
+// The slide moves three light screen-size panes (before / now / next) that the phone slides
+// without redrawing. The photo's own stage (as big as the photo, scaled down) is hidden
+// meanwhile: moving it redrew it every frame, which caught under the finger and looked blocky.
+function swStart(x,t0){
+ const W=vSize()[0], xs=galItems(gal.kind), cur=$("vCur"), ci=cur.firstChild, im=$("vImg");
+ const sw=vw.sw={x0:x,h:[{x,t:t0}],dx:0,raf:0,W,G:W+16,prev:!!xs[gal.i-1],next:!!xs[gal.i+1],ready:false};
+ ci.src=im.currentSrc||im.src;cur.classList.remove("anim");cur.style.transform="translate3d(0,0,0)";cur.hidden=false;
+ (ci.decode?ci.decode():Promise.resolve()).catch(()=>{}).then(()=>requestAnimationFrame(()=>{
+  if(vw.sw!==sw)return;sw.ready=true;const st=$("vStage");st.style.visibility="hidden";vApply(false);}));
 }
+function swPane(id,x,anim){const el=$(id);el.classList.toggle("anim",!!anim);el.style.transform="translate3d("+x+"px,0,0)";}
+function swSet(dx,anim){
+ const sw=vw.sw||vw.swLast;if(!sw)return;
+ if((dx>0&&!sw.prev)||(dx<0&&!sw.next))dx*=0.3;
+ swPane("vPrev",dx-sw.G,anim);swPane("vCur",dx,anim);swPane("vNext",dx+sw.G,anim);
+ // until the pane is ready (a frame or two), the stage moves with it
+ if(!sw.ready){const st=$("vStage");st.classList.remove("anim");st.classList.toggle("swanim",!!anim);st.style.transform="translate("+(vw.x+dx)+"px,"+vw.y+"px) scale("+vw.s+")";}
+}
+// back to the photo's own stage once the panes have come to rest
+function swRest(){const st=$("vStage");st.classList.remove("swanim");st.style.visibility="";vApply(false);$("vCur").hidden=true;$("vCur").classList.remove("anim");}
 // let go: on to the next / previous one past a quarter of the width (or a quick flick), else back
 function swEnd(e){
  const sw=vw.sw;vw.sw=null;if(!sw||!gal)return;
- const W=vSize()[0], dx=e.clientX-sw.x0, xs=galItems(gal.kind), h0=sw.h[0], dt=performance.now()-h0.t;
+ if(sw.raf)cancelAnimationFrame(sw.raf);vw.swLast=sw;
+ const W=sw.W, dx=e.clientX-sw.x0, h0=sw.h[0], dt=performance.now()-h0.t;
  sw.v=dt>0&&dt<300?(e.clientX-h0.x)/dt:0; // speed over the last moment (px per ms)
- let d=0;if((dx<-W*0.25||sw.v<-0.5)&&dx<0&&xs[gal.i+1])d=1;else if((dx>W*0.25||sw.v>0.5)&&dx>0&&xs[gal.i-1])d=-1;
- swSet(d?-d*(W+16):0,true);
- if(!d){setTimeout(()=>{if(!vw.sw)vApply(false);},230);return;}
+ let d=0;if((dx<-W*0.25||sw.v<-0.5)&&dx<0&&sw.next)d=1;else if((dx>W*0.25||sw.v>0.5)&&dx>0&&sw.prev)d=-1;
+ swSet(d?-d*sw.G:0,true);
+ if(!d){setTimeout(()=>{if(!vw.sw&&vw.swLast===sw){vw.swLast=null;swRest();}},240);return;}
  vSwapping=true;const el=$(d>0?"vNext":"vPrev");
- setTimeout(()=>{if(!gal){vSwapping=false;return;}
+ setTimeout(()=>{vw.swLast=null;$("vCur").hidden=true;if(!gal){vSwapping=false;return;}
   // the neighbour now fills the screen: it stays until the new photo is ready under it
   vOnShow=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{vSwapping=false;$("vStage").classList.remove("swanim");galPreload();}));
   $("vStage").classList.remove("swanim");el.classList.remove("anim");
