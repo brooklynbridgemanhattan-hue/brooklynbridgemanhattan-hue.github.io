@@ -2342,13 +2342,14 @@ function renderThumbs(){
 // On (設定は端末ごと) = a card listing what to photograph at each place, by its name (給湯器 / コンロ)
 // or the list chosen on the card. Its photos are その他の写真 marked with the item (x.ckl), so
 // saving, deleting, the viewer and the backup treat them as before; the list shows them, the
-// その他の写真 grid leaves them out. Every item is its own photo (施工前 本体 too: not the 施工前 used
-// for the comparison), taken from its 撮る with the camera closing once it has it.
+// その他の写真 grid leaves them out. Each item is its own photo, taken from its 撮る with the camera
+// closing once it has it; but 施工前 本体 / 施工後 本体 are the place's 施工前 / 施工後 (always the one in
+// use: a retake or another 候補 chosen shows there too), taken up there.
 // What is ticked by hand (漏水確認) and the chosen 気密試験 way are kept with the place (cklv).
 const CKL_LAB={b_body:"施工前 本体",b_plate:"施工前 銘板",pipe:"配管",line:"ラインマーク",a_body:"施工後 本体",a_plate:"施工後 銘板",a_pipe:"施工後 配管",leak:"漏水確認",air:"気密試験結果"};
 const CKL_T={kyuto:{name:"給湯器",keys:["b_body","b_plate","pipe","line","a_body","a_plate","a_pipe","leak","air"]},
  konro:{name:"ビルトインコンロ",keys:["b_body","b_plate","pipe","line","a_body","a_plate","a_pipe","air"]}};
-const CKL_AIR={liq:"検知液/検知器",prs:"圧力測定器"};
+const CKL_AIR={liq:"検知液/検知器",prs:"圧力測定器"}, CKL_PAIR={b_body:"before",a_body:"after"};
 const cklMax=k=>k==="air"?2:k==="leak"?0:1;
 const cklOn=()=>getPref("ba-ckl")==="1";
 function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
@@ -2357,11 +2358,11 @@ function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
 // an item's photos in list t (給湯器 and コンロ are separate jobs: a photo belongs to the list it was
 // taken for, cklT; one from v1.121-122 has none and counts for the place's list)
 const cklPh=(p,k,t)=>(p.extras||[]).filter(x=>x.ckl===k&&(!x.cklT||x.cklT===t));
-function cklDone(p,k,t){if(k==="leak")return !!(p.cklv&&p.cklv.leak);return cklPh(p,k,t).length>0;}
+function cklDone(p,k,t){if(CKL_PAIR[k])return !!p[CKL_PAIR[k]];if(k==="leak")return !!(p.cklv&&p.cklv.leak);return cklPh(p,k,t).length>0;}
 // place i: its list and how many are done (null = no list there)
 function cklStat(j,i){const t=cklTplOf(j,i);if(!t)return null;const p=pairsOf(j)[i], ks=CKL_T[t].keys;return {t,ks,n:ks.filter(k=>cklDone(p,k,t)).length,left:ks.filter(k=>!cklDone(p,k,t))};}
 // a photo the open place's list shows (so the その他の写真 grid leaves it out)
-function cklHides(x){if(!x||!x.ckl||!cklOn()||!job)return false;const t=cklTplOf(job,spotIdx(job));return !!t&&CKL_T[t].keys.includes(x.ckl)&&(!x.cklT||x.cklT===t);}
+function cklHides(x){if(!x||!x.ckl||!cklOn()||!job)return false;const t=cklTplOf(job,spotIdx(job));return !!t&&CKL_T[t].keys.includes(x.ckl)&&!CKL_PAIR[x.ckl]&&(!x.cklT||x.cklT===t);}
 const CKL_OK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-9"/></svg>';
 function cklRender(){
  const on=cklOn(), box=$("cklList");$("cklSw").checked=on;
@@ -2373,7 +2374,10 @@ function cklRender(){
  const st=cklStat(job,i), nx=st.left[0];
  h+='<div class="cklpg"><span class="cklbar"><i style="width:'+Math.round(100*st.n/st.ks.length)+'%"></i></span><b>'+st.n+' / '+st.ks.length+'</b></div>';
  for(const k of st.ks){const done=cklDone(p,k,t);let sub="", ph="", go="";
-  if(k==="leak"){sub="写真はいりません";go='<button type="button" class="cklgo'+(done?" on":"")+'" data-tick="leak">'+(done?"確認済み":"確認した")+'</button>';}
+  if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];sub=k==="b_body"?"上の施工前の写真":"上の施工後の写真";
+   if(b)ph='<button type="button" data-pair="'+(k==="b_body"||!p.before?0:1)+'"><img src="'+galUrl(b)+'" alt="'+CKL_LAB[k]+'"></button>';
+   else go='<button type="button" class="cklgo" data-up="'+k+'">'+CAM_SVG+'上で撮る</button>';}
+  else if(k==="leak"){sub="写真はいりません";go='<button type="button" class="cklgo'+(done?" on":"")+'" data-tick="leak">'+(done?"確認済み":"確認した")+'</button>';}
   else{const xs=cklPh(p,k,t), all=p.extras||[];
    ph=xs.map(x=>'<button type="button" data-x="'+all.indexOf(x)+'"><img src="'+galUrl(x.blob)+'" alt="'+CKL_LAB[k]+'"></button>').join("");
    if(k==="air")sub=v.air?"写真2枚まで":"下のどちらかを選んでから撮ります";
@@ -2387,6 +2391,11 @@ let cklNext=null, cklFile=null; // the item the next その他の写真 camera /
 async function cklSet(f){if(!job)return;job.cklv=job.cklv||{};f(job.cklv);await saveJob();renderThumbs();}
 $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;const d=b.dataset;
  if(d.tpl)cklTpl(d.tpl);
+ else if(d.pair!=null)openGallery(+d.pair,"pair");
+ else if(d.up){ // 施工前 本体 / 施工後 本体: to the 施工前 / 施工後 tile (施工後 needs the 施工前 first)
+  const el=$(d.up==="a_body"&&job.before?"sA":"sB"), top=$("detail").querySelector(".topbar").offsetHeight;
+  window.scrollTo({top:Math.max(0,el.getBoundingClientRect().top+window.scrollY-top-60),behavior:"smooth"});
+  setTimeout(()=>glow(el,3,d.up==="a_body"&&!job.before?"先に施工前をここで撮ります":"ここをタップして撮影"),450);}
  else if(d.tick)cklSet(v=>{if(v.leak)delete v.leak;else v.leak=1;});
  else if(d.air)cklSet(v=>{v.air=d.air;});
  else if(d.x!=null)openGallery(+d.x);
@@ -3492,12 +3501,13 @@ async function rpSave(blob,name){
  toast("保存しました");
 }
 // 撮影チェックリスト of place i for the report (null = off / no list): the photos in the list's order
-// with their step, and the ticks without a photo
+// with their step (施工前 本体 / 施工後 本体 are the 施工前 / 施工後 in use), and the ticks without a photo
 function rpCkl(j,i){
  if(!cklOn())return null;const st=cklStat(j,i);if(!st)return null;
  const p=pairsOf(j)[i], v=p.cklv||{}, items=[], has=new Set(), lines=[];
  for(const k of st.ks){
   if(k==="leak"){if(v.leak)lines.push(CKL_LAB[k]+" ✓ 確認済み");continue;}
+  if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];if(b)items.push({blob:b,at:p[CKL_PAIR[k]+"At"],cap:CKL_LAB[k]});continue;}
   for(const e of cklPh(p,k,st.t)){has.add(e);if(e.blob&&!e.noRep)items.push({blob:e.blob,at:e.at,e,cap:CKL_LAB[k]+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":"")});}
  }
  return {items,has,lines};
