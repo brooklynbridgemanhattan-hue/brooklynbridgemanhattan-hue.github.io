@@ -2321,9 +2321,34 @@ function galItems(kind){
  if(kind==="pair")return [job.before&&{blob:job.before,at:job.beforeAt,name:"施工前",nid:job.beforeNid},job.after&&{blob:job.after,at:job.afterAt,name:"施工後",nid:job.afterNid}].filter(Boolean);
  return (job.extras||[]).map((x,i)=>({blob:x.blob,at:x.at,name:"写真"+(i+1),nid:x.nid}));
 }
-function openGallery(i,kind){
+// App: the photos are seen in the phone's own viewer (smooth sliding and zoom like Google Photos).
+// The page keeps gal in step and does what its buttons ask (save / delete / comment).
+const natViewer=()=>!!(window.AndroidApp&&window.AndroidApp.viewerOpen&&window.AndroidApp.photoSize);
+function natGallery(i,kind){
+ const xs=galItems(kind), A=window.AndroidApp;
+ // every photo needs the phone's own copy; one without it is seen on the page this time
+ if(!xs.every(x=>x.nid&&A.hasPhoto(x.nid))){if(kind==="extra")(job.extras||[]).forEach(ensureNid);return false;}
+ const items=xs.map((x,k)=>{const d=String(A.photoSize(x.nid)).split(",").map(Number), e=kind==="extra"?job.extras[k]:null;
+  return {id:x.nid,label:x.name,w:d[0]||0,h:d[1]||0,notes:e?notesOf(e).filter(n=>n.tag&&n.t).map(n=>({t:n.t,x:n.tag.x,y:n.tag.y,s:n.tag.s})):[]};});
+ gal={i,kind,nat:true,dims:items.map(t=>[t.w,t.h])};
+ A.viewerOpen(JSON.stringify({items,index:i,deletable:kind==="extra",comment:kind==="extra"}));
+ return true;
+}
+window.onAppViewer=e=>{
+ if(!gal||!gal.nat||!e)return;
+ if(typeof e.index==="number")gal.i=e.index;
+ if(e.type==="close"){gal=null;return;}
+ // comments are written in at the photo's own size (as the page's viewer would have it)
+ if(e.type==="save"){const d=gal.dims[gal.i]||[0,0];if(d[0]>0){vw.nw=d[0];vw.nh=d[1];}$("vSave").onclick();return;}
+ if(e.type==="delete"){galDelArm=true;$("vDel").onclick();return;}
+ // コメント: written on the page's own viewer (the phone's one closes)
+ if(e.type==="comment"){const {i,kind}=gal;gal=null;window.AndroidApp.viewerClose();openGallery(i,kind,true);setTimeout(()=>{$("vNoteT").focus();},300);}
+};
+function openGallery(i,kind,onPage){
  kind=kind||"extra";const xs=galItems(kind);if(!xs.length){closeViewer();return;}
- i=Math.max(0,Math.min(xs.length-1,i));gal={i,kind};galDelArm=false;setTx("vDel","削除");
+ i=Math.max(0,Math.min(xs.length-1,i));
+ if(!onPage&&natViewer()&&natGallery(i,kind))return;
+ gal={i,kind};galDelArm=false;setTx("vDel","削除");
  $("vDel").hidden=kind!=="extra";
  noteEnd(true);$("vNote").hidden=kind!=="extra";cur=-1;clearTimeout(noteMsgT);$("vNoteL").parentNode.classList.remove("msg");
  $("vBar").hidden=false;$("vCnt").hidden=false;$("viewer").classList.add("gal");$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
@@ -3638,7 +3663,7 @@ showLayout();
 document.querySelectorAll('input[name="lay"]').forEach(el=>el.onchange=()=>{layout=el.value;try{localStorage.setItem("ba-lay",layout);}catch(err){}showLayout();make();});
 let toastT=null;
 // Shown for 2 seconds, then fades out.
-function toast(t,ng){const e=$("toast");
+function toast(t,ng){if(gal&&gal.nat&&window.AndroidApp&&window.AndroidApp.viewerToast)window.AndroidApp.viewerToast(t);const e=$("toast");
  // the part in brackets goes on its own, smaller line; the rest breaks at 、 rather than mid-word
  const m=String(t).match(/^(.+?)[(（](.+)[)）]$/);
  if(m){e.textContent="";const a=document.createElement("span");a.textContent=m[1];const b=document.createElement("small");b.textContent="("+m[2]+")";e.append(a,b);}else e.textContent=t;e.classList.toggle("ng",!!ng);e.classList.remove("out");e.hidden=false;clearTimeout(toastT);
@@ -3669,7 +3694,7 @@ function openViewer(src,topSrc,dims){
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
 let vOnShow=null, vSwapping=false;
-function closeViewer(){$("vPrev").hidden=$("vNext").hidden=$("vCur").hidden=true;vw.full=null;vw.sw=vw.swLast=null;$("vStage").style.visibility="";vOnShow=null;vSwapping=false;$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function closeViewer(){if(gal&&gal.nat&&window.AndroidApp&&window.AndroidApp.viewerClose)window.AndroidApp.viewerClose();$("vPrev").hidden=$("vNext").hidden=$("vCur").hidden=true;vw.full=null;vw.sw=vw.swLast=null;$("vStage").style.visibility="";vOnShow=null;vSwapping=false;$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
 function vApply(anim){
