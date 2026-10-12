@@ -775,7 +775,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <main class="wrap">
   <button class="newjob" id="hNew"><span class="ni"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="nt"><b>新しい現場を始める</b><small>まず施工前の写真を撮ります</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
   <button class="bkwarn" id="bkWarn" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><span id="bkWarnT">まだバックアップがありません</span><u>今すぐ作る</u></button>
-  <div class="hsearch"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hSearch" type="search" placeholder="お客様名・場所・メモ・日付で探す" enterkeyhint="search" autocomplete="off" aria-label="現場を探す"><button id="hSearchX" hidden aria-label="検索をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="hsearch"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hSearch" type="search" placeholder="お客様名・箇所・日付などで探す" enterkeyhint="search" autocomplete="off" aria-label="現場を探す"><button id="hSearchX" hidden aria-label="検索をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="tabs" role="tablist"><button id="tabW" class="on" role="tab"><span class="dot wait"></span>施工後待ち<b id="nW">0</b></button><button id="tabD" role="tab"><span class="dot done"></span>完了<b id="nD">0</b></button></div>
   <div class="list" id="lWait"></div><div class="list" id="lDone" hidden></div>
   <div id="lHit" hidden><p class="hithead" id="hitHead"></p><div class="list" id="hitList"></div></div>
@@ -1346,7 +1346,7 @@ function hitWord(j,w){
  return false;
 }
 function hFilter(){
- const raw=$("hSearch").value.trim(), words=z2h(raw).toLowerCase().split(/\s+/).filter(Boolean), on=words.length>0;
+ const raw=$("hSearch").value.trim(), words=z2h(raw).toLowerCase().split(/[\s、,，]+/).filter(Boolean), on=words.length>0;
  $("hSearchX").hidden=!$("hSearch").value;
  // searching: one list of the sites from both tabs, the tabs set aside meanwhile
  document.querySelector("#home .tabs").hidden=on;$("lHit").hidden=!on;
@@ -2342,7 +2342,7 @@ window.onAppViewer=e=>{
  if(e.type==="save"){const d=gal.dims[gal.i]||[0,0];if(d[0]>0){vw.nw=d[0];vw.nh=d[1];}$("vSave").onclick();return;}
  if(e.type==="delete"){galDelArm=true;$("vDel").onclick();return;}
  // コメント: written on the page's own viewer (the phone's one closes)
- if(e.type==="comment"){const {i,kind}=gal;gal=null;window.AndroidApp.viewerClose();openGallery(i,kind,true);setTimeout(()=>{$("vNoteT").focus();},300);}
+ if(e.type==="comment"){const {i,kind}=gal;gal=null;window.AndroidApp.viewerClose();openGallery(i,kind,true);gal.fromNat=true;setTimeout(()=>{$("vNoteT").focus();},300);}
 };
 function openGallery(i,kind,onPage){
  kind=kind||"extra";const xs=galItems(kind);if(!xs.length){closeViewer();return;}
@@ -2483,7 +2483,7 @@ $("vNoteAdd").onclick=()=>{cur=-1;noteUI();$("vNoteT").focus();};
 let backWhileEdit=false;
 $("vBack").addEventListener("pointerdown",()=>{backWhileEdit=editing;if(editing)cancelEdit=true;});
 $("vBack2").onclick=()=>closeViewer();
-$("vBack").onclick=()=>{if(backWhileEdit||editing){backWhileEdit=false;noteEnd(true);return;}closeViewer();};
+$("vBack").onclick=()=>{if(backWhileEdit||editing){backWhileEdit=false;noteEnd(true);return;}viewerBack();};
 // New text goes top left, under the comments already there.
 function newTagPos(ns){
  let y=0.03;const c=document.createElement("canvas").getContext("2d");
@@ -3694,6 +3694,8 @@ function openViewer(src,topSrc,dims){
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
 let vOnShow=null, vSwapping=false;
+// 戻る / ✕ / back on the page's viewer: back to the phone's viewer when a comment was written from it
+function viewerBack(){if(gal&&gal.fromNat){const {i,kind}=gal;closeViewer();openGallery(i,kind);return;}closeViewer();}
 function closeViewer(){if(gal&&gal.nat&&window.AndroidApp&&window.AndroidApp.viewerClose)window.AndroidApp.viewerClose();$("vPrev").hidden=$("vNext").hidden=$("vCur").hidden=true;vw.full=null;vw.sw=vw.swLast=null;$("vStage").style.visibility="";vOnShow=null;vSwapping=false;$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
@@ -3809,7 +3811,7 @@ function vUp(e){
 }
 $("viewer").addEventListener("pointerup",vUp);$("viewer").addEventListener("pointercancel",vUp);
 $("viewer").addEventListener("wheel",e=>{e.preventDefault();vZoomAt(Math.min(vMax(),Math.max(vw.fit,vw.s*(e.deltaY<0?1.15:1/1.15))),e.clientX,e.clientY,false);},{passive:false});
-$("vClose").onclick=closeViewer;
+$("vClose").onclick=viewerBack;
 window.addEventListener("resize",()=>{if(!$("viewer").hidden){vFit(false);if(gal&&!vSwapping)galPreload();}});
 $("out").onclick=async()=>{await makeDone;if(!imgs.b)return;openViewer(blobUrl(await fullBlob()));};
 
@@ -3891,7 +3893,7 @@ window.appBack=()=>{
  if(!$("lvEd").hidden){if(!lvBusy)lvClose();return true;}
  if(!$("adjEd").hidden){adjClose();return true;}
  if(!$("home").hidden&&hSel.size){hSelClear();return true;}
- if(!$("viewer").hidden){if(editing)noteEnd(true);else closeViewer();return true;}
+ if(!$("viewer").hidden){if(editing)noteEnd(true);else viewerBack();return true;}
  if(!$("med").hidden){$("med").hidden=true;return true;}
  if($("cam").style.display==="flex"){stopCam();return true;}
  if(sel.size){selClear();return true;}
