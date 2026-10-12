@@ -106,6 +106,7 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .list{display:flex;flex-direction:column;gap:10px}
 .job{display:flex;align-items:center;gap:14px;width:100%;padding:12px;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);text-align:left;color:var(--ink)}
 .jimg{display:flex;flex:none}
+.exsp{margin-left:4px;font-size:.8em;color:#3B5BDB}
 .jspn{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#344054}
 .jspot{display:inline-block;margin-right:6px;padding:0 7px;border-radius:8px;background:#EDF2FF;color:#3B5BDB;font-weight:800;font-size:12px;line-height:20px}
 .jimg img{width:56px;height:70px;object-fit:cover;background:#E4E7EC;border:2px solid var(--card)}
@@ -824,7 +825,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </section>
 
  <section class="card c-extra">
-  <div class="sh2"><span class="cdot"></span><h2>その他の写真</h2><button class="addbtn" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>カメラで撮る</span></button></div>
+  <div class="sh2"><span class="cdot"></span><h2>その他の写真<span class="exsp" id="exSpotNm"></span></h2><button class="addbtn" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>カメラで撮る</span></button></div>
   <label class="btn b-extra full" id="nExtra" for="fExtra" hidden style="margin-bottom:10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで撮る</label>
   <div class="thumbs" id="thumbs"></div>
   <p class="none" id="thumbsNone">まだありません。タップで拡大、長押しで選択できます。</p>
@@ -1105,8 +1106,8 @@ async function mirrorJob(j){
   if(p.after&&!p.afterNid){const b=p.after, id=await put(b);if(p.after===b&&!p.afterNid)p.afterNid=id;}
   if(p.raw){p.rawNid=p.rawNid||{};for(const k of ["b","a"]){const r=p.raw[k];if(r&&!p.rawNid[k]){const cur=k==="b"?p.before:p.after, id=r===cur?(k==="b"?p.beforeNid:p.afterNid):await put(r);if(p.raw[k]===r&&!p.rawNid[k])p.rawNid[k]=id;}}}
   for(const c of candsOf(p)){if(c.blob&&!c.nid)c.nid=await put(c.blob);if(c.raw&&!c.rawNid)c.rawNid=c.raw===c.blob?c.nid:await put(c.raw);}
+  for(const x of p.extras||[])if(x.blob&&!x.nid)x.nid=await put(x.blob);
  }
- for(const x of j.extras||[])if(x.blob&&!x.nid)x.nid=await put(x.blob);
  if(goneIds.has(j.id))return;
  window.AndroidApp.saveJobData(j.id,JSON.stringify(j,(k,v)=>v instanceof Blob?undefined:v));
 }
@@ -1127,9 +1128,9 @@ async function restoreJobs(){
    if(p.cand)for(const k of ["b","a"]){const L=p.cand[k]||[];
     for(const c of L){c.blob=await file(c.nid);c.raw=c.rawNid?(c.rawNid===c.nid?c.blob:await file(c.rawNid)):null;}
     p.cand[k]=L.filter(c=>c.blob);}
+   for(const x of p.extras||[])x.blob=await file(x.nid);
+   if(p.extras)p.extras=p.extras.filter(x=>x.blob);
   }
-  for(const x of j.extras||[])x.blob=await file(x.nid);
-  j.extras=(j.extras||[]).filter(x=>x.blob);
   await putJobDB(j);
  }
 }
@@ -1147,15 +1148,17 @@ let MEM=[];
    anything left over that is over a day old. Unsure what is in use = remove nothing. */
 /* 複数か所: a site can have several places (キッチン, 浴室 …), each with its own 施工前・施工後.
    The open place's photos are on the site itself, as before (so a one-place site is unchanged);
-   the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}]. */
-const PAIR_KEYS=["before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","raw","rawNid","cand","mask","tone","lvBg","rot","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
+   the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}].
+   その他の写真 (extras) belong to a place too; on a site from before that (no exSpot), they were the
+   site's and go to 1か所目 when it is next opened. */
+const PAIR_KEYS=["extras","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","raw","rawNid","cand","mask","tone","lvBg","rot","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
 const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
 const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
 const jobDone=j=>pairsOf(j).every(p=>!!p.after);
 const spotIdx=j=>{const L=spotList(j);return L?Math.max(0,L.findIndex(s=>s.live)):0;};
 const spotName=(j,i)=>{const L=spotList(j), x=L&&L[i];return (x&&x.name)||(i+1)+"か所目";};
-const pairNids=p=>{const r=p.rawNid||{};return [p.beforeNid,p.afterNid,r.b,r.a,...candsOf(p).flatMap(c=>[c.nid,c.rawNid])];};
-const nidsOf=j=>{if(!j)return [];return [...pairsOf(j).flatMap(pairNids),...(j.extras||[]).map(x=>x.nid)].filter(Boolean);};
+const pairNids=p=>{const r=p.rawNid||{};return [p.beforeNid,p.afterNid,r.b,r.a,...candsOf(p).flatMap(c=>[c.nid,c.rawNid]),...(p.extras||[]).map(x=>x.nid)];};
+const nidsOf=j=>{if(!j)return [];return pairsOf(j).flatMap(pairNids).filter(Boolean);};
 const candsOf=j=>j&&j.cand?[...(j.cand.b||[]),...(j.cand.a||[])]:[];
 function allJobsSafe(){return new Promise(res=>{if(!IDB)return res(null);try{const r=tx("readonly").getAll();r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);}catch(e){res(null);}});}
 async function photoGC(drop){
@@ -1227,7 +1230,7 @@ function bkErr(o){const e=String(o.error||"");
  return "うまくいきませんでした。もう一度お試しください。("+esc(e)+")";}
 // the settings this page keeps (the phone's own settings are added by the app)
 function bkSettings(){const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^ba-/.test(k))o[k]=localStorage.getItem(k);}}catch(e){}return JSON.stringify(o);}
-const bkPairs=j=>[...pairsOf(j).flatMap(p=>{const r=p.raw||{}, rn=p.rawNid||{};return [[p.before,"beforeNid",p],[p.after,"afterNid",p],[r.b,"b",rn],[r.a,"a",rn],...candsOf(p).flatMap(c=>[[c.blob,"nid",c],[c.raw,"rawNid",c]])];}),...(j.extras||[]).map(x=>[x.blob,"nid",x])];
+const bkPairs=j=>[...pairsOf(j).flatMap(p=>{const r=p.raw||{}, rn=p.rawNid||{};return [[p.before,"beforeNid",p],[p.after,"afterNid",p],[r.b,"b",rn],[r.a,"a",rn],...candsOf(p).flatMap(c=>[[c.blob,"nid",c],[c.raw,"rawNid",c]]),...(p.extras||[]).map(x=>[x.blob,"nid",x])];})];
 // every site handed to the phone with a kept copy of every photo; returns the photo ids, or throws
 async function bkPrepare(){
  await mirrorQ;await mirrorOld();await mirrorQ;
@@ -1386,6 +1389,8 @@ function setSlot(slot,blob,at){
 }
 function openJob(j){
  hSelClear();
+ if(spotList(j)&&!j.exSpot){const s0=j.spots[0];j.exSpot=1;
+  if(!s0.live&&(j.extras||[]).length){s0.extras=[...(s0.extras||[]),...j.extras];j.extras=[];}putJob(j);}
  if($("hSearch").value){$("hSearch").value="";hFilter();} // back from a site found by search: the usual list
  job=j;setPref("ba-open",j.id);$("home").hidden=true;$("detail").hidden=false;
  $("site").value=bareName(j.site);$("memo").value=j.memo||"";
@@ -1520,7 +1525,7 @@ async function spotAddAsk(){
  const p=bkDialog("箇所を追加",spotForm("",first?'<p style="margin:12px 0 0">今の写真は「1か所目」になります(名前は「1」のボタンで付けられます)。</p>':''),"追加する","やめる");
  spotFormWire();if(!await p||!job)return;
  const name=spotNmVal();
- if(!job.spots||!job.spots.length)job.spots=[{name:"",live:true}];
+ if(!job.spots||!job.spots.length){job.spots=[{name:"",live:true}];job.exSpot=1;}
  job.spots.push({name});
  if(!await spotGo(job.spots.length-1)){await saveJob();spotShow();}
  // the bar just under the top bar, with the new place's empty photos below it
@@ -1535,13 +1540,13 @@ async function spotEdit(i){
  const ok=await p;if(!job||spotList(job)!==L)return;
  if(wantDel){await spotDel(i);return;}
  if(!ok)return;
- if(!L){if(!spotNmVal())return;job.spots=L=[{name:"",live:true}];} // the only place gets a name
+ if(!L){if(!spotNmVal())return;job.spots=L=[{name:"",live:true}];job.exSpot=1;} // the only place gets a name
  L[i].name=spotNmVal();await saveJob();spotShow();
 }
 async function spotDel(i){
  const L=spotList(job);if(!L||L.length<2||!L[i])return;
- const x=L[i], P=x.live?job:x, n=[P.before,P.after].filter(Boolean).length;
- if(!await bkDialog("「"+spotName(job,i)+"」を削除しますか?",n?'この箇所の写真('+n+'枚。候補の写真も含む)も削除します。スマホの写真に保存したものも消えます。':'この箇所には、まだ写真がありません。',"削除する","やめる"))return;
+ const x=L[i], P=x.live?job:x, n=[P.before,P.after].filter(Boolean).length+(P.extras||[]).length;
+ if(!await bkDialog("「"+spotName(job,i)+"」を削除しますか?",n?'この箇所の写真('+n+'枚。候補・その他の写真も含む)も削除します。スマホの写真に保存したものも消えます。':'この箇所には、まだ写真がありません。',"削除する","やめる"))return;
  if(!job||job.spots!==L)return;
  if(x.live&&!await spotGo(i>0?i-1:1))return; // open another place first (its entry is then L[i] again)
  const y=L[i];if(!y||y.live||job.spots!==L)return;
@@ -2251,6 +2256,7 @@ $("bPlace").onclick=getPlace;
 /* ---------- other photos ---------- */
 function renderThumbs(){
  const xs=(job&&job.extras)||[];
+ $("exSpotNm").textContent=job&&spotList(job)?"("+spotName(job,spotIdx(job))+")":"";
  $("thumbs").innerHTML=xs.map((x,i)=>'<button data-x="'+i+'" aria-label="写真 '+(i+1)+(notesOf(x).length?' '+esc(notesOf(x).map(n=>n.t).join(' / ')):'')+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="ck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span>'+(notesOf(x).length?'<span class="cm"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+(notesOf(x).length>1?notesOf(x).length:'')+'</span>':'')+'</button>').join("");
  $("thumbsNone").hidden=xs.length>0;
  selClear();allInfo();
@@ -3598,8 +3604,8 @@ function photoName(kind,t,tag){const site=custName(job).replace(/[\\/:*?"<>|\s]+
 const okR=r=>typeof r==="string"&&(r==="ok"||r.startsWith("ok:"));
 const uriR=r=>okR(r)&&r.length>3?r.slice(3):null;
 function keepUri(o,key,r){const u=uriR(r);if(u&&o){(o[key]=o[key]||[]).push(u);}}
-const pairUris=p=>[...(p.savedB||[]),...(p.savedA||[]),...(p.savedC||[])];
-function savedUris(j){if(!j)return [];return [...pairsOf(j).flatMap(pairUris),...(j.extras||[]).flatMap(x=>x.saved||[])];}
+const pairUris=p=>[...(p.savedB||[]),...(p.savedA||[]),...(p.savedC||[]),...(p.extras||[]).flatMap(x=>x.saved||[])];
+function savedUris(j){if(!j)return [];return pairsOf(j).flatMap(pairUris);}
 function dropFromPhone(uris){uris=(uris||[]).filter(Boolean);if(!uris.length||!window.AndroidApp||!window.AndroidApp.deleteFromGallery)return 0;
  try{return window.AndroidApp.deleteFromGallery(JSON.stringify(uris))|0;}catch(e){return 0;}}
 // App only: writes the photo into the phone's DCIM/Camera. Returns true when saved.
