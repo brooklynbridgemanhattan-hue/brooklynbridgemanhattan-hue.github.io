@@ -3670,8 +3670,9 @@ $("viewer").addEventListener("pointermove",e=>{
   vw.s=s;vw.x=mx-cx*s;vw.y=my-cy*s;vApply(false);
  }else if(vw.pan){
   const dx=e.clientX-vw.pan.x0, dy=e.clientY-vw.pan.y0;
-  if(!vw.sw&&gal&&!vSwapping&&vw.s<=vw.fit*1.02&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy))vw.sw={x0:e.clientX,px:e.clientX,pt:performance.now(),v:0};
-  if(vw.sw){const t=performance.now(), sw=vw.sw;if(t>sw.pt){sw.v=(e.clientX-sw.px)/(t-sw.pt);sw.px=e.clientX;sw.pt=t;}swSet(e.clientX-sw.x0,false);return;}
+  if(!vw.sw&&gal&&!vSwapping&&vw.s<=vw.fit*1.02&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy))vw.sw={x0:e.clientX,h:[{x:e.clientX,t:performance.now()}]};
+  if(vw.sw){const t=performance.now(), h=vw.sw.h;h.push({x:e.clientX,t});while(h.length>2&&t-h[0].t>100)h.shift(); // the last 0.1 s, for the speed
+   swSet(e.clientX-vw.sw.x0,false);return;}
   vw.x=vw.pan.x+dx;vw.y=vw.pan.y+dy;vApply(false);
  }
 });
@@ -3686,7 +3687,8 @@ function swSet(dx,anim){
 // let go: on to the next / previous one past a quarter of the width (or a quick flick), else back
 function swEnd(e){
  const sw=vw.sw;vw.sw=null;if(!sw||!gal)return;
- const W=vSize()[0], dx=e.clientX-sw.x0, xs=galItems(gal.kind);
+ const W=vSize()[0], dx=e.clientX-sw.x0, xs=galItems(gal.kind), h0=sw.h[0], dt=performance.now()-h0.t;
+ sw.v=dt>0&&dt<300?(e.clientX-h0.x)/dt:0; // speed over the last moment (px per ms)
  let d=0;if((dx<-W*0.25||sw.v<-0.5)&&dx<0&&xs[gal.i+1])d=1;else if((dx>W*0.25||sw.v>0.5)&&dx>0&&xs[gal.i-1])d=-1;
  swSet(d?-d*(W+16):0,true);
  if(!d){setTimeout(()=>{if(!vw.sw)vApply(false);},230);return;}
