@@ -1881,14 +1881,14 @@ $("cShot").onclick=async()=>{
  let b=null;try{b=await grab();}finally{$("holdStill").hidden=true;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
  if(s.cut){ // the camera was closed while waiting for it: keep it if it came after all
   if(b&&mode!=="extra"){s.n++;s.got=camGot=s.got.then(()=>gotPhoto(mode,b,o,true,g)).then(()=>{if(job)justShot(mode==="before"?"sB":"sA");}).catch(()=>{});}
-  else if(b)s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl&&s.ckl.k)).catch(()=>{});
+  else if(b)s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl)).catch(()=>{});
   return;}
  if(!b){const st=!!stream&&!stopWanted;shotEnd();if(st)toast("撮影できませんでした。もう一度押してください");return;}
  const name={before:"施工前",after:"施工後",extra:"写真"}[mode];
  if(mode==="extra"){
   // Other photos: stay in the camera so several can be taken in a row.
   shotCount++;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
-  s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl&&s.ckl.k)).catch(()=>{});
+  s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl)).catch(()=>{});
   if(s.ckl){ // a checklist item: back to the list once it has its photo(s); the item glows there
    const c=s.ckl, last=shotCount>=c.left;
    await shotDone(b,cklCamLab(c)+(c.left>1?" "+shotCount+"枚目":"")+"を撮影しました",650);shotEnd();
@@ -2238,11 +2238,11 @@ async function grabRaw(){
 $("fBefore").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("before",f,null);};
 $("fExtra").onchange=async e=>{const f=e.target.files[0], k=cklFile;cklFile=null;e.target.value="";if(f)await gotPhoto("extra",f,null,false,null,k);};
 $("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
-async function gotPhoto(mode,blob,o,shot,g,ckl){
+async function gotPhoto(mode,blob,o,shot,g,ck){
  const now=Date.now();
- if(mode==="extra"){const j=job, ex=blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now};if(ckl)ex.ckl=ckl;(j.extras=j.extras||[]).push(ex);await saveJob();renderThumbs();
+ if(mode==="extra"){const j=job, ex=blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now};if(ck){ex.ckl=ck.k;ex.cklT=ck.t;}(j.extras=j.extras||[]).push(ex);await saveJob();renderThumbs();
   // App: other photos also go straight into the phone's photos (Google Photos), like a camera.
-  const kn=ckl?CKL_LAB[ckl]:"写真";
+  const kn=ck?CKL_LAB[ck.k]:"写真";
   const r=!shot||!window.AndroidApp?null:blob.nid&&canNative()?await nativeSave(blob.nid,"","",photoName(kn,now)):await toPhone(blob,kn,now);
   const ok=r==null?null:okR(r);if(ok){keepUri(ex,"saved",r);if((j.extras||[]).includes(ex)&&!goneIds.has(j.id)){if(j===job)saveJob();else putJob(j);}else dropFromPhone([uriR(r)]);}
   if(stream){if(ok!=null)$("shotN").textContent=shotCount+"枚 "+(ok?"保存しました":"保存できませんでした");}
@@ -2354,12 +2354,14 @@ const cklOn=()=>getPref("ba-ckl")==="1";
 function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
  if(v&&v.tpl)return CKL_T[v.tpl]?v.tpl:null; // chosen on the card ("none" = no list)
  const L=spotList(j), n=(L&&L[i]&&L[i].name)||"";return /給湯/.test(n)?"kyuto":/コンロ/.test(n)?"konro":null;}
-const cklPh=(p,k)=>(p.extras||[]).filter(x=>x.ckl===k);
-function cklDone(p,k){if(k==="leak")return !!(p.cklv&&p.cklv.leak);return cklPh(p,k).length>0;}
+// an item's photos in list t (給湯器 and コンロ are separate jobs: a photo belongs to the list it was
+// taken for, cklT; one from v1.121-122 has none and counts for the place's list)
+const cklPh=(p,k,t)=>(p.extras||[]).filter(x=>x.ckl===k&&(!x.cklT||x.cklT===t));
+function cklDone(p,k,t){if(k==="leak")return !!(p.cklv&&p.cklv.leak);return cklPh(p,k,t).length>0;}
 // place i: its list and how many are done (null = no list there)
-function cklStat(j,i){const t=cklTplOf(j,i);if(!t)return null;const p=pairsOf(j)[i], ks=CKL_T[t].keys;return {t,ks,n:ks.filter(k=>cklDone(p,k)).length,left:ks.filter(k=>!cklDone(p,k))};}
+function cklStat(j,i){const t=cklTplOf(j,i);if(!t)return null;const p=pairsOf(j)[i], ks=CKL_T[t].keys;return {t,ks,n:ks.filter(k=>cklDone(p,k,t)).length,left:ks.filter(k=>!cklDone(p,k,t))};}
 // a photo the open place's list shows (so the その他の写真 grid leaves it out)
-function cklHides(x){if(!x||!x.ckl||!cklOn()||!job)return false;const t=cklTplOf(job,spotIdx(job));return !!t&&CKL_T[t].keys.includes(x.ckl);}
+function cklHides(x){if(!x||!x.ckl||!cklOn()||!job)return false;const t=cklTplOf(job,spotIdx(job));return !!t&&CKL_T[t].keys.includes(x.ckl)&&(!x.cklT||x.cklT===t);}
 const CKL_OK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-9"/></svg>';
 function cklRender(){
  const on=cklOn(), box=$("cklList");$("cklSw").checked=on;
@@ -2370,9 +2372,9 @@ function cklRender(){
  if(!t){box.innerHTML=h+'<p class="cklnone">この箇所のチェックリストを選んでください(箇所の名前が「給湯器」「〜コンロ」なら自動で出ます)。</p>';box.hidden=false;return;}
  const st=cklStat(job,i), nx=st.left[0];
  h+='<div class="cklpg"><span class="cklbar"><i style="width:'+Math.round(100*st.n/st.ks.length)+'%"></i></span><b>'+st.n+' / '+st.ks.length+'</b></div>';
- for(const k of st.ks){const done=cklDone(p,k);let sub="", ph="", go="";
+ for(const k of st.ks){const done=cklDone(p,k,t);let sub="", ph="", go="";
   if(k==="leak"){sub="写真はいりません";go='<button type="button" class="cklgo'+(done?" on":"")+'" data-tick="leak">'+(done?"確認済み":"確認した")+'</button>';}
-  else{const xs=cklPh(p,k), all=p.extras||[];
+  else{const xs=cklPh(p,k,t), all=p.extras||[];
    ph=xs.map(x=>'<button type="button" data-x="'+all.indexOf(x)+'"><img src="'+galUrl(x.blob)+'" alt="'+CKL_LAB[k]+'"></button>').join("");
    if(k==="air")sub=v.air?"写真2枚まで":"下のどちらかを選んでから撮ります";
    if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+'撮る</button>';}
@@ -2384,16 +2386,35 @@ $("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)rend
 let cklNext=null, cklFile=null; // the item the next その他の写真 camera / file is for
 async function cklSet(f){if(!job)return;job.cklv=job.cklv||{};f(job.cklv);await saveJob();renderThumbs();}
 $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;const d=b.dataset;
- if(d.tpl)cklSet(v=>{v.tpl=d.tpl;});
+ if(d.tpl)cklTpl(d.tpl);
  else if(d.tick)cklSet(v=>{if(v.leak)delete v.leak;else v.leak=1;});
  else if(d.air)cklSet(v=>{v.air=d.air;});
  else if(d.x!=null)openGallery(+d.x);
  else if(d.go){const k=d.go;
-  const left=cklMax(k)-cklPh(job,k).length;if(left<=0)return;
-  if(camFail){cklFile=k;$("fExtra").click();return;}
-  cklNext={k,left};startCam("extra");}
+  const t=cklTplOf(job,spotIdx(job));if(!t)return;
+  const left=cklMax(k)-cklPh(job,k,t).length;if(left<=0)return;
+  if(camFail){cklFile={k,t};$("fExtra").click();return;}
+  cklNext={k,t,left};startCam("extra");}
 });
 $("nExtra").addEventListener("click",()=>{cklFile=null;});
+// choosing the list: a place whose list is in use (photos / ticks) keeps it, and the other job
+// (給湯器 ⇄ コンロ) becomes a place of its own: its own 施工前・施工後, photos and report section
+async function cklTpl(k){
+ if(!job||spotBusy)return;const i=spotIdx(job), t=cklTplOf(job,i), v=job.cklv||{};
+ if(k===t)return;
+ const used=!!t&&!!(v.leak||job.before||job.after||(job.extras||[]).some(x=>x.ckl&&(!x.cklT||x.cklT===t)));
+ if(!used||k==="none"){
+  // an unnamed place takes the job's name (the report's heading)
+  if(k!=="none"){let L=spotList(job);if(!L){job.spots=L=[{name:"",live:true}];job.exSpot=1;}if(!L[i].name)L[i].name=CKL_T[k].name;}
+  await cklSet(v=>{v.tpl=k;});spotShow();return;}
+ const nm=CKL_T[k].name, cur=CKL_T[t].name;
+ if(!await bkDialog("「"+nm+"」は別の箇所にします",'<p style="margin:0">この箇所は「'+esc(cur)+'」のチェックリストで撮影中です。「'+esc(nm)+'」は別の施工なので、新しい箇所として追加し、施工前・施工後から別々に撮ります(報告書も箇所ごとに分かれます)。</p>',"箇所を追加する","やめる")||!job)return;
+ let L=spotList(job);if(!L){job.spots=L=[{name:"",live:true}];job.exSpot=1;}
+ if(!L[spotIdx(job)].name)L[spotIdx(job)].name=cur;
+ L.push({name:nm,cklv:{tpl:k}});
+ if(!await spotGo(L.length-1)){await saveJob();spotShow();}
+ window.scrollTo({top:Math.max(0,$("spotBar").getBoundingClientRect().top+window.scrollY-$("detail").querySelector(".topbar").offsetHeight-10),behavior:"smooth"});
+}
 // the camera's title for an item: 施工前 銘板 / 気密試験結果(圧力測定器)
 const cklCamLab=c=>CKL_LAB[c.k]+(c.k==="air"&&job&&job.cklv&&job.cklv.air?"("+CKL_AIR[job.cklv.air]+")":"");
 // Like Google Photos: tap = full screen; long press = select (then tap picks / un-picks).
@@ -3472,7 +3493,7 @@ function rpCkl(j,i){
  const p=pairsOf(j)[i], v=p.cklv||{}, items=[], has=new Set(), lines=[];
  for(const k of st.ks){
   if(k==="leak"){if(v.leak)lines.push(CKL_LAB[k]+" ✓ 確認済み");continue;}
-  for(const e of cklPh(p,k)){has.add(e);if(e.blob&&!e.noRep)items.push({blob:e.blob,at:e.at,e,cap:CKL_LAB[k]+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":"")});}
+  for(const e of cklPh(p,k,st.t)){has.add(e);if(e.blob&&!e.noRep)items.push({blob:e.blob,at:e.at,e,cap:CKL_LAB[k]+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":"")});}
  }
  return {items,has,lines};
 }
