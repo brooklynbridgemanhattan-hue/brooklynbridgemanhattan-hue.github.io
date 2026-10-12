@@ -1198,7 +1198,7 @@ function showTab(){$("tabW").classList.toggle("on",homeTab==="w");$("tabD").clas
 $("tabW").onclick=()=>{homeTab="w";hSelClear();showTab();};$("tabD").onclick=()=>{homeTab="d";hSelClear();showTab();};
 async function showHome(){
  try{selClear();}catch(e){}
- urls.forEach(u=>URL.revokeObjectURL(u));urls=[];gUrls=new WeakMap();
+ urls.forEach(u=>URL.revokeObjectURL(u));urls=[];gUrls=new WeakMap();gPrev=new WeakMap();gPrevDone=new WeakMap();
  document.querySelectorAll(".hint").forEach(x=>x.remove());
  $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
@@ -2330,11 +2330,27 @@ function galNav(d){if(gal&&galItems(gal.kind)[gal.i+d])openGallery(gal.i+d,gal.k
 let gUrls=new WeakMap();
 function galUrl(b){if(!gUrls.has(b))gUrls.set(b,blobUrl(b));return gUrls.get(b);}
 // the photos either side are put in place (and decoded) ahead, so sliding to them is smooth
+// For sliding, a screen-size copy of each photo: a 12-megapixel photo coming onto the screen
+// showed dark for a moment while the phone got it ready; a small one is ready at once.
+let gPrev=new WeakMap(), gPrevDone=new WeakMap();
+function galPrev(b){
+ if(!gPrev.has(b))gPrev.set(b,(async()=>{let u=galUrl(b);
+  try{const bm=await createImageBitmap(b), W=innerWidth||400, H=innerHeight||800, k=Math.min(1,Math.max(W,H)*Math.min(2,window.devicePixelRatio||1)/Math.max(bm.width,bm.height));
+   const c=document.createElement("canvas");c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext("2d").drawImage(bm,0,0,c.width,c.height);if(bm.close)bm.close();
+   const sb=await new Promise(r=>c.toBlob(r,"image/jpeg",0.88));if(sb)u=blobUrl(sb);}catch(e){}
+  const im=new Image();im.src=u;try{if(im.decode)await im.decode();}catch(e){}
+  gPrevDone.set(b,u);return u;})());
+ return gPrev.get(b);}
 function galPreload(){
  const xs=gal?galItems(gal.kind):[];
+ if(gal&&xs[gal.i])galPrev(xs[gal.i].blob); // the one shown now, for sliding back to it
  [["vPrev",-1],["vNext",1]].forEach(([id,d])=>{const el=$(id), it=xs[gal?gal.i+d:-1];el.classList.remove("anim");el.style.transform="";
-  if(!it){el.hidden=true;return;}const im=el.firstChild, u=galUrl(it.blob);
-  if(im.getAttribute("src")!==u){im.src=u;if(im.decode)im.decode().catch(()=>{});}
+  if(!it){el.hidden=true;el.dataset.for="";return;}const im=el.firstChild, key=gal.kind+":"+(gal.i+d)+":"+it.at;
+  const put=u=>{if(el.dataset.for===key&&im.getAttribute("src")!==u){im.src=u;if(im.decode)im.decode().catch(()=>{});}};
+  el.dataset.for=key;
+  // the small copy when it is ready (made in the background); meanwhile the photo itself
+  const ready=gPrevDone.get(it.blob);put(ready||galUrl(it.blob));
+  if(!ready)galPrev(it.blob).then(u=>{if(!vw.sw&&!vSwapping)put(u);});
   el.hidden=false;el.style.transform="translateX("+d*(vSize()[0]+16)+"px)";});
 }
 let vSaving=false;
@@ -3677,7 +3693,7 @@ function swEnd(e){
  vSwapping=true;const el=$(d>0?"vNext":"vPrev");
  setTimeout(()=>{if(!gal){vSwapping=false;return;}
   // the neighbour now fills the screen: it stays until the new photo is ready under it
-  vOnShow=()=>{vSwapping=false;$("vStage").classList.remove("swanim");galPreload();};
+  vOnShow=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{vSwapping=false;$("vStage").classList.remove("swanim");galPreload();}));
   $("vStage").classList.remove("swanim");el.classList.remove("anim");
   galNav(d);
   setTimeout(()=>{if(vSwapping){vSwapping=false;vOnShow=null;$("vStage").style.visibility="";galPreload();}},1500);},230); // never stuck
