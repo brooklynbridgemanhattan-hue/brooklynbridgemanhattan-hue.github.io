@@ -169,6 +169,22 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .rpgo button{height:52px;border-radius:14px;font-size:17px;font-weight:800}
 .rpgo .s1{background:#3B5BDB;color:#fff}
 .rpgo .s2{background:#EDF2FF;color:#3B5BDB}
+#bkDlg.rpx .bkbody{max-height:calc(100vh - 230px);overflow:auto;margin:0 -6px;padding:0 6px}
+.rpxn{margin:0 0 8px;font-size:14px;color:var(--sub);line-height:1.5}
+.rpxh{display:flex;align-items:center;gap:6px;margin:12px 0 6px}
+.rpxh b{flex:1;font-size:16px}
+.rpxh button{height:32px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:800;background:var(--fill);color:#344054}
+.rpxs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rpxc{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#E4E7EC;opacity:.45;box-shadow:inset 0 0 0 2px #D0D5DD}
+.rpxc.on{opacity:1;box-shadow:0 0 0 3px #3B5BDB}
+.rpxc img{width:100%;height:100%;object-fit:cover;display:block}
+.rpxk{position:absolute;top:4px;right:4px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);color:#98A2B3;font-size:20px;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.rpxc.on .rpxk{background:#3B5BDB;color:#fff}
+.rpxcnt{margin:10px 0 0;font-size:15px;font-weight:800;color:#3B5BDB}
+.rpxv{position:fixed;inset:0;z-index:95;background:rgba(5,8,15,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
+.rpxv img{max-width:100%;max-height:70vh;border-radius:8px}
+.rpxv p{margin:0;color:#fff;font-size:16px;text-align:center}
+.rpxv button{height:48px;padding:0 28px;border-radius:999px;background:#fff;color:#101828;font-size:17px;font-weight:800}
 #bkDlg.rpd #bkDYes{background:var(--fill);color:#344054;box-shadow:none}
 .spdel{display:block;width:100%;margin-top:14px;height:44px;border-radius:12px;color:#E03131;font-size:15px;font-weight:800;box-shadow:inset 0 0 0 1.5px #FFC9C9;background:#FFF5F5}
 .steps li{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border-radius:999px;background:var(--card);color:#98A2B3;font-size:15px;font-weight:700;box-shadow:inset 0 0 0 1.5px var(--line)}
@@ -3154,7 +3170,7 @@ async function rpPhoto(x,blob,at,X,Y,w,h,kind){
  if(at)rpText(x,"撮影 "+fmtFull(at)+" "+new Date(at).getHours()+":"+String(new Date(at).getMinutes()).padStart(2,"0"),X,by+h+36,24,600,"#475467");
 }
 async function rpPages(j,co,tel,staff){
- const P=pairsOf(j).map((p,i)=>({p,i})).filter(o=>o.p.before||o.p.after), multi=pairsOf(j).length>1, named=!!(spotList(j)&&spotList(j)[0].name);
+ const P=pairsOf(j).map((p,i)=>({p,i})).filter(o=>o.p.before||o.p.after||rpIn(o.p).length), multi=pairsOf(j).length>1, named=!!(spotList(j)&&spotList(j)[0].name);
  const W=RP.W,H=RP.H,M=RP.M,CW=W-2*M, bw=(CW-30)/2, bh=330, SEC=56+52+bh+44+30, BOTTOM=H-84;
  const ats=P.flatMap(o=>[o.p.beforeAt,o.p.afterAt]).filter(Boolean).sort((a,b)=>a-b);
  const cs=[];let x=null, y=0;
@@ -3180,11 +3196,31 @@ async function rpPages(j,co,tel,staff){
  // the places, as many to a page as fit
  for(const o of P){
   if(y+SEC-30>BOTTOM)page();
-  const hd=multi?(o.i+1)+". "+spotName(j,o.i):named?spotName(j,0):"施工箇所";
-  x.fillStyle="#3B5BDB";x.fillRect(M,y+8,8,36);rpText(x,hd,M+22,y+38,32,800);
-  await rpPhoto(x,o.p.before,o.p.beforeAt,M,y+56,bw,bh,"b");
-  await rpPhoto(x,o.p.after,o.p.afterAt,M+bw+30,y+56,bw,bh,"a");
-  y+=SEC;
+  const hd=multi?(o.i+1)+". "+spotName(j,o.i):named?spotName(j,0):"施工箇所", xs=rpIn(o.p);
+  if(o.p.before||o.p.after){
+   x.fillStyle="#3B5BDB";x.fillRect(M,y+8,8,36);rpText(x,hd,M+22,y+38,32,800);
+   await rpPhoto(x,o.p.before,o.p.beforeAt,M,y+56,bw,bh,"b");
+   await rpPhoto(x,o.p.after,o.p.afterAt,M+bw+30,y+56,bw,bh,"a");
+   y+=SEC;
+  }
+  // その他の写真: 3 to a row, each with when it was taken and its comments
+  const cw=(CW-40)/3, chh=250, ROW=chh+36+2*30+22;
+  for(let r=0;r<xs.length;r+=3){
+   // a label above the first row, and again (続き) above a row that starts a new page
+   let lab=r===0?(o.p.before||o.p.after?"その他の写真":hd+" その他の写真"):"";
+   if(y+(lab?48:0)+ROW-22>BOTTOM){page();if(!lab)lab=hd+" その他の写真(続き)";}
+   if(lab){rpText(x,lab,M,y+32,26,800,"#344054");y+=48;}
+   for(let c=0;c<3&&r+c<xs.length;c++){const e=xs[r+c], X=M+c*(cw+20);
+    x.fillStyle="#F2F4F7";x.fillRect(X,y,cw,chh);
+    let im=null;try{im=await decode(e.blob);const k=Math.min(cw/im.width,chh/im.height), iw=im.width*k, ih=im.height*k;
+     x.imageSmoothingQuality="high";x.drawImage(im,X+(cw-iw)/2,y+(chh-ih)/2,iw,ih);}catch(err){}finally{if(im&&im.close)im.close();}
+    x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(X,y,cw,chh);
+    if(e.at)rpText(x,fmtFull(e.at)+" "+new Date(e.at).getHours()+":"+String(new Date(e.at).getMinutes()).padStart(2,"0"),X,y+chh+30,20,600,"#475467");
+    const t=notesOf(e).map(n=>n.t).filter(Boolean).join(" / ");
+    if(t){x.font="600 22px "+rpFont();rpLines(x,t,cw,2).forEach((l,n)=>rpText(x,l,X,y+chh+60+n*28,22,600,"#101828"));}
+   }
+   y+=ROW;
+  }
  }
  // footer: the page and who made it
  const out=[];
@@ -3221,6 +3257,35 @@ async function rpSave(blob,name){
  const a=document.createElement("a");a.href=blobUrl(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
  toast("保存しました");
 }
+// which その他の写真 go in: all at first; tap a photo to see it big, ✓ to put it in or take it out.
+// What was taken out stays out next time (x.noRep).
+const rpIn=p=>(p.extras||[]).filter(x=>x.blob&&!x.noRep);
+async function rpPick(j){
+ const P=pairsOf(j).map((p,i)=>({p,i})).filter(o=>(o.p.extras||[]).some(x=>x.blob));
+ if(!P.length)return true;
+ const multi=pairsOf(j).length>1||!!(spotList(j)&&spotList(j)[0].name), out=new Set();
+ P.forEach(o=>o.p.extras.forEach(x=>{if(x.noRep)out.add(x);}));
+ const html='<p class="rpxn">写真を押すと大きく見られます。右上の ✓ で、入れる・外すを切り替えます。</p>'+
+  P.map(o=>'<div class="rpxh"><b>'+esc(multi?(o.i+1)+". "+spotName(j,o.i):"その他の写真")+'</b><button type="button" data-all="'+o.i+'">全部入れる</button><button type="button" data-none="'+o.i+'">全部外す</button></div><div class="rpxs">'+
+   o.p.extras.map((x,k)=>x.blob?'<div class="rpxc" data-s="'+o.i+'" data-k="'+k+'"><img src="'+blobUrl(x.blob)+'" alt=""><button type="button" class="rpxk" aria-label="入れる・外す">✓</button></div>':'').join("")+'</div>').join("")+
+  '<p class="rpxcnt" id="rpxN"></p><div class="rpxv" id="rpxV" hidden><img id="rpxVi" alt="拡大表示"><p id="rpxVt"></p><button type="button" id="rpxVx">戻る</button></div>';
+ const ask=bkDialog("報告書に入れる その他の写真",html,"作る","やめる");$("bkDlg").classList.add("rpx");
+ const X=(si,k)=>pairsOf(j)[+si].extras[+k];
+ const show=()=>{let n=0,all=0;document.querySelectorAll("#bkDB .rpxc").forEach(c=>{const x=X(c.dataset.s,c.dataset.k), on=!out.has(x);c.classList.toggle("on",on);all++;if(on)n++;});
+  $("rpxN").textContent="報告書に入れる写真:"+n+" / "+all+"枚";};
+ document.querySelectorAll("#bkDB .rpxc").forEach(c=>c.onclick=e=>{const x=X(c.dataset.s,c.dataset.k);
+  if(e.target.closest(".rpxk")){if(out.has(x))out.delete(x);else out.add(x);show();return;}
+  $("rpxVi").src=c.querySelector("img").src;$("rpxVt").textContent=notesOf(x).map(n=>n.t).join(" / ");$("rpxV").hidden=false;});
+ document.querySelectorAll("#bkDB [data-all],#bkDB [data-none]").forEach(b=>b.onclick=()=>{const p=pairsOf(j)[+(b.dataset.all||b.dataset.none)];
+  (p.extras||[]).forEach(x=>{if(b.dataset.all!=null)out.delete(x);else out.add(x);});show();});
+ $("rpxVx").onclick=()=>{$("rpxV").hidden=true;};
+ show();
+ const ok=await ask;$("bkDlg").classList.remove("rpx");
+ if(!ok)return false;
+ P.forEach(o=>o.p.extras.forEach(x=>{if(out.has(x))x.noRep=true;else delete x.noRep;}));
+ if(job===j)await saveJob();else await putJob(j);
+ return true;
+}
 let rpBusy=false;
 $("bReport").onclick=async()=>{
  if(rpBusy||!job)return;
@@ -3233,6 +3298,7 @@ $("bReport").onclick=async()=>{
  if(!await ask||!job)return;
  const co=String($("rpCo").value||"").trim().slice(0,40), tel=String($("rpTel").value||"").trim().slice(0,20), staff=String($("rpStaff").value||"").trim().slice(0,30);
  setPref("ba-company",co);setPref("ba-tel",tel);setPref("ba-staff",staff);
+ if(!await rpPick(job)||!job)return;
  rpBusy=true;const j=job;let pdf=null;
  try{bkProg("施工報告書を作っています");pdf=rpPdf(await rpPages(j,co,tel,staff));}
  catch(e){toast("報告書を作れませんでした。もう一度お試しください。",true);}
@@ -3666,6 +3732,7 @@ $("svA").onclick=async()=>{if(job.after){keepUri(job,"savedA",await saveBlob(job
 // Back button: close the camera, then go back to the site list. Returns true when handled.
 window.appBack=()=>{
  if(!$("bkOv").hidden)return true; // making / putting back a backup: wait for it
+ if($("rpxV")&&!$("rpxV").hidden){$("rpxV").hidden=true;return true;} // the big photo in the report's picker
  if(!$("bkDlg").hidden){if(bkDlgEnd)bkDlgEnd();return true;}
  if(!$("cand").hidden){if(cd&&cd.pick)cdSelEnd();else candClose();return true;}
  if(!$("tfs").hidden){tfsClose(false);return true;}
