@@ -2322,7 +2322,8 @@ function openGallery(i,kind){
  $("vDel").hidden=kind!=="extra";
  noteEnd(true);$("vNote").hidden=kind!=="extra";cur=-1;clearTimeout(noteMsgT);$("vNoteL").parentNode.classList.remove("msg");
  $("vBar").hidden=false;$("vCnt").hidden=false;$("viewer").classList.add("gal");$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
- openViewer(galUrl(xs[i].blob));
+ const pv=gPrevDone.get(xs[i].blob);
+ if(pv&&pv.w)openViewer(pv.u,null,{w:pv.w,h:pv.h,full:galUrl(xs[i].blob)});else openViewer(galUrl(xs[i].blob));
  if(!vSwapping)galPreload();
  tagShow();noteUI();if(kind==="extra")ensureNid(job.extras[i]);
 }
@@ -2334,23 +2335,24 @@ function galUrl(b){if(!gUrls.has(b))gUrls.set(b,blobUrl(b));return gUrls.get(b);
 // showed dark for a moment while the phone got it ready; a small one is ready at once.
 let gPrev=new WeakMap(), gPrevDone=new WeakMap();
 function galPrev(b){
- if(!gPrev.has(b))gPrev.set(b,(async()=>{let u=galUrl(b);
-  try{const bm=await createImageBitmap(b), W=innerWidth||400, H=innerHeight||800, k=Math.min(1,Math.max(W,H)*Math.min(2,window.devicePixelRatio||1)/Math.max(bm.width,bm.height));
+ if(!gPrev.has(b))gPrev.set(b,(async()=>{let o={u:galUrl(b),w:0,h:0};
+  try{const bm=await createImageBitmap(b), bw=bm.width, bh=bm.height, W=innerWidth||400, H=innerHeight||800, k=Math.min(1,Math.max(W,H)*Math.min(2,window.devicePixelRatio||1)/Math.max(bm.width,bm.height));
    const c=document.createElement("canvas");c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext("2d").drawImage(bm,0,0,c.width,c.height);if(bm.close)bm.close();
-   const sb=await new Promise(r=>c.toBlob(r,"image/jpeg",0.88));if(sb)u=blobUrl(sb);}catch(e){}
-  const im=new Image();im.src=u;try{if(im.decode)await im.decode();}catch(e){}
-  gPrevDone.set(b,u);return u;})());
+   const sb=await new Promise(r=>c.toBlob(r,"image/jpeg",0.88));if(sb)o={u:blobUrl(sb),w:bw,h:bh};}catch(e){}
+  const im=new Image();im.src=o.u;try{if(im.decode)await im.decode();}catch(e){}
+  gPrevDone.set(b,o);return o;})());
  return gPrev.get(b);}
 function galPreload(){
  const xs=gal?galItems(gal.kind):[];
- if(gal&&xs[gal.i])galPrev(xs[gal.i].blob); // the one shown now, for sliding back to it
+ // the ones next to these too, so quick slides one after another find them ready
+ if(gal)[0,-2,2].forEach(d=>{const it=xs[gal.i+d];if(it)galPrev(it.blob);});
  [["vPrev",-1],["vNext",1]].forEach(([id,d])=>{const el=$(id), it=xs[gal?gal.i+d:-1];el.classList.remove("anim");el.style.transform="";
   if(!it){el.hidden=true;el.dataset.for="";return;}const im=el.firstChild, key=gal.kind+":"+(gal.i+d)+":"+it.at;
   const put=u=>{if(el.dataset.for===key&&im.getAttribute("src")!==u){im.src=u;if(im.decode)im.decode().catch(()=>{});}};
   el.dataset.for=key;
   // the small copy when it is ready (made in the background); meanwhile the photo itself
-  const ready=gPrevDone.get(it.blob);put(ready||galUrl(it.blob));
-  if(!ready)galPrev(it.blob).then(u=>{if(!vw.sw&&!vSwapping)put(u);});
+  const ready=gPrevDone.get(it.blob);put(ready?ready.u:galUrl(it.blob));
+  if(!ready)galPrev(it.blob).then(o=>{if(!vw.sw&&!vSwapping)put(o.u);});
   el.hidden=false;el.style.transform="translateX("+d*(vSize()[0]+16)+"px)";});
 }
 let vSaving=false;
@@ -2473,7 +2475,7 @@ function tagsDraw(){
 function tagShow(){
  $("vTags").innerHTML="";if(!galX())return;
  const im=$("vImg");
- if(im.complete&&im.naturalWidth&&vw.nw===im.naturalWidth)tagsDraw();else im.addEventListener("load",()=>setTimeout(tagsDraw,0),{once:true});
+ if(im.complete&&im.naturalWidth&&vw.loaded===im.dataset.want)tagsDraw();else im.addEventListener("load",()=>setTimeout(tagsDraw,0),{once:true});
  preburn();
 }
 function tagPick(n){cur=n;noteUI();}
@@ -3618,14 +3620,17 @@ function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました
 /* ---------- photo viewer ---------- */
 const vw={s:1,fit:1,x:0,y:0,nw:1,nh:1,pts:new Map(),pinch:null,pan:null,lastTap:0,tapX:0,tapY:0,down:null};
 // src = the photo; topSrc (optional) = the before photo laid over it, with a see-through slider.
-function openViewer(src,topSrc){
+// dims (optional): src is a screen-size copy of a photo of dims.w x dims.h; dims.full is the photo
+// itself, put in when zoomed in. Sizes (comments, saving) always go by the photo itself.
+function openViewer(src,topSrc,dims){
  const im=$("vImg"), top=$("vImg2"), st=$("vStage");
  if(!gal){$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").classList.remove("gal");}
  $("viewer").hidden=false;top.hidden=!topSrc;$("vOp").hidden=!topSrc;
  if(topSrc){top.src=topSrc;$("vOpR").value=50;top.style.opacity=0.5;}
  // hide the stage until the new photo is ready, so the previous one never flashes
  const show=()=>{if(im.dataset.want===src){st.style.visibility="";if(vOnShow){const f=vOnShow;vOnShow=null;f();}}};
- im.onload=()=>{vw.nw=im.naturalWidth;vw.nh=im.naturalHeight;st.style.width=vw.nw+"px";st.style.height=vw.nh+"px";vFit(false);
+ vw.full=dims?dims.full:null;vw.fullOn=!dims;
+ im.onload=()=>{vw.nw=dims?dims.w:im.naturalWidth;vw.nh=dims?dims.h:im.naturalHeight;vw.loaded=src;st.style.width=vw.nw+"px";st.style.height=vw.nh+"px";vFit(false);
   (im.decode?im.decode():Promise.resolve()).then(show,show);};
  im.dataset.want=src;
  if(im.getAttribute("src")===src&&im.complete&&im.naturalWidth){st.style.visibility="";im.onload();return;}
@@ -3633,7 +3638,7 @@ function openViewer(src,topSrc){
 }
 $("vOpR").oninput=e=>{$("vImg2").style.opacity=e.target.value/100;};
 let vOnShow=null, vSwapping=false;
-function closeViewer(){$("vPrev").hidden=$("vNext").hidden=true;vOnShow=null;vSwapping=false;$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
+function closeViewer(){$("vPrev").hidden=$("vNext").hidden=true;vw.full=null;vOnShow=null;vSwapping=false;$("viewer").classList.remove("gal");noteEnd(false);gal=null;$("vTags").innerHTML="";cur=-1;$("viewer").classList.remove("editing");$("vBar").hidden=true;$("vCnt").hidden=true;$("viewer").hidden=true;vw.pts.clear();vw.pinch=vw.pan=null;}
 function vSize(){const v=$("viewer");return [v.clientWidth,v.clientHeight];}
 function vFit(anim){const [W,H]=vSize();vw.fit=Math.min(W/vw.nw,H/vw.nh);vw.s=vw.fit;vw.x=(W-vw.nw*vw.s)/2;vw.y=(H-vw.nh*vw.s)/2;vApply(anim);}
 function vApply(anim){
@@ -3642,7 +3647,11 @@ function vApply(anim){
  vw.y=h<=H?(H-h)/2:Math.min(0,Math.max(H-h,vw.y));
  const im=$("vStage");im.classList.toggle("anim",!!anim);
  im.style.transform="translate("+vw.x+"px,"+vw.y+"px) scale("+vw.s+")";im.style.setProperty("--k",1/vw.s);
+ if(!vw.fullOn&&vw.full&&vw.s>vw.fit*1.05)vFull();
 }
+// zoomed in: the photo itself takes the small copy's place once it is ready (no blank moment)
+function vFull(){vw.fullOn=true;const f=vw.full, want=$("vImg").dataset.want, pre=new Image();pre.src=f;
+ (pre.decode?pre.decode():Promise.resolve()).catch(()=>{}).then(()=>{const im=$("vImg");if(vw.full!==f||im.dataset.want!==want)return;im.onload=null;im.src=f;});}
 // Zoom to scale s keeping screen point (px,py) still.
 function vZoomAt(s,px,py,anim){const cx=(px-vw.x)/vw.s, cy=(py-vw.y)/vw.s;vw.s=s;vw.x=px-cx*s;vw.y=py-cy*s;vApply(anim);}
 const vMax=()=>Math.max(vw.fit*6,1.5);
