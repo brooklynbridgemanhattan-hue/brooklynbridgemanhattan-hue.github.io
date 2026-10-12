@@ -3730,9 +3730,15 @@ function swRest(){const st=$("vStage");st.classList.remove("swanim");st.style.vi
 function swEnd(e){
  const sw=vw.sw;vw.sw=null;if(!sw||!gal)return;
  if(sw.raf)cancelAnimationFrame(sw.raf);vw.swLast=sw;
- const W=sw.W, dx=e.clientX-sw.x0, h0=sw.h[0], dt=performance.now()-h0.t;
- sw.v=dt>0&&dt<300?(e.clientX-h0.x)/dt:0; // speed over the last moment (px per ms)
- let d=0;if((dx<-W*0.25||sw.v<-0.5)&&dx<0&&sw.next)d=1;else if((dx>W*0.25||sw.v>0.5)&&dx>0&&sw.prev)d=-1;
+ // speed over the last moment (px per ms): from the oldest point of the last 0.12 s (not from
+ // when the finger came down, which may have rested there a while)
+ const now=performance.now(), W=sw.W, dx=e.clientX-sw.x0, h=sw.h;
+ let k=h.findIndex(q=>now-q.t<=120);if(k<0||k>h.length-2)k=Math.max(0,h.length-2); // few moves reported: the last two
+ const h0=h[k], dt=Math.max(8,now-h0.t);sw.v=now-h0.t<=1000?(e.clientX-h0.x)/dt:0; // a finger resting before it lets go gives a small speed anyway
+ vw.swInfo={dx,v:Math.round(sw.v*100)/100,n:h.length,ages:h.map(q=>Math.round(now-q.t))}; // what the last let-go was judged on
+ // a flick: fast at the end, or a short quick stroke (30 px within 0.25 s of coming down)
+ const quick=now-sw.h[0].t<250&&Math.abs(dx)>30;
+ let d=0;if((dx<-W*0.25||sw.v<-0.5||quick)&&dx<0&&sw.next)d=1;else if((dx>W*0.25||sw.v>0.5||quick)&&dx>0&&sw.prev)d=-1;
  swSet(d?-d*sw.G:0,true);
  if(!d){setTimeout(()=>{if(!vw.sw&&vw.swLast===sw){vw.swLast=null;swRest();}},240);return;}
  vSwapping=true;const el=$(d>0?"vNext":"vPrev");
