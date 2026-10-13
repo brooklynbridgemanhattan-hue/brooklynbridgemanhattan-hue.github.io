@@ -393,7 +393,10 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklpg .cklbar i{display:block;height:100%;background:#12B76A;border-radius:99px}
 .cklpg b{font-size:16px;font-weight:800;white-space:nowrap}
 .cklit{display:flex;flex-wrap:wrap;align-items:center;gap:10px;min-height:60px;padding:6px 6px;border-top:1px solid var(--line)}
-.cklit.cklnx{background:var(--after-soft);border-radius:12px;border-top-color:transparent}
+.cklit{--ckc:var(--extra);--cks:var(--extra-soft);--ckt:#0B6E7D;--cki:#fff}
+.cklit.cklpb{--ckc:var(--before);--cks:var(--before-soft);--ckt:var(--before);--cki:#fff}
+.cklit.cklpa{--ckc:var(--after);--cks:var(--after-soft);--ckt:var(--after-text);--cki:var(--after-ink)}
+.cklit.cklnx{background:var(--cks);border-radius:12px;border-top-color:transparent}
 .cklit .cklmk{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:inset 0 0 0 2px #D0D5DD}
 .cklit .cklmk svg{width:18px;height:18px;stroke:#fff;stroke-width:3.2;fill:none}
 .cklit.ckldone .cklmk{background:#12B76A;box-shadow:none}
@@ -404,9 +407,9 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit .cklph button{width:48px;height:48px;padding:0;border-radius:10px;overflow:hidden;background:var(--fill)}
 .cklit .cklph img{width:100%;height:100%;object-fit:cover;display:block}
 .cklit .cklph.cklrow{flex-basis:100%;margin:-2px 0 2px 38px}
-.cklit .cklgo{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:800;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.cklit .cklgo{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:800;background:var(--cks);color:var(--ckt);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .cklit .cklgo svg.i{width:20px;height:20px}
-.cklit.cklnx .cklgo{background:var(--after);color:var(--after-ink)}
+.cklit.cklnx .cklgo{background:var(--ckc);color:var(--cki)}
 .cklit .cklgo:disabled{opacity:.45}
 .cklit .cklgo.on{background:#E6F6EC;color:#067647}
 .cklpg .ckledb{flex:none;min-height:36px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:var(--fill);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
@@ -422,6 +425,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklebar button.on{background:#12B76A;color:#fff}
 .cklit .cklsk{flex:none;min-height:44px;padding:0 10px;border-radius:12px;font-size:14px;font-weight:800;background:transparent;color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line)}
 .cklit.cklskp .cklmk{box-shadow:inset 0 0 0 2px #D0D5DD;background:repeating-linear-gradient(-45deg,transparent 0 5px,#E4E7EC 5px 7px)}
+.cklit.cklskp .cklgo{background:var(--fill);color:var(--ink)}
 .cklit.cklskp .cklnm s{color:#98A2B3;text-decoration-thickness:1.5px}
 .cklit.cklskp .cklnm small{color:var(--sub);font-weight:700}
 .cklair{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;margin:-2px 0 2px 38px}
@@ -2389,6 +2393,8 @@ function renderThumbs(){
 const CKL_LAB={b_body:"施工前 本体",b_plate:"施工前 銘板",pipe:"施工前 配管",line:"ラインマーク",a_body:"施工後 本体",a_plate:"施工後 銘板",a_pipe:"施工後 配管",leak:"漏水確認",air:"気密試験結果"};
 const CKL_T={kyuto:{name:"給湯器",keys:["b_body","b_plate","pipe","line","a_body","a_plate","a_pipe","leak","air"]},
  konro:{name:"ビルトインコンロ",keys:["b_body","b_plate","pipe","line","a_body","a_plate","a_pipe","air"]}};
+// the colour of an item's 撮る: 施工前 blue, 施工後 orange (as the 施工前 / 施工後 buttons), the rest teal
+const cklPhase=k=>/^b_|^pipe$/.test(k)?" cklpb":/^a_/.test(k)?" cklpa":" cklpx";
 const CKL_AIR={liq:"検知液/検知器",prs:"圧力測定器"}, CKL_PAIR={b_body:"before",a_body:"after"};
 const cklMax=k=>k==="leak"?0:3; // photos an item can have (each 撮る / 追加 takes one)
 const cklOn=()=>getPref("ba-ckl")==="1";
@@ -2447,7 +2453,7 @@ function cklRender(){
    if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+(xs.length?'追加':'撮る')+'</button>';
    if(!xs.length&&cklCanSkip(k))go='<button type="button" class="cklsk" data-skip="'+k+'" aria-label="'+CKL_LAB[k]+'を今回なしにする">なし</button>'+go;}
   const many=(ph.match(/<img/g)||[]).length>1; // 2-3 photos: a line of their own under the name
-  h+='<div class="cklit'+(done?" ckldone":"")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+CKL_LAB[k]+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
+  h+='<div class="cklit'+cklPhase(k)+(done?" ckldone":"")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+CKL_LAB[k]+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
  box.innerHTML=h;box.hidden=false;
 }
