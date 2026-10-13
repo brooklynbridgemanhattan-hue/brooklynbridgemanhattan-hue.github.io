@@ -722,6 +722,9 @@ html.natcam #vid,html.app #vid{display:none}
 .frame.far{border-color:#EF4444}.flab.far{background:#EF4444;color:#fff}
 .cam:not(.judging) .flab{display:none}
 .flab{max-width:calc(100% - 24px);text-align:center}
+.flab.hasbar{border-radius:18px}
+.flab .fbar{display:block;height:8px;margin:6px 2px 2px;border-radius:4px;background:rgba(5,46,20,.25);overflow:hidden}
+.flab .fbar i{display:block;height:100%;width:0;background:#fff;border-radius:4px}
 .flab .fpct{font-size:24px;font-weight:900;margin-left:6px;vertical-align:-2px;font-variant-numeric:tabular-nums}
 /* after camera: the before photo small in the bottom-left corner, for lining up */
 .pip{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:auto}
@@ -751,14 +754,15 @@ html.natcam #vid,html.app #vid{display:none}
 .cam input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:4px solid var(--mode,#F5A300)}
 /* display tools: round icons with the name under them */
 .cam .tools{display:flex;justify-content:space-around;gap:4px;min-width:0}
-.cam .tools button{--tc:#E4E7EC;--tc-ink:#101828;flex:1 1 0;min-width:0;max-width:84px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:2px 0;color:#D0D5DD;font-size:14px;font-weight:700;line-height:1.2;white-space:nowrap}
-.cam .tools button svg.i{width:54px;height:54px;padding:14px;border-radius:50%;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.cam .tools button{--tc:#E4E7EC;--tc-ink:#101828;flex:1 1 0;min-width:0;max-width:84px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:2px 0;color:#D0D5DD;font-size:min(14px,3.5vw);font-weight:700;line-height:1.2;white-space:nowrap}
+.cam .tools button svg.i{width:min(54px,13vw);height:min(54px,13vw);padding:min(14px,3.4vw);border-radius:50%;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
 .cam .tools button.on{color:#fff}
 .cam .tools button.on svg.i{background:var(--tc);color:var(--tc-ink);box-shadow:none}
 .cam .tools .t-mask{--tc:#4C6EF5;--tc-ink:#fff}
 .cam .tools .t-ovl{--tc:#F59F00;--tc-ink:#2B1D00}
 .cam .tools .t-judge{--tc:#22C55E;--tc-ink:#052E14}
 .cam .tools .t-off{--tc:#F87171;--tc-ink:#fff}
+.cam .tools .t-auto{--tc:#22C55E;--tc-ink:#052E14}
 .cam .tools .lg{display:none}
 .cam .tools button span{max-width:100%;overflow:hidden;text-overflow:clip} /* a long name stays inside its button */
 /* やめる - round shutter - flash */
@@ -786,7 +790,7 @@ html.natcam #vid,html.app #vid{display:none}
 .cam .camhud .hudshot .shot{width:84px;height:84px;box-shadow:0 0 0 4px rgba(11,13,18,.9),0 0 0 7px #fff}
 .cam .camhud .tools{position:static;width:100%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;gap:4px 2px;pointer-events:auto;padding:6px;border-radius:18px;background:rgba(11,13,18,.55)}
 .cam .camhud .tools button svg.i,.cam .camhud .tools .fl svg.i{width:50px;height:50px;padding:13px}
-.cam .camhud .tools button{max-width:none;font-size:14px;gap:4px}
+.cam .camhud .tools button{max-width:none;font-size:12px;gap:4px} /* 4-letter names (自動撮影・表示オフ) side by side fit */
 .cam .camhud .tools .fl{grid-column:auto;justify-self:center;flex-direction:column;height:auto;padding:0;background:none;gap:4px;font-size:14px;color:#D0D5DD}
 .cam .camhud .tools .fl svg.i{border-radius:50%;background:rgba(255,255,255,.1)}
 .cam .camhud .tools .fl.on svg.i{background:#FACC15;color:#1A1400}
@@ -997,6 +1001,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <button id="tGhost" class="t-ovl on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3" stroke-dasharray="3 2.5"/></svg><span class="lg">施工前を重ねる</span><span class="sh">重ねる</span></button>
    <button id="tLine" class="t-ovl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M7 15l3-4 3 3 4-5"/></svg><span class="lg">線で重ねる</span><span class="sh">線表示</span></button>
    <button id="tDiff" class="t-judge on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span class="lg">色で判定</span><span class="sh">色判定</span></button>
+   <button id="tAuto" class="t-auto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg><span class="lg">自動で撮影</span><span class="sh">自動撮影</span></button>
    <button id="tAllOff" class="t-off"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.1A10 10 0 0 1 12 5c5 0 9 4.5 10 7a13 13 0 0 1-3 4.1M6.6 6.6C4.4 8 2.9 10 2 12c1 2.5 5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/></svg><span class="tx">表示オフ</span></button>
   </div>
   <div class="shoot"><button class="cancel" id="cCancel"><svg class="i x" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg><svg class="i ck" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span class="tx">やめる</span></button><button class="shot" id="cShot"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>撮影</span></button><button class="fl" id="tFlash" aria-label="フラッシュ"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><span class="tx">オフ</span></button></div>
@@ -1706,7 +1711,9 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
  // After camera starts with every overlay off; switch on what is needed.
  if(after){["tGrid","tGhost","tLine","tDiff"].forEach(id=>$(id).classList.remove("on"));$("grid").classList.remove("on");}
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
- $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff","tAllOff"].forEach(id=>$(id).style.display=after?"":"none");
+ $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff","tAuto","tAllOff"].forEach(id=>$(id).style.display=after?"":"none");
+ autoSt={t0:0,done:false};$("tAuto").classList.toggle("on",after&&autoOn());
+ if(after&&autoOn()&&!$("tDiff").classList.contains("on"))$("tDiff").click();
  $("tMask").style.display=mode==="before"?"":"none";$("tMask").classList.toggle("on",maskAfterShot);
  savedLook=null;setTx("tAllOff","表示オフ");$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");
  $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
@@ -1774,6 +1781,11 @@ $("tMask").onclick=()=>{maskAfterShot=$("tMask").classList.toggle("on");try{loca
 // 表示オフ: turn every overlay off for a clean view; 元に戻す brings back what was on.
 let savedLook=null;
 const LOOK=["tGrid","tGhost","tLine","tDiff"];
+// 自動撮影: on = 色判定 too. Kept for next time.
+const autoOn=()=>getPref("ba-auto")==="1";
+let autoSt={t0:0,done:false};
+$("tAuto").onclick=()=>{const on=!$("tAuto").classList.contains("on");$("tAuto").classList.toggle("on",on);setPref("ba-auto",on?"1":"");
+ autoSt={t0:0,done:false};gdKey="";if(on&&!$("tDiff").classList.contains("on"))$("tDiff").click();};
 $("tAllOff").onclick=()=>{
  if(!savedLook){savedLook=LOOK.filter(id=>$(id).classList.contains("on"));savedLook.forEach(id=>$(id).click());savedLook=savedLook.length?savedLook:[];setTx("tAllOff","元に戻す");$("tAllOff").classList.add("on");$("cam").classList.add("clean");}
  else{const back=savedLook;savedLook=null;back.forEach(id=>{if(!$(id).classList.contains("on"))$(id).click();});setTx("tAllOff","表示オフ");$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");}
@@ -3745,21 +3757,40 @@ async function tick(gen){
  }
  loop=setTimeout(()=>tick(gen),60);
 }
-let gdShown="", gdPend="", gdCount=0;
+let gdShown="", gdPend="", gdCount=0, gdKey="";
+// 自動撮影 (施工後 camera, with 色判定): ぴったり for 0.7 s with the phone still = the shutter, once; again
+// only after it has left ぴったり (a manual shot meanwhile counts as the one).
+const AUTO_MS=700;
+function autoStep(){
+ if(!$("tAuto").classList.contains("on")||camMode!=="after"){autoSt.t0=0;return {st:"",p:0};}
+ if(lvlShown!=="ok"){autoSt={t0:0,done:false};return {st:"",p:0};}
+ if(shooting){autoSt.done=true;autoSt.t0=0;return {st:"go",p:1};} // taking it (by itself or the shutter)
+ if(autoSt.done)return {st:"shot",p:0};
+ if(!camReady())return {st:"",p:0};
+ if(spin>20){autoSt.t0=0;return {st:"still",p:0};}
+ const now=performance.now();if(!autoSt.t0)autoSt.t0=now;
+ const p=Math.min(1,(now-autoSt.t0)/AUTO_MS);
+ if(p>=1){autoSt.done=true;autoSt.t0=0;$("cShot").onclick();return {st:"go",p:1};}
+ return {st:"wait",p};
+}
+const AUTO_LABEL={wait:"そのまま…",still:"止めてください",go:"撮影中…",shot:"撮影しました"};
 function showDiff(){
  const dB=(job.beforeOri&&oriOK)?ori.beta-job.beforeOri.beta:null, l=levelOf(est,AW,AH,estScore,estId,dB);
  // Change colour only after two readings agree, so the frame doesn't flicker.
  if(l===lvlPend)lvlCount++;else{lvlPend=l;lvlCount=1;}
  if(l!==lvlShown&&(lvlShown===null||lvlCount>=2)){
   if(l==="ok"&&lvlShown!==null)vib(60);
-  lvlShown=l;setFrame(l,LIVE_LABEL[l]);gdShown="";
+  lvlShown=l;setFrame(l,LIVE_LABEL[l]);gdShown="";gdKey="";$("fLabel").classList.remove("hasbar");
  }
  // and how well it matches, 一致 % (changed after two readings agree too)
- if(lvlShown==null||lvlShown==="na")return;
+ if(lvlShown==null||lvlShown==="na"){autoStep();return;}
  const txt=String(matchPct(est,AW,AH,dB));
  if(txt===gdPend)gdCount++;else{gdPend=txt;gdCount=1;}
- if(txt!==gdShown&&(gdShown===""||gdCount>=2)){gdShown=txt;
-  $("fLabel").innerHTML=esc(LIVE_LABEL[lvlShown])+' <span class="fpct">一致 '+txt+'%</span>';}
+ if(txt!==gdShown&&(gdShown===""||gdCount>=2))gdShown=txt;
+ const a=autoStep(), bar=a.st==="wait"||a.st==="go", key=lvlShown+"|"+gdShown+"|"+a.st;
+ if(key!==gdKey){gdKey=key;const f=$("fLabel");f.classList.toggle("hasbar",bar);
+  f.innerHTML=esc(AUTO_LABEL[a.st]||LIVE_LABEL[lvlShown])+' <span class="fpct">一致 '+gdShown+'%</span>'+(bar?'<span class="fbar"><i></i></span>':'');}
+ const bi=$("fLabel").querySelector(".fbar i");if(bi)bi.style.width=Math.round(a.p*100)+"%";
 }
 
 /* ---------- compose & save ---------- */
