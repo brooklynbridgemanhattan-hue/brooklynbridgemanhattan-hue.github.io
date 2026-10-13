@@ -722,8 +722,7 @@ html.natcam #vid,html.app #vid{display:none}
 .frame.far{border-color:#EF4444}.flab.far{background:#EF4444;color:#fff}
 .cam:not(.judging) .flab{display:none}
 .flab{max-width:calc(100% - 24px);text-align:center}
-.flab .fpct{font-size:15px;font-weight:800;opacity:.85;margin-left:4px}
-.flab .fgd{display:block;margin-top:2px;font-size:16px;font-weight:800;line-height:1.3} /* one instruction a line */
+.flab .fpct{font-size:24px;font-weight:900;margin-left:6px;vertical-align:-2px;font-variant-numeric:tabular-nums}
 /* after camera: the before photo small in the bottom-left corner, for lining up */
 .pip{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:auto}
 .pipbox{touch-action:none;cursor:move;position:relative;border-radius:10px;overflow:hidden;box-shadow:0 0 0 2px #fff,0 4px 14px rgba(0,0,0,.5);background:#000;line-height:0}
@@ -3679,21 +3678,6 @@ function levelOf(p,W,H,score,idScore,dBeta){
 }
 // 一致 %: 90% and over = within ぴったり on every count
 function matchPct(p,W,H,dBeta){const o=offBy(p,W,H,dBeta);return Math.max(0,Math.min(100,Math.round(100-10*Math.max(...Object.values(o).map(Math.abs)))));}
-// What to do, the two biggest first, in words for the person holding the phone. p maps the 施工前
-// photo onto the live picture: tx > 0 = things show right of where they were, so the phone goes
-// right; s > 1 = bigger, so step back; r > 0 = turned clockwise on the screen, so tilt the phone
-// right. Front-back: beta is 90 with the phone upright, less when its top leans away (camera looks
-// down). Held sideways, left / right / up / down and front-back would read the other way: left out.
-function guideOf(p,W,H,dBeta,beta,side){
- const o=offBy(p,W,H,dBeta), t=[], few=e=>Math.abs(e)<=2?"少し":"";
- if(!side&&Math.abs(o.x)>1)t.push([Math.abs(o.x),"スマホを"+few(o.x)+(o.x>0?"右":"左")+"へ"]);
- if(!side&&Math.abs(o.y)>1)t.push([Math.abs(o.y),"スマホを"+few(o.y)+(o.y>0?"下":"上")+"へ"]);
- if(Math.abs(o.s)>1)t.push([Math.abs(o.s),few(o.s)+(o.s>0?"下がって":"近づいて")]);
- if(Math.abs(o.r)>1)t.push([Math.abs(o.r),"スマホを"+few(o.r)+(o.r>0?"右":"左")+"に傾けて"]);
- if(!side&&dBeta!=null&&beta!=null&&Math.abs(o.b)>1){const want=beta-dBeta;
-  t.push([Math.abs(o.b),"スマホを"+few(o.b)+(dBeta>0?(want>=90?"立てて":"前に倒して"):(want<=90?"立てて":"手前に倒して"))]);}
- return t.sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]);
-}
 const LIVE_LABEL={ok:"ぴったり 撮影どうぞ",near:"おしい",far:"ずれています",na:"比べられません"};
 let lvlShown=null, lvlPend=null, lvlCount=0;
 function setFrame(l,text){const c=l==="na"?"":l;$("frame").className="frame "+c;$("fLabel").className="flab "+c;$("fLabel").textContent=text;}
@@ -3770,12 +3754,12 @@ function showDiff(){
   if(l==="ok"&&lvlShown!==null)vib(60);
   lvlShown=l;setFrame(l,LIVE_LABEL[l]);gdShown="";
  }
- // under it: 一致 % and what to do (changed after two readings agree too)
+ // and how well it matches, 一致 % (changed after two readings agree too)
  if(lvlShown==null||lvlShown==="na")return;
- const g=lvlShown==="ok"?"":guideOf(est,AW,AH,dB,oriOK?ori.beta:null,!!sideDeg).join("・"), txt=matchPct(est,AW,AH,dB)+"|"+g;
+ const txt=String(matchPct(est,AW,AH,dB));
  if(txt===gdPend)gdCount++;else{gdPend=txt;gdCount=1;}
  if(txt!==gdShown&&(gdShown===""||gdCount>=2)){gdShown=txt;
-  $("fLabel").innerHTML=esc(LIVE_LABEL[lvlShown])+' <span class="fpct">一致 '+txt.split("|")[0]+'%</span>'+(g?g.split("・").map(t=>'<span class="fgd">'+esc(t)+'</span>').join(""):'');}
+  $("fLabel").innerHTML=esc(LIVE_LABEL[lvlShown])+' <span class="fpct">一致 '+txt+'%</span>';}
 }
 
 /* ---------- compose & save ---------- */
