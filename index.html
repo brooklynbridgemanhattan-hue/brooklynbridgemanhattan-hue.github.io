@@ -403,6 +403,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit .cklph{display:flex;gap:6px;flex:none}
 .cklit .cklph button{width:48px;height:48px;padding:0;border-radius:10px;overflow:hidden;background:var(--fill)}
 .cklit .cklph img{width:100%;height:100%;object-fit:cover;display:block}
+.cklit .cklph.cklrow{flex-basis:100%;margin:-2px 0 2px 38px}
 .cklit .cklgo{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:800;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .cklit .cklgo svg.i{width:20px;height:20px}
 .cklit.cklnx .cklgo{background:var(--after);color:var(--after-ink)}
@@ -2359,7 +2360,7 @@ const CKL_LAB={b_body:"施工前 本体",b_plate:"施工前 銘板",pipe:"配管
 const CKL_T={kyuto:{name:"給湯器",keys:["b_body","b_plate","pipe","line","a_body","a_plate","a_pipe","leak","air"]},
  konro:{name:"ビルトインコンロ",keys:["b_body","b_plate","pipe","line","a_body","a_plate","a_pipe","air"]}};
 const CKL_AIR={liq:"検知液/検知器",prs:"圧力測定器"}, CKL_PAIR={b_body:"before",a_body:"after"};
-const cklMax=k=>k==="air"?2:k==="leak"?0:1;
+const cklMax=k=>k==="leak"?0:3; // photos an item can have (each 撮る / 追加 takes one)
 const cklOn=()=>getPref("ba-ckl")==="1";
 function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
  if(v&&v.tpl)return CKL_T[v.tpl]?v.tpl:null; // chosen on the card ("none" = no list)
@@ -2389,9 +2390,11 @@ function cklRender(){
   else if(k==="leak"){sub="写真はいりません";go='<button type="button" class="cklgo'+(done?" on":"")+'" data-tick="leak">'+(done?"確認済み":"確認した")+'</button>';}
   else{const xs=cklPh(p,k,t), all=p.extras||[];
    ph=xs.map(x=>'<button type="button" data-x="'+all.indexOf(x)+'"><img src="'+galUrl(x.blob)+'" alt="'+CKL_LAB[k]+'"></button>').join("");
-   if(k==="air")sub=v.air?"写真2枚まで":"下のどちらかを選んでから撮ります";
-   if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+'撮る</button>';}
-  h+='<div class="cklit'+(done?" ckldone":"")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+CKL_LAB[k]+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph?'<span class="cklph">'+ph+'</span>':'')+go+
+   sub=xs.length?xs.length+" / "+cklMax(k)+"枚":"";
+   if(k==="air"&&!v.air)sub="下のどちらかを選んでから撮ります";
+   if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+(xs.length?'追加':'撮る')+'</button>';}
+  const many=(ph.match(/<img/g)||[]).length>1; // 2-3 photos: a line of their own under the name
+  h+='<div class="cklit'+(done?" ckldone":"")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+CKL_LAB[k]+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
  box.innerHTML=h;box.hidden=false;
 }
@@ -2412,7 +2415,7 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
   const t=cklTplOf(job,spotIdx(job));if(!t)return;
   const left=cklMax(k)-cklPh(job,k,t).length;if(left<=0)return;
   if(camFail){cklFile={k,t};$("fExtra").click();return;}
-  cklNext={k,t,left};startCam("extra");}
+  cklNext={k,t,left:1};startCam("extra");}
 });
 $("nExtra").addEventListener("click",()=>{cklFile=null;});
 // choosing the list: a place whose list is in use (photos / ticks) keeps it, and the other job
@@ -3451,27 +3454,38 @@ async function rpPages(j,co,tel,staff){
   // その他の写真: 3 to a row, each with when it was taken and its comments
   await rpGrid(xs.map(e=>({blob:e.blob,at:e.at,e})),"その他の写真",hd,top||!!(ck&&ck.items.length));
  }
- // 3 to a row, each with (cap) its step above it, when it was taken and its comments
+ // 3 to a row. A checklist item's photos (up to 3, same grp) stay together on one row under one bar
+ // with its step; items fill a row while they fit. Under each photo when it was taken and its
+ // comments: a row is only as tall as what it holds (no empty room kept for comments).
  async function rpGrid(xs,name,hd,shown){
-  const cw=(CW-40)/3, chh=250, CAP=xs.some(e=>e.cap)?40:0, ROW=CAP+chh+36+3*28+22;
-  for(let r=0;r<xs.length;r+=3){
+  const cw=(CW-40)/3, chh=250, G=[];
+  for(const e of xs){const g=G[G.length-1];if(g&&e.grp!=null&&g[0].grp===e.grp&&g.length<3)g.push(e);else G.push([e]);}
+  const rows=[];let cur=[];
+  for(const g of G){if(cur.reduce((n,h)=>n+h.length,0)+g.length>3){rows.push(cur);cur=[];}cur.push(g);}
+  if(cur.length)rows.push(cur);
+  x.font="600 22px "+rpFont();
+  const notes=e=>e.e?rpLines(x,notesOf(e.e).map(n=>n.t).filter(Boolean).join(" / "),cw,3).filter(Boolean):[];
+  for(let r=0;r<rows.length;r++){
+   const row=rows[r], items=row.flat(), CAP=items.some(e=>e.cap)?40:0, NL=Math.max(0,...items.map(e=>notes(e).length));
+   const RH=CAP+chh+32+(NL?NL*28+6:0)+16;
    // a label above the first row, and again (続き) above a row that starts a new page
    let lab=r===0?(shown?name:hd+" "+name):"";
-   if(y+(lab?48:0)+ROW-22>BOTTOM){page();if(!lab)lab=hd+" "+name+"(続き)";}
-   if(lab){rpText(x,lab,M,y+32,26,800,"#344054");y+=48;}
-   if(CAP){x.font="800 22px "+rpFont();for(let c=0;c<3&&r+c<xs.length;c++){const t=xs[r+c].cap||"", X=M+c*(cw+20);
-    rpRound(x,X,y,cw,34,8);x.fillStyle="#E6F6EC";x.fill();rpText(x,rpLines(x,t,cw-16,1)[0]||"",X+cw/2,y+25,22,800,"#067647","center");}
-    y+=CAP;}
-   for(let c=0;c<3&&r+c<xs.length;c++){const e=xs[r+c], X=M+c*(cw+20);
+   if(y+(lab?44:0)+RH-16>BOTTOM){page();if(!lab)lab=hd+" "+name+"(続き)";}
+   if(lab){rpText(x,lab,M,y+30,26,800,"#344054");y+=44;}
+   let c=0;
+   if(CAP)for(const g of row){const X=M+c*(cw+20), w=g.length*cw+(g.length-1)*20;
+    if(g[0].cap){rpRound(x,X,y,w,34,8);x.fillStyle="#E6F6EC";x.fill();x.font="800 22px "+rpFont();rpText(x,rpLines(x,g[0].cap,w-16,1)[0]||"",X+w/2,y+25,22,800,"#067647","center");}
+    c+=g.length;}
+   y+=CAP;
+   for(let k=0;k<items.length;k++){const e=items[k], X=M+k*(cw+20);
     x.fillStyle="#F2F4F7";x.fillRect(X,y,cw,chh);
-    let im=null;try{im=await decode(e.blob);const k=Math.min(cw/im.width,chh/im.height), iw=im.width*k, ih=im.height*k;
+    let im=null;try{im=await decode(e.blob);const s=Math.min(cw/im.width,chh/im.height), iw=im.width*s, ih=im.height*s;
      x.imageSmoothingQuality="high";x.drawImage(im,X+(cw-iw)/2,y+(chh-ih)/2,iw,ih);}catch(err){}finally{if(im&&im.close)im.close();}
     x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(X,y,cw,chh);
-    if(e.at)rpText(x,fmtFull(e.at)+" "+new Date(e.at).getHours()+":"+String(new Date(e.at).getMinutes()).padStart(2,"0"),X,y+chh+30,20,600,"#475467");
-    const t=e.e?notesOf(e.e).map(n=>n.t).filter(Boolean).join(" / "):"";
-    if(t){x.font="600 22px "+rpFont();rpLines(x,t,cw,3).forEach((l,n)=>rpText(x,l,X,y+chh+60+n*28,22,600,"#101828"));}
+    if(e.at)rpText(x,fmtFull(e.at)+" "+new Date(e.at).getHours()+":"+String(new Date(e.at).getMinutes()).padStart(2,"0"),X,y+chh+26,20,600,"#475467");
+    notes(e).forEach((l,n)=>rpText(x,l,X,y+chh+58+n*28,22,600,"#101828"));
    }
-   y+=ROW-CAP;
+   y+=RH-CAP;
   }
  }
  // footer: the page and who made it
@@ -3516,8 +3530,8 @@ function rpCkl(j,i){
  const p=pairsOf(j)[i], v=p.cklv||{}, items=[], has=new Set(), lines=[];
  for(const k of st.ks){
   if(k==="leak"){if(v.leak)lines.push(CKL_LAB[k]+" ✓ 確認済み");continue;}
-  if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];if(b)items.push({blob:b,at:p[CKL_PAIR[k]+"At"],cap:CKL_LAB[k]});continue;}
-  for(const e of cklPh(p,k,st.t)){has.add(e);if(e.blob&&!e.noRep)items.push({blob:e.blob,at:e.at,e,cap:CKL_LAB[k]+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":"")});}
+  if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];if(b)items.push({blob:b,at:p[CKL_PAIR[k]+"At"],cap:CKL_LAB[k],grp:k});continue;}
+  for(const e of cklPh(p,k,st.t)){has.add(e);if(e.blob&&!e.noRep)items.push({blob:e.blob,at:e.at,e,cap:CKL_LAB[k]+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":""),grp:k});}
  }
  return {items,has,lines};
 }
