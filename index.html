@@ -409,6 +409,17 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit.cklnx .cklgo{background:var(--after);color:var(--after-ink)}
 .cklit .cklgo:disabled{opacity:.45}
 .cklit .cklgo.on{background:#E6F6EC;color:#067647}
+.cklpg .ckledb{flex:none;min-height:36px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:var(--fill);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.cklednote{margin:0 2px 8px;font-size:14px;line-height:1.5;color:var(--sub)}
+.cklednote b{color:var(--ink)}
+.cklit.ckledit{min-height:52px;flex-wrap:nowrap;background:var(--card);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.cklit.ckledit .cklhd{flex:none;width:48px;height:44px;display:grid;place-items:center;border-radius:10px;color:var(--sub);touch-action:none;cursor:grab}
+.cklit.ckledit .cklhd svg{width:24px;height:24px;stroke:currentColor;stroke-width:2.4;fill:none}
+.cklit.ckldrag{position:relative;z-index:5;border-radius:12px;border-top-color:transparent;box-shadow:0 8px 24px rgba(16,24,40,.22);background:var(--card)}
+.cklit.ckldrag .cklhd{color:var(--ink)}
+.cklebar{display:flex;gap:8px;margin-top:10px}
+.cklebar button{flex:1;min-height:48px;border-radius:12px;font-size:15px;font-weight:800;background:var(--fill);color:var(--ink)}
+.cklebar button.on{background:#12B76A;color:#fff}
 .cklair{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;margin:-2px 0 2px 38px}
 .cklair button{min-height:40px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:#fff;color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line)}
 .cklair button.on{background:#E6F6EC;color:#067647;box-shadow:inset 0 0 0 2px #12B76A}
@@ -2377,6 +2388,13 @@ const CKL_T={kyuto:{name:"給湯器",keys:["b_body","b_plate","pipe","line","a_b
 const CKL_AIR={liq:"検知液/検知器",prs:"圧力測定器"}, CKL_PAIR={b_body:"before",a_body:"after"};
 const cklMax=k=>k==="leak"?0:3; // photos an item can have (each 撮る / 追加 takes one)
 const cklOn=()=>getPref("ba-ckl")==="1";
+// the order (later: the items) of each list as the user set it: {kyuto:{keys:[...]}, ...} in
+// "ba-ckltpl", the same for every site from then on; a list never changed is the one above
+let cklUser=null;
+function cklUserGet(){if(cklUser)return cklUser;try{cklUser=JSON.parse(getPref("ba-ckltpl")||"{}")||{};}catch(e){cklUser={};}if(typeof cklUser!=="object")cklUser={};return cklUser;}
+function cklUserSet(t,keys){const u=Object.assign({},cklUserGet());if(keys)u[t]={keys};else delete u[t];cklUser=u;setPref("ba-ckltpl",JSON.stringify(u));}
+function cklKeys(t){const u=cklUserGet()[t], d=CKL_T[t].keys;if(!u||!Array.isArray(u.keys))return d;
+ const ks=u.keys.filter((k,n,a)=>CKL_LAB[k]&&a.indexOf(k)===n);return ks.length?ks:d;}
 function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
  if(v&&v.tpl)return CKL_T[v.tpl]?v.tpl:null; // chosen on the card ("none" = no list)
  const L=spotList(j), n=(L&&L[i]&&L[i].name)||"";return /給湯/.test(n)?"kyuto":/コンロ/.test(n)?"konro":null;}
@@ -2385,19 +2403,26 @@ function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
 const cklPh=(p,k,t)=>(p.extras||[]).filter(x=>x.ckl===k&&(!x.cklT||x.cklT===t));
 function cklDone(p,k,t){if(CKL_PAIR[k])return !!p[CKL_PAIR[k]];if(k==="leak")return !!(p.cklv&&p.cklv.leak);return cklPh(p,k,t).length>0;}
 // place i: its list and how many are done (null = no list there)
-function cklStat(j,i){const t=cklTplOf(j,i);if(!t)return null;const p=pairsOf(j)[i], ks=CKL_T[t].keys;return {t,ks,n:ks.filter(k=>cklDone(p,k,t)).length,left:ks.filter(k=>!cklDone(p,k,t))};}
+function cklStat(j,i){const t=cklTplOf(j,i);if(!t)return null;const p=pairsOf(j)[i], ks=cklKeys(t);return {t,ks,n:ks.filter(k=>cklDone(p,k,t)).length,left:ks.filter(k=>!cklDone(p,k,t))};}
 // a photo the open place's list shows (so the その他の写真 grid leaves it out)
-function cklHides(x){if(!x||!x.ckl||!cklOn()||!job)return false;const t=cklTplOf(job,spotIdx(job));return !!t&&CKL_T[t].keys.includes(x.ckl)&&!CKL_PAIR[x.ckl]&&(!x.cklT||x.cklT===t);}
+function cklHides(x){if(!x||!x.ckl||!cklOn()||!job)return false;const t=cklTplOf(job,spotIdx(job));return !!t&&cklKeys(t).includes(x.ckl)&&!CKL_PAIR[x.ckl]&&(!x.cklT||x.cklT===t);}
+const CKL_GRIP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
+let cklEd=null; // the list being put in order (its card shows only the names)
 const CKL_OK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-9"/></svg>';
 function cklRender(){
  const on=cklOn(), box=$("cklList");$("cklSw").checked=on;
  $("cklSpNm").textContent=on&&job&&spotList(job)?"("+spotName(job,spotIdx(job))+")":"";
  if(!on||!job){box.hidden=true;box.innerHTML="";return;}
- const i=spotIdx(job), t=cklTplOf(job,i), p=job, v=p.cklv||{};
+ const i=spotIdx(job), t=cklTplOf(job,i), p=job, v=p.cklv||{}, st0=t&&cklStat(job,i);
  let h='<div class="ckltp">'+Object.keys(CKL_T).map(k=>'<button type="button" data-tpl="'+k+'" class="'+(t===k?"on":"")+'">'+CKL_T[k].name+'</button>').join("")+'<button type="button" data-tpl="none" class="'+(t?"":"on")+'">使わない</button></div>';
+ if(t&&cklEd===t){ // 並び替え: ≡ held (or the row long-pressed) and moved up / down
+  h='<p class="cklednote"><b>「'+CKL_T[t].name+'」の並び替え</b><br>≡ を押さえたまま上下に動かします。この並びは次の現場からも同じになり、報告書もこの順に載ります。</p>';
+  for(const k of st0.ks)h+='<div class="cklit ckledit" data-k="'+k+'"><span class="cklnm">'+CKL_LAB[k]+'</span><span class="cklhd" aria-label="'+CKL_LAB[k]+'を動かす">'+CKL_GRIP+'</span></div>';
+  box.innerHTML=h+'<div class="cklebar"><button type="button" data-edreset="1">最初の並びに戻す</button><button type="button" class="on" data-eddone="1">完了</button></div>';box.hidden=false;return;}
+ cklEd=null;
  if(!t){box.innerHTML=h+'<p class="cklnone">この箇所のチェックリストを選んでください(箇所の名前が「給湯器」「〜コンロ」なら自動で出ます)。</p>';box.hidden=false;return;}
  const st=cklStat(job,i), nx=st.left[0];
- h+='<div class="cklpg"><span class="cklbar"><i style="width:'+Math.round(100*st.n/st.ks.length)+'%"></i></span><b>'+st.n+' / '+st.ks.length+'</b></div>';
+ h+='<div class="cklpg"><span class="cklbar"><i style="width:'+Math.round(100*st.n/st.ks.length)+'%"></i></span><b>'+st.n+' / '+st.ks.length+'</b><button type="button" class="ckledb" data-ed="1">並び替え</button></div>';
  for(const k of st.ks){const done=cklDone(p,k,t);let sub="", ph="", go="";
   if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];sub=k==="b_body"?"上の施工前の写真":"上の施工後の写真";
    if(b)ph='<button type="button" data-pair="'+(k==="b_body"||!p.before?0:1)+'"><img src="'+galUrl(b)+'" alt="'+CKL_LAB[k]+'"></button>';
@@ -2417,7 +2442,10 @@ $("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)rend
 let cklNext=null, cklFile=null; // the item the next その他の写真 camera / file is for
 async function cklSet(f){if(!job)return;job.cklv=job.cklv||{};f(job.cklv);await saveJob();renderThumbs();}
 $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;const d=b.dataset;
- if(d.tpl)cklTpl(d.tpl);
+ if(d.ed){cklEd=cklTplOf(job,spotIdx(job));cklRender();cklSee();}
+ else if(d.eddone){cklEd=null;cklRender();}
+ else if(d.edreset){const t=cklEd;if(t){cklUserSet(t,null);renderThumbs();}}
+ else if(d.tpl)cklTpl(d.tpl);
  else if(d.pair!=null)openGallery(+d.pair,"pair");
  else if(d.up){ // 施工前 本体 / 施工後 本体: to the 施工前 / 施工後 tile (施工後 needs the 施工前 first)
   const el=$(d.up==="a_body"&&job.before?"sA":"sB"), top=$("detail").querySelector(".topbar").offsetHeight;
@@ -2433,6 +2461,36 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
   cklNext={k,t,left:1};startCam("extra");}
 });
 $("nExtra").addEventListener("click",()=>{cklFile=null;});
+// 並び替え: ≡ moves at once; anywhere else on the row after a long press (a short swipe still scrolls)
+let cklDr=null, cklDrT=0, cklDr0=null;
+function cklDrGo(r,e){clearTimeout(cklDrT);cklDrT=0;
+ cklDr={r,id:e.pointerId,y0:e.clientY+window.scrollY,cy:e.clientY,raf:0};r.classList.add("ckldrag");
+ try{r.setPointerCapture(e.pointerId);}catch(x){}if(navigator.vibrate)try{navigator.vibrate(15);}catch(x){}
+ const tick=()=>{if(!cklDr)return;const top=$("detail").querySelector(".topbar").offsetHeight, nb=$("nextBar").getBoundingClientRect(), y=cklDr.cy;
+  const bot=nb.height&&nb.top>window.innerHeight/2?nb.top:window.innerHeight; // above the 施工後を撮る bar
+  const sp=y<top+56?-8:y>bot-40?8:0;if(sp){window.scrollBy(0,sp);cklDrMove();}cklDr.raf=requestAnimationFrame(tick);};
+ cklDr.raf=requestAnimationFrame(tick);}
+function cklDrMove(){const d=cklDr;if(!d)return;const r=d.r;let dy=d.cy+window.scrollY-d.y0;
+ for(;;){const nx=r.nextElementSibling, pv=r.previousElementSibling;
+  if(nx&&nx.classList.contains("ckledit")&&dy>nx.offsetHeight/2){r.parentNode.insertBefore(nx,r);d.y0+=nx.offsetHeight;dy-=nx.offsetHeight;}
+  else if(pv&&pv.classList.contains("ckledit")&&dy<-pv.offsetHeight/2){r.parentNode.insertBefore(r,pv);d.y0-=pv.offsetHeight;dy+=pv.offsetHeight;}
+  else break;}
+ r.style.transform="translateY("+dy+"px)";}
+function cklDrEnd(){clearTimeout(cklDrT);cklDrT=0;const d=cklDr;if(!d)return;cklDr=null;cancelAnimationFrame(d.raf);
+ d.r.classList.remove("ckldrag");d.r.style.transform="";
+ const t=cklEd, ks=[...$("cklList").querySelectorAll(".ckledit")].map(x=>x.dataset.k);
+ if(t&&job&&ks.join()!==cklKeys(t).join()){cklUserSet(t,ks);renderThumbs();}}
+$("cklList").addEventListener("pointerdown",e=>{const r=e.target.closest(".ckledit");if(!r||cklDr)return;
+ if(e.target.closest(".cklhd")){e.preventDefault();cklDrGo(r,e);return;}
+ const x0=e.clientX, y0=e.clientY;clearTimeout(cklDrT);
+ cklDrT=setTimeout(()=>cklDrGo(r,e),400);cklDr0={x0,y0};});
+$("cklList").addEventListener("pointermove",e=>{
+ if(cklDr){if(e.pointerId!==cklDr.id)return;cklDr.cy=e.clientY;cklDrMove();return;}
+ if(cklDrT&&cklDr0&&Math.hypot(e.clientX-cklDr0.x0,e.clientY-cklDr0.y0)>8){clearTimeout(cklDrT);cklDrT=0;}});
+$("cklList").addEventListener("pointerup",cklDrEnd);
+$("cklList").addEventListener("pointercancel",cklDrEnd);
+$("cklList").addEventListener("touchmove",e=>{if(cklDr)e.preventDefault();},{passive:false}); // the page does not scroll under the finger
+$("cklList").addEventListener("contextmenu",e=>{if(e.target.closest(".ckledit"))e.preventDefault();});
 // choosing the list: a place whose list is in use (photos / ticks) keeps it, and the other job
 // (給湯器 ⇄ コンロ) becomes a place of its own: its own 施工前・施工後, photos and report section
 // keeps the checklist card where it was on the screen after the place changes under it
