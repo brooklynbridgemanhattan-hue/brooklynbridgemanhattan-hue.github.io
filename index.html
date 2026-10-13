@@ -420,6 +420,10 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklebar{display:flex;gap:8px;margin-top:10px}
 .cklebar button{flex:1;min-height:48px;border-radius:12px;font-size:15px;font-weight:800;background:var(--fill);color:var(--ink)}
 .cklebar button.on{background:#12B76A;color:#fff}
+.cklit .cklsk{flex:none;min-height:44px;padding:0 10px;border-radius:12px;font-size:14px;font-weight:800;background:transparent;color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line)}
+.cklit.cklskp .cklmk{box-shadow:inset 0 0 0 2px #D0D5DD;background:repeating-linear-gradient(-45deg,transparent 0 5px,#E4E7EC 5px 7px)}
+.cklit.cklskp .cklnm s{color:#98A2B3;text-decoration-thickness:1.5px}
+.cklit.cklskp .cklnm small{color:var(--sub);font-weight:700}
 .cklair{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;margin:-2px 0 2px 38px}
 .cklair button{min-height:40px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:#fff;color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line)}
 .cklair button.on{background:#E6F6EC;color:#067647;box-shadow:inset 0 0 0 2px #12B76A}
@@ -1260,7 +1264,7 @@ const CHEV_SVG='<svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path
 let homeTab="w";
 // 撮影チェックリスト on: how many of the site's items are done (all places together)
 function cklBadge(j){if(!cklOn())return "";const cs=pairsOf(j).map((p,i)=>cklStat(j,i)).filter(Boolean);if(!cs.length)return "";
- const n=cs.reduce((a,c)=>a+c.n,0), t=cs.reduce((a,c)=>a+c.ks.length,0);return '<span class="cklbd'+(n<t?" ng":"")+'">チェック '+n+'/'+t+'</span>';}
+ const n=cs.reduce((a,c)=>a+c.n,0), t=cs.reduce((a,c)=>a+c.tot,0);return '<span class="cklbd'+(n<t?" ng":"")+'">チェック '+n+'/'+t+'</span>';}
 function showTab(){$("tabW").classList.toggle("on",homeTab==="w");$("tabD").classList.toggle("on",homeTab==="d");$("lWait").hidden=homeTab!=="w";$("lDone").hidden=homeTab!=="d";}
 $("tabW").onclick=()=>{homeTab="w";hSelClear();showTab();};$("tabD").onclick=()=>{homeTab="d";hSelClear();showTab();};
 async function showHome(){
@@ -2401,9 +2405,15 @@ function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
 // an item's photos in list t (給湯器 and コンロ are separate jobs: a photo belongs to the list it was
 // taken for, cklT; one from v1.121-122 has none and counts for the place's list)
 const cklPh=(p,k,t)=>(p.extras||[]).filter(x=>x.ckl===k&&(!x.cklT||x.cklT===t));
+// 今回なし (this place only, no reason asked): what the report says instead of the photos. Only the
+// photo items (not 施工前 本体 / 施工後 本体 above, 漏水確認, 気密試験結果), and only while it has none
+const CKL_SKIP={b_plate:"型番判読不可",line:"不要"}, cklSkipTx=k=>CKL_SKIP[k]||"不要";
+const cklCanSkip=k=>!CKL_PAIR[k]&&k!=="leak"&&k!=="air";
+const cklSkipped=(p,k,t)=>cklCanSkip(k)&&!!(p.cklv&&p.cklv.skip&&p.cklv.skip[k])&&!cklPh(p,k,t).length;
 function cklDone(p,k,t){if(CKL_PAIR[k])return !!p[CKL_PAIR[k]];if(k==="leak")return !!(p.cklv&&p.cklv.leak);return cklPh(p,k,t).length>0;}
 // place i: its list and how many are done (null = no list there)
-function cklStat(j,i){const t=cklTplOf(j,i);if(!t)return null;const p=pairsOf(j)[i], ks=cklKeys(t);return {t,ks,n:ks.filter(k=>cklDone(p,k,t)).length,left:ks.filter(k=>!cklDone(p,k,t))};}
+function cklStat(j,i){const t=cklTplOf(j,i);if(!t)return null;const p=pairsOf(j)[i], ks=cklKeys(t), on=ks.filter(k=>!cklSkipped(p,k,t));
+ return {t,ks,tot:on.length,n:on.filter(k=>cklDone(p,k,t)).length,left:on.filter(k=>!cklDone(p,k,t))};} // tot: without 今回なし
 // a photo the open place's list shows (so the その他の写真 grid leaves it out)
 function cklHides(x){if(!x||!x.ckl||!cklOn()||!job)return false;const t=cklTplOf(job,spotIdx(job));return !!t&&cklKeys(t).includes(x.ckl)&&!CKL_PAIR[x.ckl]&&(!x.cklT||x.cklT===t);}
 const CKL_GRIP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
@@ -2422,8 +2432,10 @@ function cklRender(){
  cklEd=null;
  if(!t){box.innerHTML=h+'<p class="cklnone">この箇所のチェックリストを選んでください(箇所の名前が「給湯器」「〜コンロ」なら自動で出ます)。</p>';box.hidden=false;return;}
  const st=cklStat(job,i), nx=st.left[0];
- h+='<div class="cklpg"><span class="cklbar"><i style="width:'+Math.round(100*st.n/st.ks.length)+'%"></i></span><b>'+st.n+' / '+st.ks.length+'</b><button type="button" class="ckledb" data-ed="1">並び替え</button></div>';
+ h+='<div class="cklpg"><span class="cklbar"><i style="width:'+(st.tot?Math.round(100*st.n/st.tot):100)+'%"></i></span><b>'+st.n+' / '+st.tot+'</b><button type="button" class="ckledb" data-ed="1">並び替え</button></div>';
  for(const k of st.ks){const done=cklDone(p,k,t);let sub="", ph="", go="";
+  if(cklSkipped(p,k,t)){
+   h+='<div class="cklit cklskp" data-k="'+k+'"><span class="cklmk"></span><span class="cklnm"><s>'+CKL_LAB[k]+'</s><small>今回なし：'+cklSkipTx(k)+'</small></span><button type="button" class="cklgo" data-unskip="'+k+'">戻す</button></div>';continue;}
   if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];sub=k==="b_body"?"上の施工前の写真":"上の施工後の写真";
    if(b)ph='<button type="button" data-pair="'+(k==="b_body"||!p.before?0:1)+'"><img src="'+galUrl(b)+'" alt="'+CKL_LAB[k]+'"></button>';
    else go='<button type="button" class="cklgo" data-up="'+k+'">'+CAM_SVG+'上で撮る</button>';}
@@ -2432,7 +2444,8 @@ function cklRender(){
    ph=xs.map(x=>'<button type="button" data-x="'+all.indexOf(x)+'"><img src="'+galUrl(x.blob)+'" alt="'+CKL_LAB[k]+'"></button>').join("");
    sub=xs.length?xs.length+" / "+cklMax(k)+"枚":"";
    if(k==="air"&&!v.air)sub="下のどちらかを選んでから撮ります";
-   if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+(xs.length?'追加':'撮る')+'</button>';}
+   if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+(xs.length?'追加':'撮る')+'</button>';
+   if(!xs.length&&cklCanSkip(k))go='<button type="button" class="cklsk" data-skip="'+k+'" aria-label="'+CKL_LAB[k]+'を今回なしにする">なし</button>'+go;}
   const many=(ph.match(/<img/g)||[]).length>1; // 2-3 photos: a line of their own under the name
   h+='<div class="cklit'+(done?" ckldone":"")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+CKL_LAB[k]+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
@@ -2451,6 +2464,8 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
   const el=$(d.up==="a_body"&&job.before?"sA":"sB"), top=$("detail").querySelector(".topbar").offsetHeight;
   window.scrollTo({top:Math.max(0,el.getBoundingClientRect().top+window.scrollY-top-60),behavior:"smooth"});
   setTimeout(()=>glow(el,3,d.up==="a_body"&&!job.before?"先に施工前をここで撮ります":"ここをタップして撮影"),450);}
+ else if(d.skip)cklSet(v=>{v.skip=Object.assign({},v.skip,{[d.skip]:1});});
+ else if(d.unskip)cklSet(v=>{if(v.skip){delete v.skip[d.unskip];if(!Object.keys(v.skip).length)delete v.skip;}});
  else if(d.tick)cklSet(v=>{if(v.leak)delete v.leak;else v.leak=1;});
  else if(d.air)cklSet(v=>{v.air=d.air;});
  else if(d.x!=null)openGallery(+d.x);
@@ -3522,7 +3537,7 @@ async function rpPages(j,co,tel,staff){
   // 撮影チェックリスト: its photos in order, each with the step above it; then 漏水確認 and the like
   const top=!!(o.p.before||o.p.after);
   if(ck){await rpGrid(ck.items,"撮影チェック",hd,top,true,ck.inTop?"※施工前 本体・施工後 本体は上の写真":"");
-   for(const t of ck.lines){if(y+44>BOTTOM)page();rpText(x,t,M,y+30,24,800,"#067647");y+=44;}
+   for(const t of ck.lines){if(y+44>BOTTOM)page();rpText(x,t.t||t,M,y+30,24,800,t.c||"#067647");y+=44;}
    if(ck.lines.length)y+=10;}
   // その他の写真: 3 to a row, each with when it was taken and its comments
   await rpGrid(xs.map(e=>({blob:e.blob,at:e.at,e})),"その他の写真",hd,top||!!(ck&&ck.items.length));
@@ -3610,6 +3625,7 @@ function rpCkl(j,i){
  const p=pairsOf(j)[i], v=p.cklv||{}, items=[], has=new Set(), lines=[];let inTop=false;
  for(const k of st.ks){
   if(k==="leak"){if(v.leak)lines.push(CKL_LAB[k]+" ✓ 確認済み");continue;}
+  if(cklSkipped(p,k,st.t)){lines.push({t:CKL_LAB[k]+"："+cklSkipTx(k),c:"#475467"});continue;}
   if(CKL_PAIR[k]){if(p[CKL_PAIR[k]])inTop=true;continue;} // shown big above, not again here
   for(const e of cklPh(p,k,st.t)){has.add(e);if(e.blob&&!e.noRep)items.push({blob:e.blob,at:e.at,e,cap:CKL_LAB[k]+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":""),grp:k});}
  }
