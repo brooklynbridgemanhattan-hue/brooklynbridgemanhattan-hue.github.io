@@ -145,7 +145,7 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 /* where you are: 施工前 -> 施工後 -> 比較写真 */
 .steps{display:flex;align-items:center;gap:6px;list-style:none;margin:0 0 14px;padding:0}
 /* 複数か所: the places of this site, side by side (scrolls sideways when many) */
-.spots{display:flex;gap:8px;margin:0 -16px 12px;padding:2px 16px 4px;overflow-x:auto;scrollbar-width:none}
+.spots{display:flex;gap:8px;margin:-8px -16px 4px;padding:10px 16px 12px;overflow-x:auto;scrollbar-width:none} /* room for a button's glow ring (same place on the page) */
 .spots::-webkit-scrollbar{display:none}
 .spb{flex:none;display:flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 8px;border-radius:999px;background:var(--card);color:#475467;font-size:15px;font-weight:700;box-shadow:inset 0 0 0 1.5px #D0D5DD}
 .spb i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--fill)}
@@ -1476,7 +1476,13 @@ function glow(el,n,note){if(!el)return;el.classList.remove("glow","glow1");void 
 let cmpGlowed=false;
 const cmpSeen=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&!cmpGlowed&&job&&job.before&&job.after&&$("result").style.display!=="none"&&$("viewer").hidden){cmpGlowed=true;glow($("bSave"),3,"比較写真を保存しましょう");}});},{threshold:[0.9]});
 cmpSeen.observe($("bSave"));
-function startGlow(){cmpGlowed=false;if(job&&!job.before)setTimeout(()=>{if(job&&!job.before&&!$("detail").hidden)glow($("sB"),3,"ここから撮影スタート");},350);}
+// A site with no photos yet whose place has no name starts from the name (箇所名を選ぶ); once it has one
+// (or a photo is taken anyway), 施工前. One at a time.
+const spotNamed=j=>{const L=spotList(j);return !!(L&&L[spotIdx(j)]&&L[spotIdx(j)].name);};
+const siteFresh=j=>!pairsOf(j).some(p=>p.before||p.after||(p.extras||[]).length);
+function startGlow(){cmpGlowed=false;if(!job)return;
+ if(!spotNamed(job)&&siteFresh(job)){setTimeout(()=>{if(job&&!$("detail").hidden&&!spotNamed(job)&&siteFresh(job)&&$("bkDlg").hidden)glow($("spotBar").querySelector(".spb.on"),3,"まずは箇所名を選ぶ");},350);return;}
+ if(!job.before)setTimeout(()=>{if(job&&!job.before&&!$("detail").hidden)glow($("sB"),3,"ここから撮影スタート");},350);}
 function refreshDetail(){
  setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);
  // empty tiles are the camera buttons; 撮り直す shows under a photo
@@ -1485,6 +1491,8 @@ function refreshDetail(){
  $("sA").parentNode.classList.toggle("off",!job.before);
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
  $("lvB").hidden=!job.before;$("lvA").hidden=!job.after;
+ // 「まずは箇所名を選ぶ」 goes as soon as the place has a name or a photo is taken
+ if(spotNamed(job)||!siteFresh(job))document.querySelectorAll(".hint").forEach(h=>{if(h.textContent==="まずは箇所名を選ぶ")h.remove();});
  showPlace();renderThumbs();spotShow();$("dTitle").textContent=custName(job)||"現場の詳細";
  $("bMask").disabled=!job.before;$("bMask").hidden=!job.before;setTx("bMask",job.mask?"比べない枠を直す":"交換する機器を枠で囲む(任意)");
  const n=$("camNote");
@@ -1612,6 +1620,7 @@ async function spotEdit(i){
  if(!ok)return;
  if(!L){if(!spotNmVal())return;job.spots=L=[{name:"",live:true}];job.exSpot=1;} // the only place gets a name
  L[i].name=spotNmVal();await saveJob();spotShow();renderThumbs(); // the checklist follows the name
+ if(siteFresh(job))startGlow(); // named: 施工前 is next
 }
 async function spotDel(i){
  const L=spotList(job);if(!L||L.length<2||!L[i])return;
@@ -2420,7 +2429,7 @@ async function cklTpl(k){
  if(!used||k==="none"){
   // an unnamed place takes the job's name (the report's heading)
   if(k!=="none"){let L=spotList(job);if(!L){job.spots=L=[{name:"",live:true}];job.exSpot=1;}if(!L[i].name)L[i].name=CKL_T[k].name;}
-  await cklSet(v=>{v.tpl=k;});spotShow();return;}
+  await cklSet(v=>{v.tpl=k;});spotShow();if(k!=="none"&&siteFresh(job))startGlow();return;}
  const nm=CKL_T[k].name, cur=CKL_T[t].name;
  if(!await bkDialog("「"+nm+"」は別の箇所にします",'<p style="margin:0">この箇所は「'+esc(cur)+'」のチェックリストで撮影中です。「'+esc(nm)+'」は別の施工なので、新しい箇所として追加し、施工前・施工後から別々に撮ります(報告書も箇所ごとに分かれます)。</p>',"箇所を追加する","やめる")||!job)return;
  let L=spotList(job);if(!L){job.spots=L=[{name:"",live:true}];job.exSpot=1;}
