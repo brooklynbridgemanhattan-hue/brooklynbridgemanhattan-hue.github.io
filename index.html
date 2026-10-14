@@ -409,8 +409,13 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit .cklph button{width:48px;height:48px;padding:0;border-radius:10px;overflow:hidden;background:var(--fill)}
 .cklit .cklph img{width:100%;height:100%;object-fit:cover;display:block}
 .cklit .cklph.cklrow{flex-basis:100%;margin:-2px 0 2px 38px}
-.cklit .cklgo{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:800;background:var(--cks);color:var(--ckt);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-.cklit .cklgo svg.i{width:20px;height:20px}
+.cklit .cklgo{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:17px;font-weight:800;background:var(--cks);color:var(--ckt);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.cklit .cklgo svg.i{width:24px;height:24px}
+/* the card's items in frames: taken / ticked green with the ✓, not yet red, 今回なし grey (編集 keeps the lines) */
+.cklit.cklbx{border:2px solid #E4E7EC;border-radius:12px;margin-top:6px;padding:4px} /* a border: the glow after a shot (box-shadow) leaves it */
+.cklit.cklbx.ckldone{border-color:#12B76A;background:#F6FEF9}
+.cklit.cklbx.cklng{border-color:#F04438}
+@media (max-width:380px){.cklit.cklbx{gap:7px;padding:4px 3px}.cklit .cklgo{padding:0 9px;font-size:16px;gap:4px}.cklit .cklgo svg.i{width:22px;height:22px}.cklit .cklsk{padding:0 8px}}
 .cklit.cklnx .cklgo{background:var(--ckc);color:var(--cki)}
 .cklit .cklgo:disabled{opacity:.45}
 .cklit .cklgo.on{background:#E6F6EC;color:#067647}
@@ -2476,7 +2481,7 @@ function cklRender(){
  h+='<div class="cklpg"><span class="cklbar"><i style="width:'+(st.tot?Math.round(100*st.n/st.tot):100)+'%"></i></span><b>'+st.n+' / '+st.tot+'</b><button type="button" class="ckledb" data-ed="1">編集</button></div>';
  for(const k of st.ks){const done=cklDone(p,k,t);let sub="", ph="", go="";
   if(cklSkipped(p,k,t)){
-   h+='<div class="cklit cklskp" data-k="'+k+'"><span class="cklmk"></span><span class="cklnm"><s>'+esc(cklLab(k))+'</s><small>今回なし：'+cklSkipTx(k)+'</small></span><button type="button" class="cklgo" data-unskip="'+k+'">戻す</button></div>';continue;}
+   h+='<div class="cklit cklbx cklskp" data-k="'+k+'"><span class="cklmk"></span><span class="cklnm"><s>'+esc(cklLab(k))+'</s><small>今回なし：'+cklSkipTx(k)+'</small></span><button type="button" class="cklgo" data-unskip="'+k+'">戻す</button></div>';continue;}
   if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];sub=k==="b_body"?"上の施工前の写真":"上の施工後の写真";
    if(b)ph='<button type="button" data-pair="'+(k==="b_body"||!p.before?0:1)+'"><img src="'+galUrl(b)+'" alt="'+cklLab(k)+'"></button>';
    else go='<button type="button" class="cklgo" data-up="'+k+'">'+CAM_SVG+'上で撮る</button>';}
@@ -2488,7 +2493,7 @@ function cklRender(){
    if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+(xs.length?'追加':'撮る')+'</button>';
    if(!xs.length&&cklCanSkip(k))go='<button type="button" class="cklsk" data-skip="'+k+'" aria-label="'+esc(cklLab(k))+'を今回なしにする">なし</button>'+go;}
   const many=(ph.match(/<img/g)||[]).length>1; // 2-3 photos: a line of their own under the name
-  h+='<div class="cklit'+cklPhase(k)+(done?" ckldone":"")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
+  h+='<div class="cklit cklbx'+cklPhase(k)+(done?" ckldone":" cklng")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
  box.innerHTML=h;box.hidden=false;
 }
