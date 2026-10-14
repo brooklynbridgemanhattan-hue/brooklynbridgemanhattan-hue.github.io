@@ -222,7 +222,9 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .fl-l svg.i{width:17px;height:17px}
 input.t,textarea.t{width:100%;font:inherit;font-size:17px;padding:13px 14px;border:1.5px solid var(--line);border-radius:var(--r-s);background:var(--fill);color:var(--ink);outline:none}
 .sama{position:relative;display:block}.sama input.t{padding-right:44px}.sama .suf{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:17px;font-weight:700;color:var(--sub);pointer-events:none}
-textarea.t{display:block;resize:none;line-height:1.5} /* 施工内容: 2 lines, ✓ closes the keyboard */
+textarea.t{display:block;resize:none;line-height:1.5} /* 施工内容: Enter is a new line, 完了 (under it while typing) closes the keyboard */
+.mdone{display:flex;align-items:center;gap:4px;margin:8px 0 0 auto;min-height:40px;padding:0 14px;border-radius:999px;font-size:15px;font-weight:800;background:var(--brand);color:#fff}
+.mdone svg.i{width:18px;height:18px;stroke:#fff;stroke-width:3}
 input.t:focus,textarea.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .place{display:flex;gap:8px}
 .pv{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:13px 14px;border-radius:var(--r-s);background:var(--fill);border:1.5px solid var(--line);font-size:17px;font-weight:700}
@@ -868,7 +870,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><span class="sama"><input class="t" id="site" type="text" placeholder="例:山田" enterkeyhint="done" autocomplete="off"><span class="suf" aria-hidden="true">様</span></span></label>
   <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
    <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
-  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>施工内容</span><textarea class="t" id="memo" rows="2" enterkeyhint="enter" placeholder="例:ビルトインコンロ交換・レンジフード交換"></textarea></label>
+  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>施工内容</span><textarea class="t" id="memo" rows="2" enterkeyhint="enter" placeholder="例:ビルトインコンロ交換・レンジフード交換"></textarea><button type="button" class="mdone" id="memoDone" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></label>
  </section>
 
  <div class="spots" id="spotBar"></div>
@@ -1507,7 +1509,11 @@ function glow(el,n,note){if(!el)return;el.classList.remove("glow","glow1");void 
  let h=null;
  if(note){document.querySelectorAll(".hint").forEach(x=>x.remove());
   const r=el.getBoundingClientRect(), up=r.top>90;h=document.createElement("div");h.className="hint "+(up?"up":"down");h.textContent=note;document.body.appendChild(h);
-  const hw=h.offsetWidth, cx=Math.min(Math.max(r.left+r.width/2,hw/2+8),innerWidth-hw/2-8);h.style.left=(cx+scrollX)+"px";h.style.top=(up?r.top+scrollY-h.offsetHeight-14:r.bottom+scrollY+14)+"px";}
+  // kept by its button while it shows (the page above can grow or shrink: 施工内容's lines, its 完了)
+  // (by the button's own size, not as it swells while it glows: the note does not bob with it)
+  const place=()=>{const r=el.getBoundingClientRect(), cy=r.top+r.height/2, eh=el.offsetHeight||r.height, hw=h.offsetWidth, cx=Math.min(Math.max(r.left+r.width/2,hw/2+8),innerWidth-hw/2-8);
+   h.style.left=(cx+scrollX)+"px";h.style.top=(up?cy-eh/2+scrollY-h.offsetHeight-14:cy+eh/2+scrollY+14)+"px";};
+  const follow=()=>{if(!h.isConnected||h.classList.contains("out"))return;place();requestAnimationFrame(follow);};follow();}
  const end=()=>{el.classList.remove("glow","glow1");el.removeEventListener("animationend",end);if(h){h.classList.add("out");setTimeout(()=>h.remove(),450);}};el.addEventListener("animationend",end);}
 // 施工前 is where a site starts: it is pointed at when an un-started site opens.
 // Once both photos are there, 比較写真を保存する is pointed at the first time it comes into view.
@@ -1568,6 +1574,12 @@ const doneKey=e=>e.key==="Enter"&&!e.isComposing&&e.keyCode!==229;
 function memoFit(){const t=$("memo");t.style.height="auto";const lh=parseFloat(getComputedStyle(t).lineHeight)||25, pad=t.offsetHeight-t.clientHeight+28;
  t.style.height=Math.min(t.scrollHeight+(t.offsetHeight-t.clientHeight),lh*6+pad)+"px";}
 $("memo").addEventListener("input",memoFit);
+// 施工内容's 完了: shown while typing; it keeps the box focused until let go (so it is not moved
+// away from under the finger), then closes the keyboard like お客様名's ✓
+$("memo").addEventListener("focus",()=>{$("memoDone").hidden=false;});
+$("memo").addEventListener("blur",()=>{$("memoDone").hidden=true;});
+$("memoDone").addEventListener("pointerdown",e=>e.preventDefault());
+$("memoDone").addEventListener("click",e=>{e.preventDefault();$("memo").blur();});
 $("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
 const hasPhotos=j=>pairsOf(j).some(p=>p.before||p.after);
 const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||hasPhotos(job)||(job.extras||[]).length||spotList(job));
