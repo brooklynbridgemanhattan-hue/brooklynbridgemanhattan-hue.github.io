@@ -1395,6 +1395,7 @@ async function bkLoad(){
   if(!r.ok){bkProgEnd();await bkDialog("戻せませんでした",bkErr(r)+"<br><small>今あるデータは消えていません。</small>","閉じる");return;}
   // the page's own settings: only those not set here
   try{const st=JSON.parse(r.settings||"{}");for(const k in st)if(/^ba-/.test(k)&&localStorage.getItem(k)==null)localStorage.setItem(k,st[k]);}catch(e){}
+  bkPrefsMerge(r.prefs);
   // sites deleted earlier in this session but put back now must show again
   (r.ids||[]).forEach(id=>goneIds.delete(id));
   bkProg("現場の一覧を作り直しています…");
@@ -1402,6 +1403,20 @@ async function bkLoad(){
   await bkDialog("バックアップから戻しました","追加した現場 <b>"+r.added+"件</b>"+(r.updated?"・新しくした現場 <b>"+r.updated+"件</b>":"")+(r.kept?"<br><small>このスマホに同じか新しい内容があるので、そのままにした現場:"+r.kept+"件</small>":"")+"<br>写真 "+(r.photosWritten+r.photosThere)+"枚"+(r.photosThere?"(うち "+r.photosThere+"枚はもともとありました)":""),"OK");
  }finally{bkBusy=false;bkProgEnd();}
 }
+// 撮影チェックリストのリスト・項目 and 箇所名の候補 from a backup are added to this phone's own (the other
+// settings come back only where not set here): a phone already in use keeps what it has and gains the
+// rest. A list the backup made under a name this phone also made one for stays this phone's; the
+// backup's is kept hidden (del) only so its items' photos keep their names.
+function bkPrefsMerge(js){cklUser=null;let o={};try{o=JSON.parse(js||"{}")||{};}catch(e){return;}
+ try{const a=JSON.parse(o["ba-spotpre"]||"null");if(Array.isArray(a)){const L=spotPre(), add=a.filter(n=>typeof n==="string"&&n.trim()&&!L.includes(n));
+  if(add.length)setPref("ba-spotpre",JSON.stringify(L.concat(add).slice(0,40)));}}catch(e){}
+ try{const b=JSON.parse(o["ba-ckltpl"]||"null");if(!b||typeof b!=="object")return;
+  const u=Object.assign({},cklUserGet()), names=cklLstIds().map(t=>cklLst(t).name);let ch=false;
+  for(const t in b){const x=b[t];if(!x||typeof x!=="object")continue;
+   if(!u[t]){u[t]=x.own&&!x.del&&names.includes(x.name)?Object.assign({},x,{del:1}):x;ch=true;}
+   else if(x.add&&typeof x.add==="object"){const a=Object.assign({},x.add,u[t].add);if(Object.keys(a).length!==Object.keys(u[t].add||{}).length){u[t]=Object.assign({},u[t],{add:a});ch=true;}}}
+  if(ch){cklUser=u;setPref("ba-ckltpl",JSON.stringify(u));}}catch(e){}
+ cklUser=null;}
 // the card at the bottom of the list, and a warning at the top when there is no recent backup
 function bkShow(){
  const app=NJ()&&!!window.AndroidApp.backupCreate;$("bkCard").hidden=!app;
