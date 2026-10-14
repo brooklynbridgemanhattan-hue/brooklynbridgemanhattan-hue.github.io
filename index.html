@@ -169,7 +169,17 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .sppre{display:flex;flex-wrap:wrap;gap:8px}
 .sppre button{height:38px;padding:0 12px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:700}
 .sppre button.on{background:#3B5BDB;color:#fff;box-shadow:0 0 0 2px #C5D0FA}
-.sppre .ppdel{flex-basis:100%;height:44px;background:#fff;color:#E03131;box-shadow:inset 0 0 0 1.5px #FFC9C9}
+.sppre button{display:inline-flex;align-items:center}
+/* names with a checklist are marked; 候補を整理 = each name gets × and a tap takes it off the ready names */
+.sppl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;font-size:13px;font-weight:800;color:var(--sub)}
+.sptidy{height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:800;color:#344054;background:var(--fill);box-shadow:inset 0 0 0 1px #D0D5DD}
+.sptidy.on{background:#3B5BDB;color:#fff;box-shadow:none}
+.sppre .sppck{width:16px;height:16px;margin-right:4px;stroke:#12B76A;stroke-width:2.4;fill:none;flex:none}
+.sppre button.on .sppck{stroke:#fff}
+.sppre.tidy button{background:#FFF5F5;color:#C92A2A;box-shadow:inset 0 0 0 1.5px #FFC9C9}
+.sppre.tidy .sppck{stroke:#C92A2A}
+.sppx{margin-left:6px;font-size:17px;font-weight:800;line-height:1}
+.spdelw{margin-top:16px;border-top:1px solid var(--line)}
 .spphint{min-height:20px;margin:8px 0 0;font-size:14px;color:var(--sub)}
 .rplab{display:block;margin-top:8px;font-size:14px;font-weight:700;color:var(--sub)}
 .rpin{width:100%;height:46px;margin:4px 0 6px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
@@ -394,10 +404,8 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .c-ckl:has(#cklSw:checked){padding-bottom:14px}
 .cklsw{padding:0 2px;font-size:18px;font-weight:800}
 .cklsw .exsp{margin-left:4px;display:inline-block;white-space:nowrap}
-.ckltp{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
-.ckltp button{min-height:40px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:var(--fill);color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line)}
-.ckltp button.on{background:#E6F6EC;color:#067647;box-shadow:inset 0 0 0 2px #12B76A}
 .cklnone{margin:0 2px 4px;font-size:14px;color:var(--sub)}
+.cklold{margin-bottom:10px;padding:8px 10px;border-radius:10px;background:#FFF8E6;color:#7A4F01}
 .cklpg{display:flex;align-items:center;gap:10px;margin:0 2px 6px}
 .cklpg .cklbar{flex:1;height:10px;border-radius:99px;background:var(--fill);overflow:hidden}
 .cklpg .cklbar i{display:block;height:100%;background:#12B76A;border-radius:99px}
@@ -442,7 +450,6 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit.cklhid{min-height:52px;flex-wrap:nowrap}
 .cklit.cklhid .cklnm{color:#98A2B3}
 .cklit.cklhid .cklgo{background:var(--fill);color:var(--ink)}
-.ckltp .cklnew{background:transparent;color:#0B6E7D;box-shadow:inset 0 0 0 1.5px var(--extra)}
 .ckllsq{margin:2px 0 6px;width:100%;text-align:left;font-size:14px;font-weight:800;color:var(--sub)}
 .ckllsdel{display:block;margin:14px auto 2px;min-height:44px;padding:0 16px;border-radius:12px;font-size:14px;font-weight:800;background:transparent;color:#B42318}
 .cklkind{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left}
@@ -1693,20 +1700,23 @@ async function spotGo(i,quiet){
   return true;
  }finally{spotBusy=false;}
 }
-const spotForm=(v,note)=>'<input class="spnm" id="spotNm" maxlength="20" placeholder="例:ビルトインコンロ" value="'+esc(v)+'"><div class="sppre" id="spotPre"></div><p class="spphint" id="sppHint"></p>'+(note||"");
-// tap a ready name = it is chosen (coloured) and put in the box; then 「…」を候補から消す takes it off the
-// ready names (shown only after a tap: opening the box chooses none, typing un-chooses). A name taken
-// off is not put back by 決定 in the same box (spotRemember skips it).
+const spotForm=(v,note,del)=>'<input class="spnm" id="spotNm" maxlength="20" placeholder="例:ビルトインコンロ" value="'+esc(v)+'"><div class="sppl"><span>候補</span><button type="button" class="sptidy" id="spTidy" aria-pressed="false">候補を整理</button></div><div class="sppre" id="spotPre"></div><p class="spphint" id="sppHint"></p>'+(note||"")+(del?'<div class="spdelw">'+del+'</div>':'');
+const CKL_MARK='<svg class="sppck" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="m8 12.5 2.8 2.8L16.5 9"/></svg>';
+// tap a ready name = it is chosen (coloured) and put in the box (typing un-chooses). 候補を整理 is a
+// mode of its own: each name has ×, a tap takes it off the ready names at once (nothing else
+// changes). A name taken off is not put back by the box's button (spotRemember skips it).
 let spotForgot=new Set();
+const SPP_HINT=()=>"候補を押すと名前に入ります。"+(cklOn()?"印の付いた名前は、チェックリストも出ます。":"")+"新しい名前も、決めると次回から候補に出ます";
 function spotFormWire(){
- let list=spotPre(), at=-1;spotForgot=new Set();const box=$("spotPre"), hint=t=>{$("sppHint").textContent=t||"";};
- const draw=()=>{const v=list[at];
-  box.innerHTML=list.map((n,i)=>'<button type="button" data-pi="'+i+'" class="'+(i===at?"on":"")+'" aria-pressed="'+(i===at)+'">'+esc(n)+'</button>').join("")+
-   (at>=0?'<button type="button" class="ppdel" id="ppDel">「'+esc(v)+'」を候補から消す</button>':'');
-  box.querySelectorAll("[data-pi]").forEach(b=>b.onclick=()=>{at=+b.dataset.pi;$("spotNm").value=list[at];hint("");draw();});
-  if($("ppDel"))$("ppDel").onclick=()=>{const n=list[at];list.splice(at,1);at=-1;spotForgot.add(n);setPref("ba-spotpre",JSON.stringify(list));hint("「"+n+"」を候補から消しました");draw();};};
+ let list=spotPre(), at=-1, tidy=false;spotForgot=new Set();const box=$("spotPre"), tb=$("spTidy"), hint=t=>{$("sppHint").textContent=t||"";};
+ const draw=()=>{box.classList.toggle("tidy",tidy);tb.classList.toggle("on",tidy);tb.setAttribute("aria-pressed",String(tidy));tb.textContent=tidy?"整理を終える":"候補を整理";
+  box.innerHTML=list.map((n,i)=>'<button type="button" data-pi="'+i+'" class="'+(!tidy&&i===at?"on":"")+'"'+(tidy?' aria-label="「'+esc(n)+'」を候補から消す"':' aria-pressed="'+(i===at)+'"')+'>'+(cklOn()&&cklForName(n)?CKL_MARK:'')+esc(n)+(tidy?'<span class="sppx" aria-hidden="true">×</span>':'')+'</button>').join("");
+  box.querySelectorAll("[data-pi]").forEach(b=>b.onclick=()=>{const i=+b.dataset.pi;
+   if(tidy){const n=list[i];list.splice(i,1);if(at===i)at=-1;else if(at>i)at--;spotForgot.add(n);setPref("ba-spotpre",JSON.stringify(list));hint("「"+n+"」を候補から消しました(箇所の名前や写真は変わりません)");draw();return;}
+   at=i;$("spotNm").value=list[at];hint(SPP_HINT());draw();});};
+ tb.onclick=()=>{tidy=!tidy;hint(tidy?"× の付いた候補を押すと、候補から消えます(箇所の名前や写真は変わりません)":SPP_HINT());draw();};
  $("spotNm").addEventListener("input",()=>{if(at>=0){at=-1;draw();}});
- draw();hint("候補を押すと選べます(選ぶと候補から消すこともできます)。新しい名前も、決めると次回から候補に出ます");
+ draw();hint(SPP_HINT());
 }
 const spotNmVal=()=>String(($("spotNm")||{}).value||"").trim().slice(0,20);
 // a name used for a place is a ready name from then on (no need for ＋追加); 削除 still takes it off
@@ -1727,12 +1737,19 @@ async function spotAddAsk(){
 async function spotEdit(i){
  if(spotBusy||!job)return;let L=spotList(job);
  const del=L&&L.length>1?'<button type="button" class="spdel" id="spotDel">この箇所を削除</button>':'';
- const p=bkDialog(L&&L.length>1?(i+1)+"か所目の編集":"箇所の編集",spotForm(L?L[i].name||"":"",del),"決定","やめる");
+ const p=bkDialog(L&&L.length>1?(i+1)+"か所目の編集":"箇所の編集",spotForm(L?L[i].name||"":"","",del),"この名前にする","やめる");
  spotFormWire();let wantDel=false;
  if($("spotDel"))$("spotDel").onclick=()=>{wantDel=true;if(bkDlgEnd)bkDlgEnd();};
  const ok=await p;if(!job||spotList(job)!==L)return;
  if(wantDel){await spotDel(i);return;}
  if(!ok)return;
+ // photos taken for this place's checklist stay with it: another job's name is a place of its own
+ const nn=spotNmVal(), t0=cklTplOf(job,i), t1=cklForName(nn);
+ if(cklOn()&&t0&&t1!==t0&&cklUsed(job,t0)){const cur=cklLst(t0).name;
+  if(!await bkDialog("「"+nn+"」は別の箇所にします",'<p style="margin:0">この箇所は「'+esc(cur)+'」のチェックリストで撮影中です。名前を「'+esc(nn)+'」に変えると、撮った写真がリストから外れるので、「'+esc(nn)+'」は新しい箇所として追加します(この箇所の名前はそのままです)。</p>',"箇所を追加する","やめる")||!job||spotList(job)!==L)return;
+  spotRemember(nn);if(!L){job.spots=L=[{name:"",live:true}];job.exSpot=1;}if(!L[spotIdx(job)].name)L[spotIdx(job)].name=cur;
+  L.push({name:nn});if(!await spotGo(L.length-1)){await saveJob();spotShow();}
+  window.scrollTo({top:Math.max(0,$("spotBar").getBoundingClientRect().top+window.scrollY-$("detail").querySelector(".topbar").offsetHeight-10),behavior:"smooth"});return;}
  if(!L){if(!spotNmVal())return;job.spots=L=[{name:"",live:true}];job.exSpot=1;} // the only place gets a name
  L[i].name=spotNmVal();spotRemember(L[i].name);await saveJob();spotShow();renderThumbs(); // the checklist follows the name
  if(siteFresh(job))startGlow(); // named: 施工前 is next
@@ -2503,10 +2520,17 @@ function cklLst(t){if(CKL_T[t])return CKL_T[t];const o=cklUserGet()[t];return o&
 const cklLstIds=()=>Object.keys(CKL_T).concat(Object.keys(cklUserGet()).filter(t=>!CKL_T[t]&&cklLst(t)));
 function cklKeys(t){const T=cklLst(t);if(!T)return [];const u=cklUserGet()[t], d=T.keys;if(!u||!Array.isArray(u.keys))return d;
  return u.keys.filter((k,n,a)=>cklLab(k)&&a.indexOf(k)===n);}
-function cklTplOf(j,i){const p=pairsOf(j)[i], v=p&&p.cklv;if(!p)return null;
- if(v&&v.tpl)return cklLst(v.tpl)?v.tpl:null; // chosen on the card ("none" = no list)
- const L=spotList(j), n=((L&&L[i]&&L[i].name)||"").trim();if(!n)return null;
- const own=cklLstIds().find(t=>!CKL_T[t]&&cklLst(t).name===n);if(own)return own; // the list made for that name
+// A place's list is the one for its name. Before v1.146 a list could be chosen on the card (cklv.tpl)
+// whatever the name: that one stays while this place has photos taken for it.
+function cklTplOf(j,i){const p=pairsOf(j)[i];if(!p)return null;
+ const L=spotList(j), t=cklForName(L&&L[i]&&L[i].name), o=p.cklv&&p.cklv.tpl;
+ if(o&&o!==t&&cklLst(o)&&(p.extras||[]).some(x=>x.ckl&&x.cklT===o))return o;
+ return t;}
+// a place has something for list t: a photo taken for it, or a tick
+const cklUsed=(p,t)=>{const v=p.cklv||{};return !!(v.leak||(v.tick&&Object.keys(v.tick).length)||(p.extras||[]).some(x=>x.ckl&&(!x.cklT||x.cklT===t)&&cklKeys(t).includes(x.ckl)));};
+// the list for a place name: the one made for that name, else 給湯器 / コンロ by the name
+function cklForName(n){n=String(n||"").trim();if(!n)return null;
+ const own=cklLstIds().find(t=>!CKL_T[t]&&cklLst(t).name===n);if(own)return own;
  return /給湯/.test(n)?"kyuto":/コンロ/.test(n)?"konro":null;}
 // an item's photos in list t (給湯器 and コンロ are separate jobs: a photo belongs to the list it was
 // taken for, cklT; one from v1.121-122 has none and counts for the place's list)
@@ -2532,7 +2556,8 @@ function cklRender(){
  $("cklSpNm").textContent=on&&job&&spotList(job)?"("+spotName(job,spotIdx(job))+")":"";
  if(!on||!job){box.hidden=true;box.innerHTML="";return;}
  const i=spotIdx(job), t=cklTplOf(job,i), p=job, v=p.cklv||{}, st0=t&&cklStat(job,i);
- let h='<div class="ckltp">'+cklLstIds().map(k=>'<button type="button" data-tpl="'+k+'" class="'+(t===k?"on":"")+'">'+esc(cklLst(k).name)+'</button>').join("")+'<button type="button" data-tpl="none" class="'+(!t&&v.tpl==="none"?"on":"")+'">使わない</button><button type="button" class="cklnew" data-new="1">＋ 新しいリスト</button></div>';
+ const pn=((spotList(job)||[])[i]||{}).name||"";
+ let h=t&&t!==cklForName(pn)?'<p class="cklnone cklold">この箇所は「'+esc(cklLst(t).name)+'」のチェックリストで撮った写真があるので、このリストを出しています。</p>':'';
  if(t&&cklEd===t){ // 並び替え: ≡ held (or the row long-pressed) and moved up / down
   h='<p class="cklednote"><b>「'+esc(cklLst(t).name)+'」の項目の編集</b><br>≡ を押さえたまま上下に動かすと並び替え、× で外します。次の現場からも同じになり、報告書もこの順に載ります。</p>';
   for(const k of st0.ks){const n=esc(cklLab(k)), d=cklDef(k);
@@ -2543,11 +2568,11 @@ function cklRender(){
   if(hid.length)h+='<p class="cklhidt">外した項目</p>'+hid.map(k=>'<div class="cklit cklhid"><span class="cklnm">'+cklLab(k)+'</span><button type="button" class="cklgo" data-show="'+k+'">戻す</button></div>').join("");
   box.innerHTML=h+'<div class="cklebar"><button type="button" data-edreset="1">最初の項目に戻す</button><button type="button" class="on" data-eddone="1">完了</button></div>'+(cklLst(t).own?'<button type="button" class="ckllsdel" data-lsdel="1">「'+esc(cklLst(t).name)+'」のリストを削除</button>':'');box.hidden=false;return;}
  cklEd=null;
- if(!t){const L=spotList(job), pn=((L&&L[i]&&L[i].name)||"").trim();
-  box.innerHTML=h+(pn&&v.tpl!=="none"?'<p class="cklnone">「'+esc(pn)+'」のチェックリストはまだありません。作ると、次の現場からも箇所名が「'+esc(pn)+'」なら自動で出ます。</p><button type="button" class="ckladd" data-new="1">＋「'+esc(pn)+'」のチェックリストを作る</button>'
-   :'<p class="cklnone">この箇所のチェックリストを上から選ぶか、「＋ 新しいリスト」で作ってください(箇所の名前がリストの名前なら自動で出ます)。</p>');box.hidden=false;return;}
+ if(!t){const n=pn.trim();
+  box.innerHTML=h+(n?'<p class="cklnone">「'+esc(n)+'」のチェックリストはまだありません。作ると、次の現場からも箇所名が「'+esc(n)+'」なら自動で出ます。</p><button type="button" class="ckladd" data-new="1">＋「'+esc(n)+'」のチェックリストを作る</button>'
+   :'<p class="cklnone">上の箇所のボタンで箇所名を選ぶと、その名前のチェックリストが出ます。</p><button type="button" class="ckladd" data-name="1">箇所名を選ぶ</button>');box.hidden=false;return;}
  const st=cklStat(job,i), nx=st.left[0];
- h+='<div class="cklpg"><span class="cklbar"><i style="width:'+(st.tot?Math.round(100*st.n/st.tot):100)+'%"></i></span><b>'+st.n+' / '+st.tot+'</b><button type="button" class="ckledb" data-ed="1">編集</button></div>';
+ h+='<div class="cklpg"><span class="cklbar"><i style="width:'+(st.tot?Math.round(100*st.n/st.tot):100)+'%"></i></span><b>'+st.n+' / '+st.tot+'</b><button type="button" class="ckledb" data-ed="1">項目を編集</button></div>';
  for(const k of st.ks){const done=cklDone(p,k,t);let sub="", ph="", go="";
   if(cklSkipped(p,k,t)){
    h+='<div class="cklit cklbx cklskp" data-k="'+k+'"><span class="cklmk"></span><span class="cklnm"><s>'+esc(cklLab(k))+'</s><small>今回なし：'+cklSkipTx(k)+'</small></span><button type="button" class="cklgo" data-unskip="'+k+'">戻す</button></div>';continue;}
@@ -2578,7 +2603,7 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
  else if(d.add)cklAdd();
  else if(d.new)cklNew();
  else if(d.lsdel)cklLsDel();
- else if(d.tpl)cklTpl(d.tpl);
+ else if(d.name)spotEdit(spotIdx(job));
  else if(d.pair!=null)openGallery(+d.pair,"pair");
  else if(d.up){ // 施工前 本体 / 施工後 本体: to the 施工前 / 施工後 tile (施工後 needs the 施工前 first)
   const el=$(d.up==="a_body"&&job.before?"sA":"sB"), top=$("detail").querySelector(".topbar").offsetHeight;
@@ -2609,22 +2634,20 @@ async function cklAdd(){const t=cklEd;if(!t||!job)return;
  const k="u"+Date.now().toString(36);
  cklUserPut(t,o=>{o.add=Object.assign({},o.add,{[k]:chk?{n,chk:1}:{n}});o.keys=ks.concat(k);});renderThumbs();
  const r=$("cklList").querySelector('.ckledit[data-k="'+k+'"]');if(r)r.scrollIntoView({block:"center",behavior:"smooth"});}
-// a new list: its name (the place's at first), and what it starts with (施工前 本体・施工後 本体, or a
-// copy of a list); this place then uses it and its 編集 opens to add the items
-async function cklNew(){if(!job||spotBusy)return;const i=spotIdx(job), L=spotList(job), pn=((L&&L[i]&&L[i].name)||"").trim(), ids=cklLstIds();
- setTimeout(()=>{const e=$("cklLsNm");if(e&&!e.value)e.focus();},60);
- if(!await bkDialog("チェックリストを作る",'<input class="spnm" id="cklLsNm" maxlength="20" placeholder="例:食洗機" value="'+esc(pn)+'"><p class="ckllsq">はじめの項目</p><div class="cklkind" role="radiogroup">'+
+// a new list for the place's name, and what it starts with (施工前 本体・施工後 本体, or a copy of a
+// list); this place then uses it and its 編集 opens to add the items
+async function cklNew(){if(!job||spotBusy)return;const j=job, i=spotIdx(j), pn=(((spotList(j)||[])[i]||{}).name||"").trim(), ids=cklLstIds();if(!pn)return;
+ if(!await bkDialog("「"+pn+"」のチェックリストを作る",'<p class="ckllsq">はじめの項目</p><div class="cklkind" role="radiogroup">'+
   '<label><input type="radio" name="cklFrom" value="" checked><span>施工前 本体・施工後 本体だけ</span></label>'+
   ids.map(t=>'<label><input type="radio" name="cklFrom" value="'+t+'"><span>「'+esc(cklLst(t).name)+'」と同じ項目</span></label>').join("")+
-  '</div><p class="spphint">あとから「編集」で項目を足したり外したりできます。箇所の名前がこのリストの名前なら、次の現場からも自動で出ます。</p>',"作る","やめる")||!job)return;
- const n=String(($("cklLsNm")||{}).value||"").replace(/\s+/g," ").trim().slice(0,20), fr=(document.querySelector('input[name="cklFrom"]:checked')||{}).value||"";
- if(!n){toast("リストの名前を入れてください",true);return;}
- if(cklLstIds().some(t=>cklLst(t).name===n)){toast("「"+n+"」のリストはもうあります",true);return;}
- const keys=fr&&cklLst(fr)?cklKeys(fr).slice():["b_body","a_body"], id="l"+Date.now().toString(36);
- cklUserPut(id,o=>{o.own=1;o.name=n;o.k0=keys.slice();o.keys=keys.slice();});
- spotRemember(n); // the list's name is a ready place name too: choosing it brings the list
- await cklTpl(id);
- if(job&&cklTplOf(job,spotIdx(job))===id){cklEd=id;renderThumbs();cklSee();}else renderThumbs();}
+  '</div><p class="spphint">あとから「項目を編集」で項目を足したり外したりできます。次の現場からも、箇所名が「'+esc(pn)+'」なら自動で出ます。</p>',"作る","やめる"))return;
+ if(job!==j||spotIdx(j)!==i)return;
+ if(cklForName(pn)){toast("「"+pn+"」のリストはもうあります",true);return;}
+ const fr=(document.querySelector('input[name="cklFrom"]:checked')||{}).value||"", keys=fr&&cklLst(fr)?cklKeys(fr).slice():["b_body","a_body"], id="l"+Date.now().toString(36);
+ cklUserPut(id,o=>{o.own=1;o.name=pn;o.k0=keys.slice();o.keys=keys.slice();});
+ spotRemember(pn);
+ if(j.cklv&&j.cklv.tpl)await cklSet(v=>{delete v.tpl;}); // a list chosen on the card before v1.146 gives way
+ if(cklTplOf(j,i)===id)cklEd=id;renderThumbs();cklSee();}
 async function cklLsDel(){const t=cklEd, T=t&&cklLst(t);if(!T||!T.own||!job)return;
  if(!await bkDialog("「"+T.name+"」のリストを削除しますか?",'<p style="margin:0">撮った写真は消えません(「その他の写真」に入ります)。箇所の名前もそのままです。</p>',"削除する","やめる"))return;
  if(cklEd!==t)return;cklUserPut(t,o=>{o.del=1;});cklEd=null;renderThumbs();}
@@ -2664,29 +2687,8 @@ $("cklList").addEventListener("pointerup",cklDrEnd);
 $("cklList").addEventListener("pointercancel",cklDrEnd);
 $("cklList").addEventListener("touchmove",e=>{if(cklDr)e.preventDefault();},{passive:false}); // the page does not scroll under the finger
 $("cklList").addEventListener("contextmenu",e=>{if(e.target.closest(".ckledit"))e.preventDefault();});
-// choosing the list: a place whose list is in use (photos / ticks) keeps it, and the other job
-// (給湯器 ⇄ コンロ) becomes a place of its own: its own 施工前・施工後, photos and report section
 // keeps the checklist card where it was on the screen after the place changes under it
 function cklSee(){const c=$("cklCard"), top=$("detail").querySelector(".topbar").offsetHeight;window.scrollTo({top:Math.max(0,c.getBoundingClientRect().top+window.scrollY-top-10)});}
-async function cklTpl(k){
- if(!job||spotBusy)return;const i=spotIdx(job), t=cklTplOf(job,i), v=job.cklv||{};
- if(k===t)return;
- // another place already doing that job: open it, like its button in the place bar
- const L0=spotList(job), at=L0&&k!=="none"?L0.findIndex((x,n)=>n!==i&&cklTplOf(job,n)===k):-1;
- if(at>=0){if(await spotGo(at,true))cklSee();return;}
- const used=!!t&&!!(v.leak||job.before||job.after||(job.extras||[]).some(x=>x.ckl&&(!x.cklT||x.cklT===t)));
- if(!used||k==="none"){
-  // an unnamed place takes the job's name (the report's heading)
-  if(k!=="none"){let L=spotList(job);if(!L){job.spots=L=[{name:"",live:true}];job.exSpot=1;}if(!L[i].name)L[i].name=cklLst(k).name;}
-  await cklSet(v=>{v.tpl=k;});spotShow();if(k!=="none"&&siteFresh(job))startGlow();return;}
- const nm=cklLst(k).name, cur=cklLst(t).name;
- if(!await bkDialog("「"+nm+"」は別の箇所にします",'<p style="margin:0">この箇所は「'+esc(cur)+'」のチェックリストで撮影中です。「'+esc(nm)+'」は別の施工なので、新しい箇所として追加し、施工前・施工後から別々に撮ります(報告書も箇所ごとに分かれます)。</p>',"箇所を追加する","やめる")||!job)return;
- let L=spotList(job);if(!L){job.spots=L=[{name:"",live:true}];job.exSpot=1;}
- if(!L[spotIdx(job)].name)L[spotIdx(job)].name=cur;
- L.push({name:nm,cklv:{tpl:k}});
- if(!await spotGo(L.length-1)){await saveJob();spotShow();}
- window.scrollTo({top:Math.max(0,$("spotBar").getBoundingClientRect().top+window.scrollY-$("detail").querySelector(".topbar").offsetHeight-10),behavior:"smooth"});
-}
 // the camera's title for an item: 施工前 銘板 / 気密試験結果(圧力測定器)
 const cklCamLab=c=>cklLab(c.k)+(c.k==="air"&&job&&job.cklv&&job.cklv.air?"("+CKL_AIR[job.cklv.air]+")":"");
 // Like Google Photos: tap = full screen; long press = select (then tap picks / un-picks).
