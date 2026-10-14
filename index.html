@@ -1649,15 +1649,18 @@ function spotFormWire(){
    if(list.includes(v)){hint("「"+v+"」はもうあります");return;}
    list.push(v);setPref("ba-spotpre",JSON.stringify(list));hint("「"+v+"」を追加しました(次回からも出ます)");draw();};
   if($("ppDel"))$("ppDel").onclick=()=>{del=!del;hint(del?"消したい名前を押してください":"");draw();};};
- draw();
+ draw();hint("新しい名前も、決めると次回から候補に出ます");
 }
 const spotNmVal=()=>String(($("spotNm")||{}).value||"").trim().slice(0,20);
+// a name used for a place is a ready name from then on (no need for ＋追加); 削除 still takes it off
+function spotRemember(n){if(!n)return;const L=spotPre();if(L.includes(n))return;
+ L.push(n);setPref("ba-spotpre",JSON.stringify(L.slice(-40)));} // said in the name box (no notice: 施工前's hint comes right then)
 async function spotAddAsk(){
  if(spotBusy||!job)return;
  const L0=spotList(job), first=!L0||!L0[spotIdx(job)].name&&L0.length===1;
  const p=bkDialog("箇所を追加",spotForm("",first?'<p style="margin:12px 0 0">今の写真は「1か所目」になります(名前は「1」のボタンで付けられます)。</p>':''),"追加する","やめる");
  spotFormWire();if(!await p||!job)return;
- const name=spotNmVal();
+ const name=spotNmVal();spotRemember(name);
  if(!job.spots||!job.spots.length){job.spots=[{name:"",live:true}];job.exSpot=1;}
  job.spots.push({name});
  if(!await spotGo(job.spots.length-1)){await saveJob();spotShow();}
@@ -1674,7 +1677,7 @@ async function spotEdit(i){
  if(wantDel){await spotDel(i);return;}
  if(!ok)return;
  if(!L){if(!spotNmVal())return;job.spots=L=[{name:"",live:true}];job.exSpot=1;} // the only place gets a name
- L[i].name=spotNmVal();await saveJob();spotShow();renderThumbs(); // the checklist follows the name
+ L[i].name=spotNmVal();spotRemember(L[i].name);await saveJob();spotShow();renderThumbs(); // the checklist follows the name
  if(siteFresh(job))startGlow(); // named: 施工前 is next
 }
 async function spotDel(i){
