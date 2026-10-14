@@ -180,7 +180,9 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .sppre.tidy .sppck{stroke:#C92A2A}
 .sppx{margin-left:6px;font-size:17px;font-weight:800;line-height:1}
 .spdelw{margin-top:16px;border-top:1px solid var(--line)}
-.spphint.spdup{color:#B54708;font-weight:800}
+.spphint.spdup{padding:10px 12px;border-radius:12px;background:#FFF4E5;box-shadow:inset 0 0 0 1.5px #FDB022}
+.spdupa{display:block;font-size:16px;font-weight:800;line-height:1.45;color:#B54708;word-break:keep-all;overflow-wrap:anywhere}
+.spdupb{display:block;margin-top:2px;font-size:13px;font-weight:700;color:#93370D;word-break:keep-all;overflow-wrap:anywhere}
 .spphint{min-height:20px;margin:8px 0 0;font-size:14px;color:var(--sub)}
 .rplab{display:block;margin-top:8px;font-size:14px;font-weight:700;color:var(--sub)}
 .rpin{width:100%;height:46px;margin:4px 0 6px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
@@ -1710,12 +1712,13 @@ let spotForgot=new Set();
 const SPP_HINT=()=>"候補を押すと名前に入ります。"+(cklOn()?"印の付いた名前は、チェックリストも出ます。":"")+"新しい名前も、決めると次回から候補に出ます";
 // the other place of this site with the same name (-1 = none); self = the place being named
 const spotSame=(n,self)=>{n=String(n||"").trim();const L=spotList(job);return n&&L?L.findIndex((x,k)=>k!==self&&String(x.name||"").trim()===n):-1;};
-const spotSameTx=(n,self)=>{const k=spotSame(n,self);return k<0?"":"「"+String(n).trim()+"」はこの現場にすでに存在します("+(k+1)+"か所目)。同じ名前でも作れます";};
+// said under the box: big, broken only between its phrases (a long name may break anywhere)
+const spotSameTx=(n,self)=>{const k=spotSame(n,self);return k<0?"":'<span class="spdupa">「'+esc(String(n).trim())+'」は<wbr>この現場に<wbr>すでに存在します</span><span class="spdupb">'+(k+1)+'か所目と同じ名前です。<wbr>このままでも作れます</span>';};
 // a name already used on the site: said, and made only if wanted (2台目 etc.)
 async function spotSameOk(n,self,yes){const k=spotSame(n,self);if(k<0)return true;
  return await bkDialog("「"+n+"」はすでに存在します",'<p style="margin:0">この現場には「'+esc(n)+'」の箇所がすでに存在します('+(k+1)+'か所目)。同じ名前でもう1つ作ることもできます(2台目の交換など)。</p>',yes,"やめる");}
 function spotFormWire(self){
- let list=spotPre(), at=-1, tidy=false;spotForgot=new Set();const box=$("spotPre"), tb=$("spTidy"), hint=(t,dup)=>{$("sppHint").textContent=t||"";$("sppHint").classList.toggle("spdup",!!dup);}, same=n=>{const d=spotSameTx(n,self);hint(d||SPP_HINT(),d);};
+ let list=spotPre(), at=-1, tidy=false;spotForgot=new Set();const box=$("spotPre"), tb=$("spTidy"), hint=(t,dup)=>{const h=$("sppHint");if(dup)h.innerHTML=dup;else h.textContent=t||"";h.classList.toggle("spdup",!!dup);}, same=n=>{const d=spotSameTx(n,self);hint(d||SPP_HINT(),d);};
  const draw=()=>{box.classList.toggle("tidy",tidy);tb.classList.toggle("on",tidy);tb.setAttribute("aria-pressed",String(tidy));tb.textContent=tidy?"整理を終える":"候補を整理";
   box.innerHTML=list.map((n,i)=>'<button type="button" data-pi="'+i+'" class="'+(!tidy&&i===at?"on":"")+'"'+(tidy?' aria-label="「'+esc(n)+'」を候補から消す"':' aria-pressed="'+(i===at)+'"')+'>'+(cklOn()&&cklForName(n)?CKL_MARK:'')+esc(n)+(tidy?'<span class="sppx" aria-hidden="true">×</span>':'')+'</button>').join("");
   box.querySelectorAll("[data-pi]").forEach(b=>b.onclick=()=>{const i=+b.dataset.pi;
