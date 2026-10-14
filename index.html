@@ -595,9 +595,6 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .adjbtns button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border-radius:999px;font-size:18px;font-weight:800}
 .adjbtns .o2{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3);font-size:16px}
 .adjbtns .ok{background:linear-gradient(135deg,#7048E8,#9C36B5);color:#fff}
-.col.before .mini.lv{background:#fff;color:var(--before);box-shadow:inset 0 0 0 2px #C5D0FA}
-.col.after .mini.lv{background:#fff;color:var(--after-text);box-shadow:inset 0 0 0 2px #FFE08A}
-.mini.lv{font-size:16px;min-height:44px}
 /* 候補から選ぶ */
 .cand .cdview{position:relative;flex:1;min-height:42vh;display:flex;align-items:center;justify-content:center;touch-action:pan-y;user-select:none}
 .cand .cdview img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:10px;background:#000}
@@ -659,10 +656,19 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvsl input::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:5px solid #9C36B5}
 .lvrow{display:grid;grid-template-columns:1fr;gap:10px}
 /* 補正: 傾き / 明るさ tabs; both sets of controls take the same place, so the photo keeps its size */
-.lvhd{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.lvtabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28);flex:none}
-.lvtabs button{min-height:46px;padding:0 20px;border-radius:999px;font-size:18px;font-weight:800;color:#F2F4F7}
-.lvtabs button.on{background:#fff;color:#101828;box-shadow:0 0 0 3px #9C36B5}
+/* 写真の編集: the same tabs on 位置・大きさ (adjEd) and 傾き / 明るさ (lvEd), which work on one photo (施工前 / 施工後) */
+.edtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0 0;padding:3px;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
+.edtabs button{min-height:38px;padding:0 2px;border-radius:999px;font-size:min(16px,4.2vw);font-weight:800;color:#F2F4F7;white-space:nowrap}
+.edtabs button.on{background:#fff;color:#101828;box-shadow:0 0 0 3px #9C36B5}
+.edtabs button.off{opacity:.35}
+.edrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.edph{display:flex;gap:6px;flex:none}
+.edph button{min-height:34px;padding:0 14px;border-radius:999px;font-size:15px;font-weight:800;color:#CBD5E1;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
+.edph button[data-k="b"].on{background:#5C7CFA;color:#fff;box-shadow:none}
+.edph button[data-k="a"].on{background:#F59F00;color:#2B1D00;box-shadow:none}
+.edph button:disabled{opacity:.35}
+#bEdit{flex-wrap:wrap;row-gap:0;min-height:64px}
+#bEdit .edsub{flex-basis:100%;text-align:center;font-size:13px;font-weight:700;color:#37B24D}
 .lvpanes{display:grid}
 .lvpane{grid-area:1/1;display:flex;flex-direction:column;gap:10px;min-width:0}
 .lvpane.off{visibility:hidden;pointer-events:none}
@@ -907,16 +913,15 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <div class="col before">
     <div class="slot" id="sB"><span class="tag">施工前</span><span class="ph"><span class="pi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span>タップして撮影</span></div>
     <button class="mini" id="bBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">撮り直す</span></button>
-    <button class="mini lv" id="lvB" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="10" rx="1.5" transform="rotate(-12 12 10)"/><path d="M2 20h20"/></svg><span class="tx">傾き・明るさ</span></button>
     <button id="svB" hidden disabled></button>
    </div>
    <div class="col after">
     <div class="slot after" id="sA"><span class="tag">施工後</span><span class="ph"><span class="pi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span id="sAph">施工前の<br>あとに撮れます</span></span></div>
     <button class="mini" id="bAfter" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span class="tx">撮り直す</span></button>
-    <button class="mini lv" id="lvA" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="10" rx="1.5" transform="rotate(-12 12 10)"/><path d="M2 20h20"/></svg><span class="tx">傾き・明るさ</span></button>
     <button id="svA" hidden disabled></button>
    </div>
   </div>
+  <button class="adjbtn" id="bEdit" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg><span class="tx">写真を編集</span><small class="edsub">傾き・明るさ・位置・大きさ</small></button>
   <div id="nativeBtns" hidden>
    <label class="btn b-before" id="nBefore" for="fBefore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで施工前</label>
    <label class="btn b-after off" id="nAfter" for="fAfter"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで施工後</label>
@@ -928,7 +933,6 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <section class="card c-cmp" id="result">
   <div class="sh2"><span class="cdot"></span><h2>比較写真</h2><small>タップで拡大</small></div>
   <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
-  <button class="adjbtn" id="bAdj"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg><span class="tx">写真の位置・大きさを調整</span></button>
   <div class="cmpopts">
   <div class="seg" role="radiogroup" aria-label="並べ方">
    <label class="opt"><input type="radio" name="lay" id="lyH" value="h" checked><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>横</label>
@@ -977,7 +981,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div class="bkov" id="bkDlg" hidden role="dialog" aria-modal="true"><div class="bkbox bkdlg"><b id="bkDT"></b><div class="bkbody" id="bkDB"></div><div class="bkbtns"><button id="bkDNo"></button><button class="bkmain" id="bkDYes"></button></div></div></div>
 <div class="waitnote" id="busy" hidden role="status"><span class="sp"></span>保存中…</div>
 <div class="adj" id="adjEd" hidden>
- <div class="adjhd"><b>写真の位置・大きさを調整</b><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
+ <div class="adjhd"><b>写真の編集</b><div class="edtabs" role="tablist"><button data-et="pos" role="tab">位置・大きさ</button><button data-et="lv" role="tab">傾き</button><button data-et="tn" role="tab">明るさ</button></div><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
  <div class="adjstage" id="adjStage"><div class="adjwrap"><canvas id="adjC"></canvas><div class="trimov" id="trimOv"></div></div></div>
  <div class="selst" id="adjSel" role="status"></div>
  <div class="pad1" id="adjPad">
@@ -998,7 +1002,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 </div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="tnF" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR id="tnFR" type="table" tableValues="0 1"/><feFuncG id="tnFG" type="table" tableValues="0 1"/><feFuncB id="tnFB" type="table" tableValues="0 1"/></feComponentTransfer></filter></svg>
 <div class="adj lved" id="lvEd" hidden>
- <div class="adjhd lvhd"><b id="lvT">施工前の補正</b><div class="lvtabs" role="tablist"><button data-p="lv" role="tab">傾き</button><button data-p="tn" role="tab">明るさ</button></div></div>
+ <div class="adjhd"><div class="edrow"><b>写真の編集</b><div class="edph" role="radiogroup" aria-label="写真"><button data-k="b" role="radio">施工前</button><button data-k="a" role="radio">施工後</button></div></div><div class="edtabs" role="tablist"><button data-et="pos" role="tab">位置・大きさ</button><button data-et="lv" role="tab">傾き</button><button data-et="tn" role="tab">明るさ</button></div></div>
  <div class="lvstage" id="lvStage"><div class="lvbox" id="lvBox"><img id="lvImg" alt=""><div class="lvgrid"></div></div></div>
  <div class="lvpanes" id="lvPanes"><div class="lvpane" data-p="lv">
  <div class="lvval"><button id="lvM" aria-label="左に0.1度">−0.1°</button><b id="lvV">0.0°</b><button id="lvP" aria-label="右に0.1度">＋0.1°</button></div>
@@ -1587,7 +1591,7 @@ function refreshDetail(){
  $("bAfter").disabled=!job.before;$("fAfter").disabled=!job.before;$("nAfter").classList.toggle("off",!job.before);
  $("sA").parentNode.classList.toggle("off",!job.before);
  $("svB").disabled=!job.before;$("svA").disabled=!job.after;
- $("lvB").hidden=!job.before;$("lvA").hidden=!job.after;
+ $("bEdit").hidden=!job.before;
  // 「まずは箇所名を選ぶ」 goes as soon as the place has a name or a photo is taken
  if(spotNamed(job)||!siteFresh(job))document.querySelectorAll(".hint").forEach(h=>{if(h.textContent==="まずは箇所名を選ぶ")h.remove();});
  showPlace();renderThumbs();spotShow();$("dTitle").textContent=custName(job)||"現場の詳細";
@@ -2028,7 +2032,15 @@ function shotDone(blob,text,ms){
  return new Promise(r=>setTimeout(()=>{o.classList.add("out");setTimeout(()=>{o.hidden=true;o.classList.remove("out");},250);r();},ms));
 }
 // Back on the site page: the new photo glows so it is plain it is there.
-function justShot(id){const el=$(id);if(!el)return;el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);}
+function justShot(id){const el=$(id);if(!el)return;el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);if(id==="sB")edHint();}
+// the first 施工前 on this phone: once its own notices are gone, 写真を編集 shows where a tilt is put right
+// (after its saving to the phone and every notice: never on top of one)
+function edHint(){if(getPref("ba-edhint"))return;const j=job, wait=ms=>new Promise(r=>setTimeout(r,ms));
+ (async()=>{await wait(800);try{if(autoPend.b)await autoPend.b;}catch(e){}
+  for(let i=0;i<40&&job===j&&!($("toast").hidden&&!document.querySelector(".hint"));i++)await wait(300);
+  await wait(400);const b=$("bEdit");
+  if(job!==j||!job.before||$("detail").hidden||b.hidden||!$("bkDlg").hidden||$("cam").style.display==="flex"||!$("toast").hidden||document.querySelector(".hint"))return;
+  setPref("ba-edhint","1");glow(b,2,"傾いていればここで直せます");})();}
 let shooting=false;
 function shotEnd(){shooting=false;if(stopWanted){stopWanted=false;stopCam(true);}}
 $("cShot").onclick=async()=>{
@@ -3116,11 +3128,11 @@ $("trimOv").addEventListener("pointerup",e=>{
 });
 $("trimOv").addEventListener("pointercancel",()=>{tdrag=null;tapAt=null;});
 window.addEventListener("resize",()=>{if(!$("adjEd").hidden)ovShow();});
-$("bAdj").onclick=async()=>{
+async function adjOpen(){
  if(!job||!job.before||!job.after)return;await getImgs();
  job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};
- adjOld=adjSnap();adjSel.clear();trimOn=false;$("trimOv").dataset.sig="";$("adjEd").hidden=false;trimSet(false);
-};
+ adjOld=adjSnap();adjSel.clear();trimOn=false;$("trimOv").dataset.sig="";edTabsShow("pos");$("adjEd").hidden=false;trimSet(false);
+}
 // ＋拡大 −縮小 ↑上へ ↓下へ ←左へ →右へ (moves the picture itself), 元に戻す
 function adjStep(act){
  if(!adjTgt()){toast("先に画像をタップして選択してください",true);return false;}
@@ -3156,7 +3168,8 @@ function autoCrop(t){
  adjDraw();toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");return true;
 }
 $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
-$("adjOk").onclick=async()=>{if(trimOn)trimSet(false);$("adjEd").hidden=true;if(adjSnap()!==adjOld){job.cmpSavedAt=null;await saveJob();make();showNext();}};
+async function adjCommit(){if(trimOn)trimSet(false);if(adjSnap()!==adjOld){adjOld=adjSnap();job.cmpSavedAt=null;await saveJob();make();showNext();}}
+$("adjOk").onclick=async()=>{$("adjEd").hidden=true;await adjCommit();};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
 
 /* ---------- 候補 (施工前・施工後) ---------- */
@@ -3408,7 +3421,7 @@ async function rawRead(id){
 }
 // The editor: the photo as taken, turned live with the slider; 完了 makes the levelled photo.
 let lv=null;
-async function lvOpen(k){
+async function lvOpen(k,pane){
  const cur=k==="b"?job.before:job.after;if(!cur)return;
  job.raw=job.raw||{};job.rot=job.rot||{};
  if(!job.raw[k]&&rawPend[k])await rawPend[k];
@@ -3417,8 +3430,9 @@ async function lvOpen(k){
  const raw=job.raw[k]||cur;
  const bg0=(job.lvBg&&job.lvBg[k])||getPref("ba-lvbg")||"white";
  const t0=job.raw[k]&&job.tone&&job.tone[k]?{...job.tone[k]}:{br:0,ct:0};
- lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,bg:bg0,oldBg:bg0,tn:t0,oldTn:{...t0}};lvBgShow();lvTab("lv");
- $("lvT").textContent=(k==="b"?"施工前":"施工後")+"の補正";
+ lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,bg:bg0,oldBg:bg0,tn:t0,oldTn:{...t0}};lvBgShow();lvTab(pane||"lv");
+ document.querySelectorAll(".edph button").forEach(b=>{const on=b.dataset.k===k;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);b.disabled=!(b.dataset.k==="b"?job.before:job.after);});
+ $("lvEd").querySelector('.edtabs [data-et="pos"]').classList.toggle("off",!(job.before&&job.after));
  $("lvEd").classList.toggle("a",k==="a");
  const im=$("lvImg");im.onload=lvFit;im.src=blobUrl(raw);
  $("lvEd").hidden=false;lvShow();
@@ -3429,7 +3443,7 @@ const LV_GAP=14;
 function lvFit(){
  const im=$("lvImg"), iw=im.naturalWidth, ih=im.naturalHeight;if(!iw)return;
  const ed=$("lvEd"), box=$("lvBox"), W=Math.min(ed.clientWidth-28,900);
- const size=H=>{const r=Math.min(W/iw,Math.max(150,H)/ih);box.style.width=Math.round(iw*r)+"px";box.style.height=Math.round(ih*r)+"px";};
+ const size=H=>{const r=Math.min(W/iw,Math.max(140,H)/ih);box.style.width=Math.round(iw*r)+"px";box.style.height=Math.round(ih*r)+"px";};
  size(window.innerHeight*0.3);
  // room between 撮ったままに戻す and the buttons (or how much the page runs over)
  const btns=ed.querySelector(".adjbtns").getBoundingClientRect(), last=$("lvPanes").getBoundingClientRect();
@@ -3452,7 +3466,6 @@ function lvShow(){
 }
 function lvSet(d){if(!lv)return;lv.deg=Math.max(-LV_MAX,Math.min(LV_MAX,d));lvShow();}
 $("lvR").addEventListener("input",e=>lvSet(+e.target.value));
-$("lvB").onclick=()=>lvOpen("b");$("lvA").onclick=()=>lvOpen("a");
 [["lvM",-0.1],["lvP",0.1]].forEach(([id,st])=>{let rep=0;const b=$(id), stop=()=>{clearTimeout(rep);clearInterval(rep);};
  b.addEventListener("pointerdown",e=>{e.preventDefault();stop();lvSet(lv.deg+st);rep=setTimeout(()=>{rep=setInterval(()=>lvSet(lv.deg+st),60);},380);});
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
@@ -3466,9 +3479,17 @@ function toneLut(t){const ex=Math.pow(2,-t.br/33), k=1+t.ct/100, l=new Uint8Clam
 // the live preview: an SVG filter with the same table
 function tonePreview(t){const l=toneLut(t), v=[];for(let i=0;i<256;i+=4)v.push((l[i]/255).toFixed(4));v.push((l[255]/255).toFixed(4));
  const tv=v.join(" ");["tnFR","tnFG","tnFB"].forEach(id=>$(id).setAttribute("tableValues",tv));}
-function lvTab(p){document.querySelectorAll(".lvtabs button").forEach(b=>{const on=b.dataset.p===p;b.classList.toggle("on",on);b.setAttribute("aria-selected",on);});
- document.querySelectorAll(".lvpane").forEach(x=>x.classList.toggle("off",x.dataset.p!==p));}
-document.querySelectorAll(".lvtabs button").forEach(b=>b.onclick=()=>lvTab(b.dataset.p));
+function lvTab(p){edTabsShow(p);document.querySelectorAll(".lvpane").forEach(x=>x.classList.toggle("off",x.dataset.p!==p));}
+// 写真の編集: one button opens it (with only 施工前, at 傾き). Moving to another tab or photo keeps what was done.
+function edTabsShow(t){document.querySelectorAll(".edtabs button").forEach(b=>{const on=b.dataset.et===t;b.classList.toggle("on",on);b.setAttribute("aria-selected",on);});}
+$("bEdit").onclick=()=>{if(!job||!job.before)return;if(job.after)adjOpen();else lvOpen("b");};
+document.querySelectorAll(".edtabs button").forEach(b=>b.onclick=async()=>{const t=b.dataset.et;if(!job)return;
+ if(b.classList.contains("off")){toast("位置・大きさは、施工後を撮ると使えます");return;}
+ if(!$("adjEd").hidden){if(t==="pos")return;const k=adjSel.size===1?adjKeys()[0]:"b";await adjCommit();await lvOpen(k,t);$("adjEd").hidden=true;return;}
+ if(!lv||lvBusy)return;if(t!=="pos"){lvTab(t);return;}
+ if(!await lvApply())return;await adjOpen();lvClose();});
+document.querySelectorAll(".edph button").forEach(b=>b.onclick=async()=>{const k=b.dataset.k;if(!lv||lvBusy||lv.k===k||b.disabled)return;
+ const p=document.querySelector("#lvEd .edtabs button.on").dataset.et;if(!await lvApply())return;await lvOpen(k,p);});
 const fmtTn=v=>(v>0?"+":v<0?"−":"")+Math.abs(v);
 function tnShow(){if(!lv)return;const t=lv.tn;
  if(toneOn(t)){tonePreview(t);$("lvImg").style.filter="url(#tnF)";}else $("lvImg").style.filter="";
@@ -3496,9 +3517,10 @@ $("tnAuto").onclick=async()=>{if(!lv)return;const b=$("tnAuto");b.disabled=true;
 function lvClose(){lv=null;$("lvEd").hidden=true;}
 $("lvX").onclick=()=>{if(!lvBusy)lvClose();};
 let lvBusy=false;
-$("lvOk").onclick=async()=>{
- if(!lv||lvBusy)return;const {k,raw,deg,bg}=lv, tn=toneOn(lv.tn)?{...lv.tn}:null;
- if(deg===lv.old&&bg===lv.oldBg&&lv.tn.br===lv.oldTn.br&&lv.tn.ct===lv.oldTn.ct&&job.raw[k]){lvClose();return;}
+// makes the levelled photo (nothing when unchanged); false = it could not
+async function lvApply(){
+ if(!lv||lvBusy)return false;const {k,raw,deg,bg}=lv, tn=toneOn(lv.tn)?{...lv.tn}:null;
+ if(deg===lv.old&&bg===lv.oldBg&&lv.tn.br===lv.oldTn.br&&lv.tn.ct===lv.oldTn.ct&&job.raw[k])return true;let done=false;
  const ok=$("lvOk");ok.disabled=true;setTx2("lvOk","補正中…");lvBusy=true;
  try{
   if(autoPend[k])await busyWait(autoPend[k]); // the photo it replaces is still being saved to the phone
@@ -3508,13 +3530,14 @@ $("lvOk").onclick=async()=>{
   job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;job.lvBg=job.lvBg||{};job.lvBg[k]=bg;job.tone=job.tone||{};job.tone[k]=tn;job.cmpSavedAt=null;
   const bn=b.nid||(b===raw?rn:null)||null;
   if(k==="b"){job.before=b;job.beforeNid=bn;}else{job.after=b;job.afterNid=bn;}
-  refreshDetail();lvClose();toast(deg||tn?"補正しました("+[deg?"傾き "+fmtDeg(deg):"",tn?"明るさ "+fmtTn(tn.br)+" ・ コントラスト "+fmtTn(tn.ct):""].filter(Boolean).join(" ・ ")+")":"撮ったままに戻しました");
+  refreshDetail();done=true;toast(deg||tn?"補正しました("+[deg?"傾き "+fmtDeg(deg):"",tn?"明るさ "+fmtTn(tn.br)+" ・ コントラスト "+fmtTn(tn.ct):""].filter(Boolean).join(" ・ ")+")":"撮ったままに戻しました");
   const SK=k==="b"?"savedB":"savedA", had=job[SK]||[];job[SK]=[];
   await saveJob();photoGC([was]);make();
   if(had.length)autoSaveBA(k,deg,had);
  }catch(e){toast("補正できませんでした",true);}
- lvBusy=false;ok.disabled=false;setTx2("lvOk","完了");lvClose();
-};
+ lvBusy=false;ok.disabled=false;setTx2("lvOk","完了");return done;
+}
+$("lvOk").onclick=async()=>{if(!lv||lvBusy)return;await lvApply();lvClose();};
 window.addEventListener("resize",()=>{if(lv)lvFit();});
 
 /* ---------- トリミング (full screen) ---------- */
