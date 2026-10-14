@@ -159,9 +159,8 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .spnm{width:100%;height:48px;margin:8px 0 10px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
 .sppre{display:flex;flex-wrap:wrap;gap:8px}
 .sppre button{height:38px;padding:0 12px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:700}
-.sppre .ppadd{background:#EDF2FF;color:#3B5BDB;box-shadow:inset 0 0 0 1.5px #91A7FF}
-.sppre .ppdel{background:#fff;color:#E03131;box-shadow:inset 0 0 0 1.5px #FFC9C9}
-.sppre.del [data-pi]{background:#FFF5F5;color:#E03131}
+.sppre button.on{background:#3B5BDB;color:#fff;box-shadow:0 0 0 2px #C5D0FA}
+.sppre .ppdel{flex-basis:100%;height:44px;background:#fff;color:#E03131;box-shadow:inset 0 0 0 1.5px #FFC9C9}
 .spphint{min-height:20px;margin:8px 0 0;font-size:14px;color:var(--sub)}
 .rplab{display:block;margin-top:8px;font-size:14px;font-weight:700;color:var(--sub)}
 .rpin{width:100%;height:46px;margin:4px 0 6px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
@@ -1653,25 +1652,23 @@ async function spotGo(i,quiet){
  }finally{spotBusy=false;}
 }
 const spotForm=(v,note)=>'<input class="spnm" id="spotNm" maxlength="20" placeholder="例:ビルトインコンロ" value="'+esc(v)+'"><div class="sppre" id="spotPre"></div><p class="spphint" id="sppHint"></p>'+(note||"");
-// tap a name = put it in the box; ＋追加 = keep what is in the box as a ready name; 削除 = tap names to remove them
+// tap a ready name = it is chosen (coloured) and put in the box; then 「…」を候補から消す takes it off the
+// ready names (shown only after a tap: opening the box chooses none, typing un-chooses). A name taken
+// off is not put back by 決定 in the same box (spotRemember skips it).
+let spotForgot=new Set();
 function spotFormWire(){
- let list=spotPre(), del=false;const box=$("spotPre"), hint=t=>{$("sppHint").textContent=t||"";};
- const draw=()=>{box.classList.toggle("del",del);
-  box.innerHTML=list.map((n,i)=>'<button type="button" data-pi="'+i+'">'+esc(n)+(del?' ×':'')+'</button>').join("")+
-   (del?'':'<button type="button" class="ppadd" id="ppAdd">＋追加</button>')+(list.length||del?'<button type="button" class="ppdel" id="ppDel">'+(del?'削除をやめる':'削除')+'</button>':'');
-  box.querySelectorAll("[data-pi]").forEach(b=>b.onclick=()=>{const n=list[+b.dataset.pi];
-   if(del){list.splice(+b.dataset.pi,1);setPref("ba-spotpre",JSON.stringify(list));hint("「"+n+"」を消しました");if(!list.length)del=false;draw();}
-   else{$("spotNm").value=n;hint("");}});
-  if($("ppAdd"))$("ppAdd").onclick=()=>{const v=spotNmVal();
-   if(!v){hint("上の欄に名前を入れてから「＋追加」を押してください");$("spotNm").focus();return;}
-   if(list.includes(v)){hint("「"+v+"」はもうあります");return;}
-   list.push(v);setPref("ba-spotpre",JSON.stringify(list));hint("「"+v+"」を追加しました(次回からも出ます)");draw();};
-  if($("ppDel"))$("ppDel").onclick=()=>{del=!del;hint(del?"消したい名前を押してください":"");draw();};};
- draw();hint("新しい名前も、決めると次回から候補に出ます");
+ let list=spotPre(), at=-1;spotForgot=new Set();const box=$("spotPre"), hint=t=>{$("sppHint").textContent=t||"";};
+ const draw=()=>{const v=list[at];
+  box.innerHTML=list.map((n,i)=>'<button type="button" data-pi="'+i+'" class="'+(i===at?"on":"")+'" aria-pressed="'+(i===at)+'">'+esc(n)+'</button>').join("")+
+   (at>=0?'<button type="button" class="ppdel" id="ppDel">「'+esc(v)+'」を候補から消す</button>':'');
+  box.querySelectorAll("[data-pi]").forEach(b=>b.onclick=()=>{at=+b.dataset.pi;$("spotNm").value=list[at];hint("");draw();});
+  if($("ppDel"))$("ppDel").onclick=()=>{const n=list[at];list.splice(at,1);at=-1;spotForgot.add(n);setPref("ba-spotpre",JSON.stringify(list));hint("「"+n+"」を候補から消しました");draw();};};
+ $("spotNm").addEventListener("input",()=>{if(at>=0){at=-1;draw();}});
+ draw();hint("候補を押すと選べます(選ぶと候補から消すこともできます)。新しい名前も、決めると次回から候補に出ます");
 }
 const spotNmVal=()=>String(($("spotNm")||{}).value||"").trim().slice(0,20);
 // a name used for a place is a ready name from then on (no need for ＋追加); 削除 still takes it off
-function spotRemember(n){if(!n)return;const L=spotPre();if(L.includes(n))return;
+function spotRemember(n){if(!n||spotForgot.has(n))return;const L=spotPre();if(L.includes(n))return;
  L.push(n);setPref("ba-spotpre",JSON.stringify(L.slice(-40)));} // said in the name box (no notice: 施工前's hint comes right then)
 async function spotAddAsk(){
  if(spotBusy||!job)return;
