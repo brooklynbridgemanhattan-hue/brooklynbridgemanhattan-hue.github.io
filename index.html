@@ -655,6 +655,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvsl input::-moz-range-track{height:8px;border-radius:4px;background:rgba(255,255,255,.18)}
 .lvsl input::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:5px solid #9C36B5}
 .lvrow{display:grid;grid-template-columns:1fr;gap:10px}
+.lvrow2{grid-template-columns:1fr 1.4fr}
 /* 補正: 傾き / 明るさ tabs; both sets of controls take the same place, so the photo keeps its size */
 /* 写真の編集: the same tabs on 位置・大きさ (adjEd) and 傾き / 明るさ (lvEd), which work on one photo (施工前 / 施工後) */
 .edtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0 0;padding:3px;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
@@ -1009,7 +1010,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="lvsl"><span>左に回す</span><input type="range" id="lvR" min="-15" max="15" step="0.1" value="0" aria-label="傾き"><span>右に回す</span></div>
  <div class="lvbg" role="radiogroup" aria-label="余白の色"><span>回したときの余白の色</span><button data-bg="white" role="radio"><i class="sw w"></i>白</button><button data-bg="black" role="radio"><i class="sw k"></i>黒</button></div>
  <div class="lvbg lvgr" role="radiogroup" aria-label="グリッドを表示"><span>グリッドを表示</span><button data-gr="1" role="radio">オン</button><button data-gr="0" role="radio">オフ</button></div>
- <div class="lvrow"><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
+ <div class="lvrow lvrow2"><button id="lvTurn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>90°回転</button><button id="lvZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>撮ったままに戻す</button></div>
  </div><div class="lvpane" data-p="tn">
  <div class="tnrow"><span>明るさ</span><button class="tnst" data-t="br" data-d="-1" aria-label="明るさ −1">−</button><input type="range" id="tnBr" min="-50" max="50" step="1" value="0" aria-label="明るさ"><button class="tnst" data-t="br" data-d="1" aria-label="明るさ ＋1">＋</button><b id="tnBrV">0</b></div>
  <div class="tnrow"><span>コントラスト</span><button class="tnst" data-t="ct" data-d="-1" aria-label="コントラスト −1">−</button><input type="range" id="tnCt" min="-50" max="50" step="1" value="0" aria-label="コントラスト"><button class="tnst" data-t="ct" data-d="1" aria-label="コントラスト ＋1">＋</button><b id="tnCtV">0</b></div>
@@ -1296,7 +1297,7 @@ let MEM=[];
    the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}].
    その他の写真 (extras) belong to a place too; on a site from before that (no exSpot), they were the
    site's and go to 1か所目 when it is next opened. */
-const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","raw","rawNid","cand","mask","tone","lvBg","rot","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
+const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
 const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
 const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
 const jobDone=j=>pairsOf(j).every(p=>!!p.after);
@@ -2430,7 +2431,7 @@ async function gotPhoto(mode,blob,o,shot,g,ck){
  const prev=snapOf(lk);
  const oldNids=[mode==="before"?job.beforeNid:job.afterNid,job.rawNid&&job.rawNid[lk]], SK=lk==="b"?"savedB":"savedA", oldSaved=job[SK]||[];job[SK]=[];job.raw=job.raw||{};job.rot=job.rot||{};job.grav=job.grav||{};job.auto=job.auto||{};
  job.rawNid=job.rawNid||{};
- job.grav[lk]=g||null;job.rot[lk]=0;if(job.tone)job.tone[lk]=null;
+ job.grav[lk]=g||null;job.rot[lk]=0;if(job.qt)job.qt[lk]=0;if(job.tone)job.tone[lk]=null;
  if(blob.lvRaw){
   // already levelled by the phone; the photo as taken is fetched in the background
   job.raw[lk]=null;job.rawNid[lk]=blob.lvRaw;job.rot[lk]=job.auto[lk]=blob.lvDeg;rawFetch(job,lk,blob.lvRaw);
@@ -3181,7 +3182,7 @@ function snapOf(k){
  const b=k==="b"?job.before:job.after;if(!b)return null;
  const g=(o,d)=>{const v=(job[o]||{})[k];return v==null?d:v;};
  return {blob:b,at:k==="b"?job.beforeAt:job.afterAt,ori:(k==="b"?job.beforeOri:job.afterOri)||null,nid:(k==="b"?job.beforeNid:job.afterNid)||null,
-  raw:g("raw",null),rawNid:g("rawNid",null),rot:g("rot",0),auto:g("auto",null),grav:g("grav",null),lvBg:g("lvBg",null),tone:g("tone",null),mask:k==="b"?(job.mask||null):null};
+  raw:g("raw",null),rawNid:g("rawNid",null),rot:g("rot",0),qt:g("qt",0),auto:g("auto",null),grav:g("grav",null),lvBg:g("lvBg",null),tone:g("tone",null),mask:k==="b"?(job.mask||null):null};
 }
 // adds c; returns the phone copies of the 候補 it pushes out
 function candKeep(k,c){
@@ -3197,7 +3198,7 @@ async function candAdopt(k,c){
  if(k==="b"){job.before=c.blob;job.beforeAt=c.at;job.beforeOri=c.ori;job.beforeNid=c.nid||null;job.mask=c.mask||null;}
  else{job.after=c.blob;job.afterAt=c.at;job.afterOri=c.ori;job.afterNid=c.nid||null;}
  ["raw","rawNid","rot","auto","grav","lvBg"].forEach(o=>{job[o]=job[o]||{};});
- job.raw[k]=c.raw||null;job.rawNid[k]=c.rawNid||null;job.rot[k]=c.rot||0;job.auto[k]=c.auto==null?null:c.auto;job.grav[k]=c.grav||null;
+ job.raw[k]=c.raw||null;job.rawNid[k]=c.rawNid||null;job.rot[k]=c.rot||0;job.qt=job.qt||{};job.qt[k]=c.qt||0;job.auto[k]=c.auto==null?null:c.auto;job.grav[k]=c.grav||null;
  if(c.lvBg)job.lvBg[k]=c.lvBg;else delete job.lvBg[k];
  job.tone=job.tone||{};job.tone[k]=c.tone||null;
  if(!job.raw[k]&&job.rawNid[k])rawFetch(job,k,job.rawNid[k]);
@@ -3387,25 +3388,26 @@ async function autoTilt(blob,g){
 // App: the phone turns its own copy of the photo (about 3x quicker than doing it in the page).
 let lvReq=0;const lvWait=new Map();
 window.onAppLevel=(req,r)=>{const f=lvWait.get(req);if(f){lvWait.delete(req);f(r);}};
-function natLevel(id,deg,bg,tn){return new Promise(res=>{const req="l"+(++lvReq);lvWait.set(req,res);
+function natLevel(id,deg,bg,tn,q){return new Promise(res=>{const req="l"+(++lvReq);lvWait.set(req,res);
  setTimeout(()=>{if(lvWait.has(req)){lvWait.delete(req);res("error:timeout");}},15000);
- try{if(toneOn(tn))window.AndroidApp.levelTone(req,id,deg,bg||"white",tn.br|0,tn.ct|0);else if(window.AndroidApp.levelColor)window.AndroidApp.levelColor(req,id,deg,bg||"white");else window.AndroidApp.level(req,id,deg);}catch(e){lvWait.delete(req);res("error");}});}
+ try{if(q)window.AndroidApp.levelTurn(req,id,deg,bg||"white",tn?tn.br|0:0,tn?tn.ct|0:0,q);else if(toneOn(tn))window.AndroidApp.levelTone(req,id,deg,bg||"white",tn.br|0,tn.ct|0);else if(window.AndroidApp.levelColor)window.AndroidApp.levelColor(req,id,deg,bg||"white");else window.AndroidApp.level(req,id,deg);}catch(e){lvWait.delete(req);res("error");}});}
 // bg: colour of the corners the turn leaves ("white" / "black")
-async function levelBlob(raw,deg,nid,bg,tn){
- if(!deg&&!toneOn(tn))return raw;
+// q: quarter turns clockwise first (the photo itself, width and height swap)
+async function levelBlob(raw,deg,nid,bg,tn,q){
+ q=((q|0)%4+4)%4;if(!deg&&!toneOn(tn)&&!q)return raw;
  // App: the phone turns (and tones) its own copy in one pass, well under a second
- if(nid&&window.AndroidApp&&window.AndroidApp.level&&(bg!=="black"||window.AndroidApp.levelColor)&&(!toneOn(tn)||window.AndroidApp.levelTone)){
-  const r=await natLevel(nid,deg,bg,tn);
+ if(nid&&window.AndroidApp&&window.AndroidApp.level&&(bg!=="black"||window.AndroidApp.levelColor)&&(!toneOn(tn)||window.AndroidApp.levelTone)&&(!q||window.AndroidApp.levelTurn)){
+  const r=await natLevel(nid,deg,bg,tn,q);
   if(r.startsWith("ok:"))try{const id=r.slice(3), q=await fetch("/cam/shot/"+id,{cache:"no-store"});if(q.ok){const b=await q.blob();b.nid=id;return b;}}catch(e){}
  }
- const im=await createImageBitmap(raw), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
+ const im=await createImageBitmap(raw), c=document.createElement("canvas");c.width=q%2?im.height:im.width;c.height=q%2?im.width:im.height;
  const x=c.getContext("2d");x.fillStyle=bg==="black"?"#000000":"#FFFFFF";x.fillRect(0,0,c.width,c.height);
  // 明るさ / コントラスト only on the photo, not on the corners the turn leaves
  let src=im;
  if(toneOn(tn)){const t=document.createElement("canvas");t.width=im.width;t.height=im.height;const y=t.getContext("2d",{willReadFrequently:true});y.drawImage(im,0,0);
   const g=y.getImageData(0,0,t.width,t.height), d=g.data, lut=toneLut(tn);
   for(let i=0;i<d.length;i+=4){d[i]=lut[d[i]];d[i+1]=lut[d[i+1]];d[i+2]=lut[d[i+2]];}y.putImageData(g,0,0);src=t;}
- x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);x.imageSmoothingQuality="high";x.drawImage(src,-im.width/2,-im.height/2);if(im.close)im.close();
+ x.translate(c.width/2,c.height/2);x.rotate((q*90+deg)*Math.PI/180);x.imageSmoothingQuality="high";x.drawImage(src,-im.width/2,-im.height/2);if(im.close)im.close();
  return await new Promise(r=>c.toBlob(r,"image/jpeg",0.93));
 }
 const rawPend={};
@@ -3430,7 +3432,8 @@ async function lvOpen(k,pane){
  const raw=job.raw[k]||cur;
  const bg0=(job.lvBg&&job.lvBg[k])||getPref("ba-lvbg")||"white";
  const t0=job.raw[k]&&job.tone&&job.tone[k]?{...job.tone[k]}:{br:0,ct:0};
- lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,bg:bg0,oldBg:bg0,tn:t0,oldTn:{...t0}};lvBgShow();lvTab(pane||"lv");
+ const q0=job.raw[k]&&job.qt?(job.qt[k]||0):0;
+ lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,q:q0,oldQ:q0,bg:bg0,oldBg:bg0,tn:t0,oldTn:{...t0}};lvBgShow();lvTab(pane||"lv");
  document.querySelectorAll(".edph button").forEach(b=>{const on=b.dataset.k===k;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);b.disabled=!(b.dataset.k==="b"?job.before:job.after);});
  $("lvEd").querySelector('.edtabs [data-et="pos"]').classList.toggle("off",!(job.before&&job.after));
  $("lvEd").classList.toggle("a",k==="a");
@@ -3441,7 +3444,7 @@ async function lvOpen(k,pane){
 // so they aren't pressed by mistake.
 const LV_GAP=14;
 function lvFit(){
- const im=$("lvImg"), iw=im.naturalWidth, ih=im.naturalHeight;if(!iw)return;
+ const im=$("lvImg"), odd=!!(lv&&lv.q%2), iw=odd?im.naturalHeight:im.naturalWidth, ih=odd?im.naturalWidth:im.naturalHeight;if(!iw)return;
  const ed=$("lvEd"), box=$("lvBox"), W=Math.min(ed.clientWidth-28,900);
  const size=H=>{const r=Math.min(W/iw,Math.max(140,H)/ih);box.style.width=Math.round(iw*r)+"px";box.style.height=Math.round(ih*r)+"px";};
  size(window.innerHeight*0.3);
@@ -3451,6 +3454,8 @@ function lvFit(){
  size(box.offsetHeight+free);
  // once more: on small screens the first try can still run a few pixels over
  const o2=ed.scrollHeight-ed.clientHeight;if(o2>0)size(box.offsetHeight-o2);
+ const W2=box.offsetWidth, H2=box.offsetHeight;
+ Object.assign(im.style,odd?{width:H2+"px",height:W2+"px",left:(W2-H2)/2+"px",top:(H2-W2)/2+"px"}:{width:"",height:"",left:"",top:""});
 }
 // the colour the turned corners get: shown behind the preview, used when the photo is made
 function lvBgShow(){if(!lv)return;$("lvBox").style.background=lv.bg==="black"?"#000":"#fff";lvGridShow();
@@ -3462,14 +3467,16 @@ function lvGridShow(){const on=getPref("ba-lvgrid")!=="0";$("lvEd").classList.to
 document.querySelectorAll(".lvgr button").forEach(b=>b.onclick=()=>{setPref("ba-lvgrid",b.dataset.gr);lvGridShow();});
 function lvShow(){
  const d=Math.round(lv.deg*10)/10;lv.deg=d;
- $("lvImg").style.transform="rotate("+d+"deg)";tnShow();$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
+ $("lvImg").style.transform="rotate("+(lv.q*90+d)+"deg)";tnShow();$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
 }
 function lvSet(d){if(!lv)return;lv.deg=Math.max(-LV_MAX,Math.min(LV_MAX,d));lvShow();}
 $("lvR").addEventListener("input",e=>lvSet(+e.target.value));
 [["lvM",-0.1],["lvP",0.1]].forEach(([id,st])=>{let rep=0;const b=$(id), stop=()=>{clearTimeout(rep);clearInterval(rep);};
  b.addEventListener("pointerdown",e=>{e.preventDefault();stop();lvSet(lv.deg+st);rep=setTimeout(()=>{rep=setInterval(()=>lvSet(lv.deg+st),60);},380);});
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
-$("lvZero").onclick=()=>lvSet(0);
+$("lvZero").onclick=()=>{if(!lv)return;const t=lv.q%2;lv.q=0;lvSet(0);if(t)lvFit();};
+// 90°回転: the photo itself, a quarter turn clockwise each press
+$("lvTurn").onclick=()=>{if(!lv)return;lv.q=(lv.q+1)%4;lvShow();lvFit();};
 // 明るさ / コントラスト (-50…+50): shown live with the same filter the finished photo is made with
 const toneOn=t=>!!t&&(!!t.br||!!t.ct);
 // 明るさ is a curve like the phone's photo editors (darks and middle move a lot, white stays white,
@@ -3520,17 +3527,21 @@ let lvBusy=false;
 // makes the levelled photo (nothing when unchanged); false = it could not
 async function lvApply(){
  if(!lv||lvBusy)return false;const {k,raw,deg,bg}=lv, tn=toneOn(lv.tn)?{...lv.tn}:null;
- if(deg===lv.old&&bg===lv.oldBg&&lv.tn.br===lv.oldTn.br&&lv.tn.ct===lv.oldTn.ct&&job.raw[k])return true;let done=false;
+ const q=lv.q;
+ if(deg===lv.old&&q===lv.oldQ&&bg===lv.oldBg&&lv.tn.br===lv.oldTn.br&&lv.tn.ct===lv.oldTn.ct&&job.raw[k])return true;let done=false;
  const ok=$("lvOk");ok.disabled=true;setTx2("lvOk","補正中…");lvBusy=true;
  try{
   if(autoPend[k])await busyWait(autoPend[k]); // the photo it replaces is still being saved to the phone
   job.rawNid=job.rawNid||{};
   const was=k==="b"?job.beforeNid:job.afterNid, rn=job.raw[k]?job.rawNid[k]:was;
-  const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null,bg,tn);
-  job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;job.lvBg=job.lvBg||{};job.lvBg[k]=bg;job.tone=job.tone||{};job.tone[k]=tn;job.cmpSavedAt=null;
+  const b=await levelBlob(raw,deg,rn&&window.AndroidApp&&window.AndroidApp.hasPhoto&&window.AndroidApp.hasPhoto(rn)?rn:null,bg,tn,q);
+  const dq=(q-((job.qt||{})[k]||0)+4)%4;
+  job.raw[k]=raw;job.rawNid[k]=rn||null;job.rot[k]=deg;job.qt=job.qt||{};job.qt[k]=q;
+  // turned: the 比べない frame turns with the photo; the comparison's zoom / cut start again (the shape changed)
+  if(dq){if(k==="b"&&job.mask)job.mask=maskTurn(job.mask,dq);if(job.adj)job.adj[k]={s:1,x:0,y:0};job.crop=null;job.crops=null;}job.lvBg=job.lvBg||{};job.lvBg[k]=bg;job.tone=job.tone||{};job.tone[k]=tn;job.cmpSavedAt=null;
   const bn=b.nid||(b===raw?rn:null)||null;
   if(k==="b"){job.before=b;job.beforeNid=bn;}else{job.after=b;job.afterNid=bn;}
-  refreshDetail();done=true;toast(deg||tn?"補正しました("+[deg?"傾き "+fmtDeg(deg):"",tn?"明るさ "+fmtTn(tn.br)+" ・ コントラスト "+fmtTn(tn.ct):""].filter(Boolean).join(" ・ ")+")":"撮ったままに戻しました");
+  refreshDetail();done=true;toast(deg||tn||q?"補正しました("+[q?"回転 "+q*90+"°":"",deg?"傾き "+fmtDeg(deg):"",tn?"明るさ "+fmtTn(tn.br)+" ・ コントラスト "+fmtTn(tn.ct):""].filter(Boolean).join(" ・ ")+")":"撮ったままに戻しました");
   const SK=k==="b"?"savedB":"savedA", had=job[SK]||[];job[SK]=[];
   await saveJob();photoGC([was]);make();
   if(had.length)autoSaveBA(k,deg,had);
@@ -3901,6 +3912,8 @@ function openMaskEditor(){
  const im=$("mImg");im.onload=layoutMask;im.src=blobUrl(job.before);
  $("med").hidden=false;if(im.complete&&im.naturalWidth)layoutMask();
 }
+// a frame on the photo after the photo is turned dq quarter turns clockwise
+function maskTurn(m,dq){for(let i=0;i<dq;i++)m={x:1-(m.y+m.h),y:m.x,w:m.h,h:m.w};return maskFit(m);}
 function maskFit(m){const w=Math.min(1,Math.max(0.05,+m.w||0.4)), h=Math.min(1,Math.max(0.05,+m.h||0.4));
  return {w,h,x:Math.min(1-w,Math.max(0,+m.x||0)),y:Math.min(1-h,Math.max(0,+m.y||0))};}
 function layoutMask(){
