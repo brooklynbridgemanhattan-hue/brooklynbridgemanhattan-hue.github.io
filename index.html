@@ -144,8 +144,8 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .dwrap{padding-top:4px;padding-bottom:130px}
 /* where you are: 施工前 -> 施工後 -> 比較写真 */
 .steps{display:flex;align-items:center;gap:6px;list-style:none;margin:0 0 14px;padding:0}
-/* 複数か所: the places of this site, side by side (scrolls sideways when many) */
-.spots{display:flex;gap:8px;margin:-8px -16px 4px;padding:10px 16px 12px;overflow-x:auto;scrollbar-width:none} /* room for a button's glow ring (same place on the page) */
+/* 複数か所: the places of this site, side by side (wrapping; over 2 rows the rest go under 「ほか」) */
+.spots{display:flex;flex-wrap:wrap;gap:8px;margin:-8px -16px 4px;padding:10px 16px 12px;scrollbar-width:none} /* room for a button's glow ring (same place on the page) */
 .spots::-webkit-scrollbar{display:none}
 .spb{flex:none;display:flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 8px;border-radius:999px;background:var(--card);color:#475467;font-size:15px;font-weight:700;box-shadow:inset 0 0 0 1.5px #D0D5DD}
 .spb i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--fill)}
@@ -154,8 +154,17 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .spb .ok{width:18px;height:18px;stroke:#12B886;stroke-width:3;fill:none}
 .spb.on .ok{stroke:#B2F2BB}
 .spb .ed{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;opacity:.85}
+.spb .spedt{display:flex;align-items:center;gap:3px;height:26px;margin-left:2px;padding:0 9px 0 7px;border-radius:999px;background:rgba(255,255,255,.22);font-size:13px;font-weight:800}
+.spb .spedt .ed{width:14px;height:14px;opacity:1}
 .spadd{flex:none;display:flex;align-items:center;gap:4px;height:44px;padding:0 14px;border-radius:999px;background:#EDF2FF;color:#3B5BDB;font-size:15px;font-weight:800;border:1.5px dashed #91A7FF}
 .spadd svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none}
+/* more than 2 rows of places: the rest are under 「ほか」, opened as a list below the buttons */
+.spmore{flex:none;display:flex;align-items:center;gap:4px;height:44px;padding:0 12px 0 14px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:800;box-shadow:inset 0 0 0 1.5px #D0D5DD}
+.spmore svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none;transition:transform .15s}
+.spmore.open svg{transform:rotate(180deg)}
+.spmenu{flex-basis:100%;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:16px;background:var(--card);box-shadow:0 6px 20px rgba(16,24,40,.16),inset 0 0 0 1px var(--line)}
+.spmenu .spb{height:48px;border-radius:12px;box-shadow:none;background:none}
+.spmenu .spb:active{background:var(--fill)}
 .spnm{width:100%;height:48px;margin:8px 0 10px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
 .sppre{display:flex;flex-wrap:wrap;gap:8px}
 .sppre button{height:38px;padding:0 12px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:700}
@@ -1179,20 +1188,32 @@ function putJob(j){j.upd=Date.now();mirror(j);setTimeout(()=>ensureThumbs(j),0);
 /* The site list shows small ready-made thumbnails (a few KB, kept with the site), not the
    full photos: those are 12-megapixel pictures the phone had to decode for a 56 px tile,
    which made the list slow and left tiles grey while scrolling. */
-async function thumbOf(blob){
- let im;try{im=await createImageBitmap(blob,{resizeWidth:240,resizeQuality:"medium"});}catch(e){im=await createImageBitmap(blob);}
+async function thumbOf(blob,j,k){
+ const sm=async b=>{try{return await createImageBitmap(b,{resizeWidth:240,resizeQuality:"medium"});}catch(e){return await createImageBitmap(b);}};
+ const im=await sm(blob);
  const W=168,H=210,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
- const r=Math.max(W/im.width,H/im.height), w=im.width*r, h=im.height*r;x.drawImage(im,(W-w)/2,(H-h)/2,w,h);if(im.close)im.close();
+ if(thAdj(j,k)){
+  // zoomed / moved / cut like the comparison photo (same frame: from the 施工前 photo's shape)
+  let ref=im;if(k==="a"&&j.before){try{ref=await sm(j.before);}catch(e){}}
+  const portrait=ref.height>=ref.width, fw=portrait?900:1200, fh=portrait?1200:900;if(ref!==im&&ref.close)ref.close();
+  const e=effCrop(k,j), rw=fw*(1-e.l-e.r), rh=fh*(1-e.t-e.b), s=Math.max(W/rw,H/rh);
+  x.fillStyle="#FFFFFF";x.fillRect(0,0,W,H);
+  x.translate(W/2,H/2);x.scale(s,s);x.translate(-(e.l*fw+rw/2),-(e.t*fh+rh/2));drawAdj(x,im,0,0,fw,fh,(j.adj||{})[k]);
+ }else{const r=Math.max(W/im.width,H/im.height), w=im.width*r, h=im.height*r;x.drawImage(im,(W-w)/2,(H-h)/2,w,h);}
+ if(im.close)im.close();
  return c.toDataURL("image/jpeg",0.8);
 }
-const thKey=(j,k)=>String(k==="b"?j.beforeAt:j.afterAt)+"|"+((j.rot&&j.rot[k])||0)+"|"+((k==="b"?j.before:j.after)||{}).size;
+// the comparison photo's zoom / move / cut for this photo ("" = none)
+const thAdj=(j,k)=>{if(!j)return "";const a=(j.adj||{})[k], e=effCrop(k,j);
+ return (a&&(a.s!==1||a.x||a.y))||e.t||e.b||e.l||e.r?JSON.stringify([a?a.s:1,a?a.x:0,a?a.y:0,e.t,e.b,e.l,e.r]):"";};
+const thKey=(j,k)=>{const d=thAdj(j,k);return String(k==="b"?j.beforeAt:j.afterAt)+"|"+((j.rot&&j.rot[k])||0)+"|"+((k==="b"?j.before:j.after)||{}).size+(d?"|"+d:"");};
 const thBusy=new Set();
 async function ensureThumbs(j){
  if(!j||thBusy.has(j.id))return false;thBusy.add(j.id);let changed=false;
  try{for(const k of ["b","a"]){const b=k==="b"?j.before:j.after, K=k==="b"?"thB":"thA";
   if(!b){if(j[K]){j[K]=null;j[K+"k"]=null;changed=true;}continue;}
   const key=thKey(j,k);if(j[K]&&j[K+"k"]===key)continue;
-  try{const t=await thumbOf(b);if((k==="b"?j.before:j.after)!==b)continue; // another place opened meanwhile
+  try{const t=await thumbOf(b,j,k);if((k==="b"?j.before:j.after)!==b)continue; // another place opened meanwhile
    j[K]=t;j[K+"k"]=key;changed=true;}catch(e){}}
   if(changed){if(job&&job!==j&&job.id===j.id){if(spotList(job)||spotList(j))return changed; // several places: made again when next put
    ["thB","thBk","thA","thAk"].forEach(x=>job[x]=j[x]);j=job;}await putJobDB(j);mirror(j);}
@@ -1310,7 +1331,7 @@ async function showHome(){
  homeJobs=new Map(js.map(j=>[j.id,j]));hFilter();bkShow();
  window.scrollTo(0,0);
  // sites from before thumbnails existed get theirs once, one by one, filled in as they come
- (async()=>{for(const j of js){if(!spotList(j)&&((j.before&&!j.thB)||(j.after&&!j.thA))){if($("home").hidden)return;
+ (async()=>{for(const j of js){if(!spotList(j)&&((j.before&&j.thBk!==thKey(j,"b"))||(j.after&&j.thAk!==thKey(j,"a")))){if($("home").hidden)return;
   await ensureThumbs(j);
   document.querySelectorAll('[data-job="'+j.id+'"]').forEach(card=>card.querySelectorAll("img[data-th]").forEach(im=>{const t=im.dataset.th==="b"?j.thB:j.thA;if(t)im.src=t;}));}}})();
 }
@@ -1623,9 +1644,29 @@ function spotShow(){
  // a place without a name: 「箇所名を選ぶ」while it is the only one, 「1か所目」… once there are more
  const lab=i=>(L&&L[i]&&L[i].name)?esc(L[i].name):one?"箇所名を選ぶ":esc(spotName(job,i));
  const add='<button class="spadd" id="spotAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>箇所を追加</button>';
- bar.innerHTML=(L||[{live:true}]).map((x,i)=>{const p=x.live?job:x;return '<button class="spb'+(x.live?" on":"")+'" data-spot="'+i+'"><i>'+(i+1)+'</i>'+lab(i)+(p.after&&!one?OK_SVG:'')+(x.live?ED:'')+'</button>';}).join("")+add;
+ bar.innerHTML=(L||[{live:true}]).map((x,i)=>{const p=x.live?job:x;return '<button class="spb'+(x.live?" on":"")+'" data-spot="'+i+'"><i>'+(i+1)+'</i>'+lab(i)+(p.after&&!one?OK_SVG:'')+(x.live?'<span class="spedt">'+ED+'編集</span>':'')+'</button>';}).join("")+add;
+ spotFit();
  const on=bar.querySelector(".spb.on");if(on)on.scrollIntoView({block:"nearest",inline:"nearest"});
 }
+// At most 2 rows: places that don't fit (never the open one, and at least 2 of them) go under 「ほか」. Measured on the screen,
+// so it is done again when the screen turns.
+function spotFit(){
+ const bar=$("spotBar");["spotMore","spotMenu"].forEach(id=>{if($(id))$(id).remove();});
+ const ps=[...bar.querySelectorAll(":scope > .spb[data-spot]")];ps.forEach(b=>b.hidden=false);
+ if(!bar.offsetParent)return;
+ const rows=()=>new Set([...bar.children].filter(b=>!b.hidden).map(b=>b.offsetTop)).size;
+ if(rows()<=2)return;
+ const more=document.createElement("button");more.className="spmore";more.id="spotMore";more.setAttribute("aria-expanded","false");
+ const lab=n=>{more.innerHTML='ほか '+n+'か所<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';};
+ bar.insertBefore(more,$("spotAdd"));const gone=[];
+ for(let i=ps.length-1;i>=0;i--){if(ps[i].classList.contains("on"))continue;lab(gone.length);if(gone.length&&rows()<=2)break;ps[i].hidden=true;gone.unshift(ps[i]);}
+ lab(gone.length);
+ // only one would go: showing it is clearer than 「ほか 1か所」 (a 3rd row then)
+ if(gone.length<2){gone.forEach(b=>b.hidden=false);more.remove();return;}
+ const menu=document.createElement("div");menu.className="spmenu";menu.id="spotMenu";menu.hidden=true;
+ menu.innerHTML=gone.map(b=>b.outerHTML.replace(' hidden=""',"")).join("");bar.appendChild(menu);
+}
+window.addEventListener("resize",()=>{if(job&&!$("detail").hidden)spotFit();});
 // ＋箇所を追加 swells like the photo tiles when a place is done (its comparison saved, or a finished site
 // opened): as soon as the bar is on the screen, scrolled so the button shows.
 let spotHintWant=false;
@@ -1634,6 +1675,7 @@ function spotHintGo(){if(!spotHintWant||!job||$("detail").hidden||!$("bkDlg").hi
  const b=$("spotBar");b.scrollLeft=b.scrollWidth;glow($("spotAdd"),3,"ほかの箇所もここから撮れます");}
 new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))spotHintGo();},{threshold:[1]}).observe($("spotBar"));
 $("spotBar").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;
+ if(b.id==="spotMore"){const m=$("spotMenu"), open=m.hidden;m.hidden=!open;b.classList.toggle("open",open);b.setAttribute("aria-expanded",String(open));return;}
  if(b.id==="spotAdd")spotAddAsk();else{const i=+b.dataset.spot;if(b.classList.contains("on"))spotEdit(i);else spotGo(i);}});
 // the open place's photos go into job.spots, and the chosen place's come out onto the site
 function spotSwap(j,i){const L=j.spots, cur=L.findIndex(x=>x.live), out={name:L[cur].name||""};
@@ -1685,7 +1727,7 @@ async function spotAddAsk(){
 async function spotEdit(i){
  if(spotBusy||!job)return;let L=spotList(job);
  const del=L&&L.length>1?'<button type="button" class="spdel" id="spotDel">この箇所を削除</button>':'';
- const p=bkDialog(L&&L.length>1?(i+1)+"か所目の名前":"箇所の名前",spotForm(L?L[i].name||"":"",del),"決定","やめる");
+ const p=bkDialog(L&&L.length>1?(i+1)+"か所目の編集":"箇所の編集",spotForm(L?L[i].name||"":"",del),"決定","やめる");
  spotFormWire();let wantDel=false;
  if($("spotDel"))$("spotDel").onclick=()=>{wantDel=true;if(bkDlgEnd)bkDlgEnd();};
  const ok=await p;if(!job||spotList(job)!==L)return;
@@ -4048,9 +4090,9 @@ function compose(c,k,iB,iA){
 }
 // Both-photo cut plus this photo's own cut (at least 15% of each side stays).
 let noCropDraw=false;
-function effCrop(i){
- if(noCropDraw)return {t:0,b:0,l:0,r:0};
- const c=job.crop||{}, o=(job.crops&&job.crops[i])||{}, e={};
+function effCrop(i,j){
+ if(noCropDraw&&!j)return {t:0,b:0,l:0,r:0};
+ j=j||job;const c=j.crop||{}, o=(j.crops&&j.crops[i])||{}, e={};
  ["t","b","l","r"].forEach(k=>e[k]=(c[k]||0)+(o[k]||0));
  [["l","r"],["t","b"]].forEach(([p,q])=>{const sum=e[p]+e[q];if(sum>0.85){e[p]*=0.85/sum;e[q]*=0.85/sum;}});
  return e;
