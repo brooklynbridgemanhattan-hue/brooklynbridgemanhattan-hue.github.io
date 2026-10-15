@@ -1334,7 +1334,11 @@ let MEM=[];
 const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","afterPct","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmt","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
 const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
 const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
-const jobDone=j=>pairsOf(j).every(p=>!!p.after);
+// the list's photos are of the first place that has some.
+// A place with no name and no photo at all (left over, e.g. 1か所目 when ＋箇所を追加 named the first one)
+// does not count: not in 完了 nor in the list's numbers. A named one does (still to be taken).
+const spotsUsed=j=>{const P=pairsOf(j), L=spotList(j);return P.filter((p,i)=>p.before||p.after||(p.extras||[]).length||(L&&L[i]&&String(L[i].name||"").trim()));};
+const jobDone=j=>{const P=spotsUsed(j);return P.length>0&&P.every(p=>!!p.after);};
 const spotIdx=j=>{const L=spotList(j);return L?Math.max(0,L.findIndex(s=>s.live)):0;};
 const spotName=(j,i)=>{const L=spotList(j), x=L&&L[i];return (x&&x.name)||(i+1)+"か所目";};
 const pairNids=p=>{const r=p.rawNid||{};return [p.beforeNid,p.afterNid,r.b,r.a,...candsOf(p).flatMap(c=>[c.nid,c.rawNid]),...(p.extras||[]).map(x=>x.nid)];};
@@ -1367,10 +1371,10 @@ async function showHome(){
  $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
  // several places: the first place's photos, and how many places are done
- const spotsTx=j=>{const P=pairsOf(j), n=P.filter(p=>p.after).length, bs=P.map(p=>p.beforeAt).filter(Boolean), as=P.map(p=>p.afterAt).filter(Boolean);
-  return '<div class="jd"><span class="jspot">'+P.length+'か所</span><span class="jspn">'+P.map((p,i)=>esc(spotName(j,i))).join("・")+'</span></div>'+
+ const spotsTx=j=>{const U=spotsUsed(j), P=U.length?U:pairsOf(j), n=P.filter(p=>p.after).length, bs=P.map(p=>p.beforeAt).filter(Boolean), as=P.map(p=>p.afterAt).filter(Boolean);
+  return '<div class="jd"><span class="jspot">'+P.length+'か所</span><span class="jspn">'+P.map(p=>esc(spotName(j,pairsOf(j).indexOf(p)))).join("・")+'</span></div>'+
    '<div class="jd">'+(n===P.length?'施工前 '+fmtD(Math.min(...bs))+' ・ 施工後 '+fmtD(Math.max(...as)):'施工後 '+n+' / '+P.length+'か所')+'</div>';};
- const card=j=>{const p=pairsOf(j)[0];return '<button class="job'+(jobDone(j)?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'')+'</span>'+
+ const card=j=>{const p=pairsOf(j).find(q=>q.before)||pairsOf(j)[0];return '<button class="job'+(jobDone(j)?" done":"")+'" data-job="'+j.id+'"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+(p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'')+'</span>'+
   '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+cklBadge(j)+'</div>'+(j.place&&j.place.text?'<div class="jd"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.place.text)+'</div>':'')+
   (pairsOf(j).length>1||(spotList(j)&&spotList(j)[0].name)?spotsTx(j):'<div class="jd">施工前 '+(j.beforeAt?fmtD(j.beforeAt):"未撮影")+(j.after?' ・ 施工後 '+fmtD(j.afterAt):'')+'</div>')+'</div>'+CHEV_SVG+'</button>';};
  const w=js.filter(j=>!jobDone(j)), d=js.filter(jobDone);
@@ -1774,9 +1778,12 @@ function spotRemember(n){if(!n||spotForgot.has(n))return;const L=spotPre();if(L.
 async function spotAddAsk(){
  if(spotBusy||!job)return;
  const L0=spotList(job), first=!L0||!L0[spotIdx(job)].name&&L0.length===1;
- const p=bkDialog("箇所を追加",spotForm("",first?'<p style="margin:12px 0 0">今の写真は「1か所目」になります(名前は「1」のボタンで付けられます)。</p>':''),"追加する","やめる");
+ const fresh=first&&siteFresh(job); // nothing taken yet: the name goes to the place there is (no empty 1か所目 left behind)
+ const p=bkDialog("箇所を追加",spotForm("",first&&!fresh?'<p style="margin:12px 0 0">今の写真は「1か所目」になります(名前は「1」のボタンで付けられます)。</p>':''),"追加する","やめる");
  spotFormWire(-1);if(!await p||!job)return;
  const name=spotNmVal();if(!await spotSameOk(name,-1,"同じ名前で追加する")||!job)return;
+ if(fresh&&siteFresh(job)){if(!name)return;spotRemember(name);const L=spotList(job);if(L)L[spotIdx(job)].name=name;else{job.spots=[{name,live:true}];job.exSpot=1;}
+  await saveJob();spotShow();renderThumbs();startGlow();return;}
  spotRemember(name);
  if(!job.spots||!job.spots.length){job.spots=[{name:"",live:true}];job.exSpot=1;}
  job.spots.push({name});
