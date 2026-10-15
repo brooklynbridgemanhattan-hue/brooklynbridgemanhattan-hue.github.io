@@ -882,7 +882,10 @@ html.natcam #vid,html.app #vid{display:none}
 .cam .camhud .shoot{display:flex;gap:14px;align-items:center;padding:0}
 .cam .camhud .shot{width:76px;height:76px}
 .hudcol{position:absolute;right:0;top:0;display:flex;flex-direction:column;align-items:center;padding:8px 6px;gap:12px;pointer-events:none}
-.hudshot{flex:1;display:flex;align-items:center;justify-content:center;min-height:92px;pointer-events:auto}
+.hudshot{flex:1;display:flex;align-items:center;justify-content:center;min-height:92px;pointer-events:auto;position:relative;padding-bottom:64px}
+/* sideways, after a shot: 完了 right under the shutter. Its room is kept even before (padding), so the
+   shutter never moves while shooting */
+.cam .camhud .hudshot .cancel{position:absolute;left:50%;top:calc(50% + 22px);transform:translateX(-50%);margin:0}
 .cam .camhud .hudshot .shot{width:84px;height:84px;box-shadow:0 0 0 4px rgba(11,13,18,.9),0 0 0 7px #fff}
 .cam .camhud .tools{position:static;width:100%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;gap:4px 2px;pointer-events:auto;padding:6px;border-radius:18px;background:rgba(11,13,18,.55)}
 .cam .camhud .tools button svg.i,.cam .camhud .tools .fl svg.i{width:50px;height:50px;padding:13px}
@@ -1902,7 +1905,7 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
  $("cam").classList.toggle("judging",after&&$("tDiff").classList.contains("on"));
  setFrame("na","比べています…");lvlShown=null;
  $("camMask").hidden=true;
- shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");$("cCancel").classList.remove("fin");
+ shotCount=0;$("shotN").hidden=true;setTx("cCancel",mode==="extra"?"戻る":"やめる");$("cCancel").classList.remove("fin");placeFin();
  stopWanted=false;
  camSess={mode,n:0,had:mode!=="extra"&&!!(mode==="before"?job.before:job.after),got:Promise.resolve(),ckl};camGot=camSess.got;
  if(after){photoSrc=blobUrl(job.before);$("ghost").src=$("tLine").classList.contains("on")?await outlineSrc():photoSrc;ghostLook();$("pipImg").src=photoSrc;
@@ -2116,7 +2119,7 @@ $("cShot").onclick=async()=>{
  // 施工前・施工後: the camera stays open so a few can be taken; each new one is used and the
  // ones before it stay as 候補. 完了 closes the camera; with 2 or more, the choosing screen follows.
  shotCount++;s.n=shotCount;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
- setTx("cCancel","完了");$("cCancel").classList.add("fin");
+ setTx("cCancel","完了");$("cCancel").classList.add("fin");placeFin();
  s.got=camGot=s.got.then(()=>gotPhoto(mode,b,o,true,g)).catch(()=>{}); // under the camera screen, one after another
  await shotDone(b,name+(shotCount>1?" "+shotCount+"枚目":"")+"を撮影しました",700);shotEnd();
 };
@@ -2159,6 +2162,11 @@ function camRot(){
 }
 // UI turned to face the user: the camera screen and the box editor follow the phone.
 let sideDeg=0;const homes=new Map();
+// 完了 (after a shot) when sideways: under the shutter; やめる / 戻る stay in the low row
+const finHome=$("cCancel").parentNode;
+function placeFin(){const c=$("cCancel");
+ if(sideDeg&&c.classList.contains("fin")){if(c.parentNode!==$("hudShot"))$("hudShot").appendChild(c);}
+ else if(c.parentNode!==finHome)finHome.insertBefore(c,finHome.firstChild);}
 function setSideUI(deg){
  if(deg===sideDeg)return;const was=sideDeg;sideDeg=deg;
  const cam=$("cam"), hud=$("camHud"), tools=cam.querySelector(".tools");
@@ -2176,6 +2184,7 @@ function setSideUI(deg){
   homes.clear();
   hud.hidden=true;hud.classList.remove("mir");$("hudCol").style.width="";hud.style.removeProperty("--hudw");
  }
+ placeFin();
  pinchPts.clear();pinch0=null;
  fitStage();alignRot=null;prepAlign();
  if(deg){
@@ -4305,7 +4314,8 @@ function toast(t,ng){if(gal&&gal.nat&&window.AndroidApp&&window.AndroidApp.viewe
  // the part in brackets goes on its own, smaller line; the rest breaks at 、 rather than mid-word
  const m=String(t).match(/^(.+?)[(（](.+)[)）]$/);
  if(m){e.textContent="";const a=document.createElement("span");a.textContent=m[1];const b=document.createElement("small");b.textContent="("+m[2]+")";e.append(a,b);}else e.textContent=t;e.classList.toggle("ng",!!ng);e.classList.remove("out");e.hidden=false;clearTimeout(toastT);
- toastT=setTimeout(()=>{e.classList.add("out");toastT=setTimeout(()=>{e.hidden=true;e.classList.remove("out");},300);},2300);}
+ // shown 1.7 s (green); a problem (red, ng) stays 2.3 s so there is time to read it
+ toastT=setTimeout(()=>{e.classList.add("out");toastT=setTimeout(()=>{e.hidden=true;e.classList.remove("out");},300);},ng?2300:1700);}
 function saved(ok,msg){$("saveMsg").textContent=msg;toast(ok?"保存しました":msg,!ok);}
 
 /* ---------- photo viewer ---------- */
