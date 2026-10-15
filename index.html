@@ -659,8 +659,30 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvrow{display:grid;grid-template-columns:1fr;gap:10px}
 .lvrow2{grid-template-columns:1fr 1.4fr}
 /* 補正: 傾き / 明るさ tabs; both sets of controls take the same place, so the photo keeps its size */
+/* 文字 tab: in the 位置・拡大 screen; its buttons give way to the 文字 settings */
+#adjEd.txmode #adjSel,#adjEd.txmode #adjPad,#adjEd.txmode .trimrow,#adjEd.txmode #adjReset{display:none}
+#adjEd.txmode .adjbtns{grid-template-columns:1fr}
+#adjEd.txmode .trimov{touch-action:none}
+.txpanel{display:flex;flex-direction:column;gap:10px}
+.txoff{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(252,196,25,.14);color:#FCC419;font-size:14px;font-weight:700}
+.txoff button{flex:none;min-height:40px;padding:0 14px;border-radius:999px;background:#FCC419;color:#2B1D00;font-size:15px;font-weight:800}
+.txrow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;font-weight:700;color:#E2E8F0}
+.txrow.txcol{flex-direction:column;align-items:stretch;gap:6px}
+.txrow.off{opacity:.35;pointer-events:none}
+.txsz{display:flex;align-items:center;gap:6px}
+.txsz button{width:48px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-size:22px;font-weight:800;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
+.txsz b{min-width:62px;text-align:center;font-size:18px}
+.txseg{display:flex;gap:6px}
+.txseg button{min-height:40px;padding:0 14px;border-radius:999px;font-size:15px;font-weight:800;color:#E2E8F0;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
+.txseg button.on,.txsw button.on{background:#fff;color:#101828;box-shadow:0 0 0 3px #9C36B5}
+.txsw{display:flex;flex-wrap:wrap;gap:5px}
+.txsw button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
+.txsw button i{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.txsw .txstd{width:auto;padding:0 10px;border-radius:999px;font-size:13px;font-weight:800;color:#E2E8F0}
+.txbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.txbtns button{min-height:46px;border-radius:12px;font-size:14px;font-weight:800;background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
 /* 写真の編集: the same tabs on 位置・大きさ (adjEd) and 傾き / 明るさ (lvEd), which work on one photo (施工前 / 施工後) */
-.edtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0 0;padding:3px;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
+.edtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0 0;padding:3px;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
 .edtabs button{min-height:38px;padding:0 2px;border-radius:999px;font-size:min(16px,4.2vw);font-weight:800;color:#F2F4F7;white-space:nowrap}
 .edtabs button.on{background:#fff;color:#101828;box-shadow:0 0 0 3px #9C36B5}
 .edtabs button.off{opacity:.35}
@@ -984,7 +1006,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div class="bkov" id="bkDlg" hidden role="dialog" aria-modal="true"><div class="bkbox bkdlg"><b id="bkDT"></b><div class="bkbody" id="bkDB"></div><div class="bkbtns"><button id="bkDNo"></button><button class="bkmain" id="bkDYes"></button></div></div></div>
 <div class="waitnote" id="busy" hidden role="status"><span class="sp"></span>保存中…</div>
 <div class="adj" id="adjEd" hidden>
- <div class="adjhd"><b>写真の編集</b><div class="edtabs" role="tablist"><button data-et="pos" role="tab">位置・大きさ</button><button data-et="lv" role="tab">傾き</button><button data-et="tn" role="tab">明るさ</button></div><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
+ <div class="adjhd"><b>写真の編集</b><div class="edtabs" role="tablist"><button data-et="pos" role="tab">位置・拡大</button><button data-et="lv" role="tab">傾き</button><button data-et="tn" role="tab">明るさ</button><button data-et="txt" role="tab">文字</button></div><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
  <div class="adjstage" id="adjStage"><div class="adjwrap"><canvas id="adjC"></canvas><div class="trimov" id="trimOv"></div></div></div>
  <div class="selst" id="adjSel" role="status"></div>
  <div class="pad1" id="adjPad">
@@ -993,6 +1015,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <button data-a="reset" class="rs"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg><span>元に戻す</span></button><button data-a="down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span>下へ</span></button><span></span>
  </div>
  <div class="trimrow"><button class="mtrim" id="adjTrim"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg><span class="tx">手動でトリミング</span></button><button class="auto" id="adjAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg><span>余白を自動カット</span></button></div>
+ <div class="txpanel" id="txPanel" hidden><div class="txoff" id="txOff" hidden><span>施工前・施工後の文字は、今は入れない設定です</span><button type="button" id="txOn">文字を入れる</button></div><div class="txrow"><span>大きさ</span><div class="txsz"><button type="button" id="txSzM" aria-label="小さく">−</button><b id="txSzV">100%</b><button type="button" id="txSzP" aria-label="大きく">＋</button></div></div><div class="txrow"><span>背景</span><div class="txseg" id="txBg" role="radiogroup"><button type="button" data-v="1" role="radio">あり</button><button type="button" data-v="0" role="radio">なし(文字だけ)</button></div></div><div class="txrow txcol"><span>文字の色</span><div class="txsw" id="txFg" role="radiogroup"><button type="button" data-c="" role="radio" class="txstd">標準</button><button type="button" data-c="#FFFFFF" role="radio" aria-label="白"><i style="background:#FFFFFF"></i></button><button type="button" data-c="#101828" role="radio" aria-label="黒"><i style="background:#101828"></i></button><button type="button" data-c="#E03131" role="radio" aria-label="赤"><i style="background:#E03131"></i></button><button type="button" data-c="#FCC419" role="radio" aria-label="黄"><i style="background:#FCC419"></i></button><button type="button" data-c="#2F9E44" role="radio" aria-label="緑"><i style="background:#2F9E44"></i></button><button type="button" data-c="#1C7ED6" role="radio" aria-label="青"><i style="background:#1C7ED6"></i></button><button type="button" data-c="#F76707" role="radio" aria-label="オレンジ"><i style="background:#F76707"></i></button></div></div><div class="txrow txcol"><span>縁取り</span><div class="txsw" id="txOl" role="radiogroup"><button type="button" data-c="" role="radio" class="txstd">なし</button><button type="button" data-c="#FFFFFF" role="radio" aria-label="白"><i style="background:#FFFFFF"></i></button><button type="button" data-c="#101828" role="radio" aria-label="黒"><i style="background:#101828"></i></button><button type="button" data-c="#E03131" role="radio" aria-label="赤"><i style="background:#E03131"></i></button><button type="button" data-c="#FCC419" role="radio" aria-label="黄"><i style="background:#FCC419"></i></button><button type="button" data-c="#2F9E44" role="radio" aria-label="緑"><i style="background:#2F9E44"></i></button><button type="button" data-c="#1C7ED6" role="radio" aria-label="青"><i style="background:#1C7ED6"></i></button><button type="button" data-c="#F76707" role="radio" aria-label="オレンジ"><i style="background:#F76707"></i></button></div></div><div class="txrow" id="txOwRow"><span>縁取りの太さ</span><div class="txseg" id="txOw" role="radiogroup"><button type="button" data-v="1" role="radio">細</button><button type="button" data-v="2" role="radio">中</button><button type="button" data-v="3" role="radio">太</button></div></div><div class="txbtns"><button type="button" id="txPosR">位置を元に戻す</button><button type="button" id="txStR">文字の設定を元に戻す</button></div></div>
  <div class="adjbtns"><button class="o2" id="adjReset">すべて元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
 </div>
 
@@ -1005,7 +1028,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 </div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="tnF" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR id="tnFR" type="table" tableValues="0 1"/><feFuncG id="tnFG" type="table" tableValues="0 1"/><feFuncB id="tnFB" type="table" tableValues="0 1"/></feComponentTransfer></filter></svg>
 <div class="adj lved" id="lvEd" hidden>
- <div class="adjhd"><div class="edrow"><b>写真の編集</b><div class="edph" role="radiogroup" aria-label="写真"><button data-k="b" role="radio">施工前</button><button data-k="a" role="radio">施工後</button></div></div><div class="edtabs" role="tablist"><button data-et="pos" role="tab">位置・大きさ</button><button data-et="lv" role="tab">傾き</button><button data-et="tn" role="tab">明るさ</button></div></div>
+ <div class="adjhd"><div class="edrow"><b>写真の編集</b><div class="edph" role="radiogroup" aria-label="写真"><button data-k="b" role="radio">施工前</button><button data-k="a" role="radio">施工後</button></div></div><div class="edtabs" role="tablist"><button data-et="pos" role="tab">位置・拡大</button><button data-et="lv" role="tab">傾き</button><button data-et="tn" role="tab">明るさ</button><button data-et="txt" role="tab">文字</button></div></div>
  <div class="lvstage" id="lvStage"><div class="lvbox" id="lvBox"><img id="lvImg" alt=""><div class="lvgrid"></div></div></div>
  <div class="lvpanes" id="lvPanes"><div class="lvpane" data-p="lv">
  <div class="lvval"><button id="lvM" aria-label="左に0.1度">−0.1°</button><b id="lvV">0.0°</b><button id="lvP" aria-label="右に0.1度">＋0.1°</button></div>
@@ -1299,7 +1322,7 @@ let MEM=[];
    the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}].
    その他の写真 (extras) belong to a place too; on a site from before that (no exSpot), they were the
    site's and go to 1か所目 when it is next opened. */
-const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","afterPct","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
+const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","afterPct","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","txp","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
 const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
 const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
 const jobDone=j=>pairsOf(j).every(p=>!!p.after);
@@ -3055,7 +3078,7 @@ const ADJ0=()=>({s:1,x:0,y:0}), CROP0=()=>({t:0,b:0,l:0,r:0});
 let adjOld=null, adjRep=0;const adjSel=new Set();
 const adjKeys=()=>["b","a"].filter(k=>adjSel.has(k));
 const adjTgt=()=>adjSel.size===2?"both":adjSel.size?adjKeys()[0]:null;
-function adjSnap(){return JSON.stringify({adj:job.adj,crop:job.crop,crops:job.crops});}
+function adjSnap(){return JSON.stringify({adj:job.adj,crop:job.crop,crops:job.crops,txp:job.txp||null,st:txSt()});}
 function adjSelShow(){
  const t=adjTgt(), el=$("adjSel");
  el.classList.toggle("none",!t);
@@ -3073,8 +3096,8 @@ function adjDraw(){
  adjSelShow();ovShow();
 }
 // ---- manual trimming (点線の枠) ----
-let trimOn=false, tdrag=null;
-function trimSet(on){trimOn=on;$("adjHint").textContent=on?"枠の角や辺を引っ張って残す範囲を決めます(枠の中を引っぱると移動)":"写真をタップして選び、ボタンで調整します(長押しで連続)";$("adjTrim").classList.toggle("on",on);setTx("adjTrim",on?"トリミング完了":"手動でトリミング");adjDraw();}
+let trimOn=false, tdrag=null, edMode="pos";
+function trimSet(on){trimOn=on;$("adjHint").textContent=edMode==="txt"?"写真の上の文字を指で動かすと、位置を変えられます":on?"枠の角や辺を引っ張って残す範囲を決めます(枠の中を引っぱると移動)":"写真をタップして選び、ボタンで調整します(長押しで連続)";$("adjTrim").classList.toggle("on",on);setTx("adjTrim",on?"トリミング完了":"手動でトリミング");adjDraw();}
 $("adjTrim").onclick=()=>tfsOpen(adjTgt()||"both");
 // the crop a box shows: 両方 = shared cut; one photo = shared + its own
 const tcrop=k=>adjTgt()==="both"?job.crop:(()=>{const c=job.crop,o=job.crops[k];return {t:c.t+o.t,b:c.b+o.b,l:c.l+o.l,r:c.r+o.r};})();
@@ -3082,11 +3105,11 @@ const tcrop=k=>adjTgt()==="both"?job.crop:(()=>{const c=job.crop,o=job.crops[k];
 function ovShow(){
  const ov=$("trimOv"), cv=$("adjC"), lay=cv._lay;if(!lay)return;const k0=cv.clientWidth/cv.width;
  ov.style.width=cv.clientWidth+"px";ov.style.height=cv.clientHeight+"px";
- const sig=(trimOn?"T":"S")+adjKeys().join();
+ const sig=(edMode==="txt"?"X":trimOn?"T":"S")+adjKeys().join();
  if(ov.dataset.sig!==sig){
   ov.dataset.sig=sig;
   ov.innerHTML=["b","a"].map(k=>{const on=adjSel.has(k);
-   return '<div class="scell '+k+(on?" on":"")+'" data-k="'+k+'">'+(trimOn?"":'<span class="stag">'+(on?"選択中":(k==="b"?"施工前":"施工後"))+'</span>')+'</div>'+
+   return '<div class="scell '+k+(on?" on":"")+'" data-k="'+k+'">'+(trimOn||edMode==="txt"?"":'<span class="stag">'+(on?"選択中":(k==="b"?"施工前":"施工後"))+'</span>')+'</div>'+
     (trimOn&&on?'<div class="tcell" data-k="'+k+'"><div class="tbox '+k+'" data-h="m">'+["tl","t","tr","r","br","b","bl","l"].map(h=>'<i data-h="'+h+'" class="'+(h.length===1?"e":"")+'"></i>').join("")+'</div></div>':"");}).join("");
  }
  ["b","a"].forEach((k,i)=>{const L=lay.cells[i], css="left:"+L.x*k0+"px;top:"+L.y*k0+"px;width:"+L.w*k0+"px;height:"+L.h*k0+"px";
@@ -3132,11 +3155,39 @@ $("trimOv").addEventListener("pointerup",e=>{
 });
 $("trimOv").addEventListener("pointercancel",()=>{tdrag=null;tapAt=null;});
 window.addEventListener("resize",()=>{if(!$("adjEd").hidden)ovShow();});
-async function adjOpen(){
+async function adjOpen(mode){
  if(!job||!job.before||!job.after)return;await getImgs();
  job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};
- adjOld=adjSnap();adjSel.clear();trimOn=false;$("trimOv").dataset.sig="";edTabsShow("pos");$("adjEd").hidden=false;trimSet(false);
+ adjOld=adjSnap();adjSel.clear();trimOn=false;$("trimOv").dataset.sig="";adjMode(mode||"pos");$("adjEd").hidden=false;trimSet(false);
 }
+// the 位置・拡大 screen shows its buttons ("pos") or the 文字 settings ("txt"), on the same preview
+function adjMode(m){edMode=m;$("adjEd").classList.toggle("txmode",m==="txt");$("txPanel").hidden=m!=="txt";edTabsShow(m);
+ if(m==="txt"){if(trimOn)trimSet(false);txShow();}$("trimOv").dataset.sig="";if(!$("adjEd").hidden)adjDraw();trimSet(trimOn);}
+function txShow(){const st=txSt();
+ $("txOff").hidden=withLabels;$("txSzV").textContent=Math.round(st.sz*100)+"%";
+ const on=(id,f)=>$(id).querySelectorAll("button").forEach(b=>{const v=f(b);b.classList.toggle("on",v);b.setAttribute("aria-checked",v);});
+ on("txBg",b=>+b.dataset.v===st.bg);on("txFg",b=>b.dataset.c===st.fg);on("txOl",b=>b.dataset.c===st.ol);on("txOw",b=>+b.dataset.v===st.ow);
+ $("txOwRow").classList.toggle("off",!st.ol);}
+function txSet(f){const st={...txSt()};f(st);txSave(st);txShow();adjDraw();}
+$("txSzM").onclick=()=>txSet(st=>{st.sz=Math.max(0.6,Math.round(st.sz*10-1)/10);});
+$("txSzP").onclick=()=>txSet(st=>{st.sz=Math.min(2,Math.round(st.sz*10+1)/10);});
+$("txBg").onclick=e=>{const b=e.target.closest("[data-v]");if(b)txSet(st=>{st.bg=+b.dataset.v;});};
+$("txFg").onclick=e=>{const b=e.target.closest("button");if(b)txSet(st=>{st.fg=b.dataset.c;});};
+$("txOl").onclick=e=>{const b=e.target.closest("button");if(b)txSet(st=>{st.ol=b.dataset.c;});};
+$("txOw").onclick=e=>{const b=e.target.closest("[data-v]");if(b)txSet(st=>{st.ow=+b.dataset.v;});};
+$("txPosR").onclick=()=>{delete job.txp;adjDraw();};
+$("txStR").onclick=()=>txSet(st=>Object.assign(st,TX0));
+$("txOn").onclick=()=>{withLabels=true;$("cLabel").checked=true;try{localStorage.setItem("ba-labels","1");}catch(err){}showLab();txShow();adjDraw();};
+// a finger on 施工前 / 施工後 moves it (kept with the site); elsewhere on the photos nothing happens
+let txDrag=null;
+const txAt=e=>{const cv=$("adjC"), r=cv.getBoundingClientRect(), k0=cv.width/r.width;return {X:(e.clientX-r.left)*k0,Y:(e.clientY-r.top)*k0};};
+$("trimOv").addEventListener("pointerdown",e=>{if(edMode!=="txt")return;e.stopImmediatePropagation();e.preventDefault();
+ const {X,Y}=txAt(e), B=($("adjC")._lay||{}).badges||[], i=B.findIndex(b=>b&&X>=b.x-12&&X<=b.x+b.w+12&&Y>=b.y-12&&Y<=b.y+b.h+12);if(i<0)return;
+ txDrag={i,X0:X,Y0:Y,b:{...B[i]}};$("trimOv").setPointerCapture(e.pointerId);},true);
+$("trimOv").addEventListener("pointermove",e=>{if(edMode!=="txt")return;e.stopImmediatePropagation();if(!txDrag)return;
+ const {X,Y}=txAt(e), d=txDrag, b=d.b, cl=v=>Math.max(0,Math.min(1,v));
+ job.txp=job.txp||{};job.txp[d.i?"a":"b"]={x:b.fx?cl((b.x+X-d.X0-b.x0)/b.fx):0,y:b.fy?cl((b.y+Y-d.Y0-b.y0)/b.fy):0};adjDraw();},true);
+["pointerup","pointercancel"].forEach(t=>$("trimOv").addEventListener(t,e=>{if(edMode!=="txt")return;e.stopImmediatePropagation();txDrag=null;},true));
 // ＋拡大 −縮小 ↑上へ ↓下へ ←左へ →右へ (moves the picture itself), 元に戻す
 function adjStep(act){
  if(!adjTgt()){toast("先に画像をタップして選択してください",true);return false;}
@@ -3174,7 +3225,7 @@ function autoCrop(t){
 $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
 async function adjCommit(){if(trimOn)trimSet(false);if(adjSnap()!==adjOld){adjOld=adjSnap();job.cmpSavedAt=null;await saveJob();make();showNext();}}
 $("adjOk").onclick=async()=>{$("adjEd").hidden=true;await adjCommit();};
-function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;}$("adjEd").hidden=true;}
+function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;job.txp=o.txp||undefined;if(o.st)txSave(o.st);}$("adjEd").hidden=true;}
 
 /* ---------- 候補 (施工前・施工後) ---------- */
 // A retaken / newer photo doesn't throw the one before away: it is kept as a 候補 (job.cand.b / .a,
@@ -3441,7 +3492,7 @@ async function lvOpen(k,pane){
  const q0=job.raw[k]&&job.qt?(job.qt[k]||0):0;
  lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,q:q0,oldQ:q0,bg:bg0,oldBg:bg0,tn:t0,oldTn:{...t0}};lvBgShow();lvTab(pane||"lv");
  document.querySelectorAll(".edph button").forEach(b=>{const on=b.dataset.k===k;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);b.disabled=!(b.dataset.k==="b"?job.before:job.after);});
- $("lvEd").querySelector('.edtabs [data-et="pos"]').classList.toggle("off",!(job.before&&job.after));
+ $("lvEd").querySelectorAll('.edtabs [data-et="pos"],.edtabs [data-et="txt"]').forEach(b=>b.classList.toggle("off",!(job.before&&job.after)));
  $("lvEd").classList.toggle("a",k==="a");
  const im=$("lvImg");im.onload=lvFit;im.src=blobUrl(raw);
  $("lvEd").hidden=false;lvShow();
@@ -3496,11 +3547,11 @@ function lvTab(p){edTabsShow(p);document.querySelectorAll(".lvpane").forEach(x=>
 // 写真の編集: one button opens it (with only 施工前, at 傾き). Moving to another tab or photo keeps what was done.
 function edTabsShow(t){document.querySelectorAll(".edtabs button").forEach(b=>{const on=b.dataset.et===t;b.classList.toggle("on",on);b.setAttribute("aria-selected",on);});}
 $("bEdit").onclick=()=>{if(!job||!job.before)return;if(job.after)adjOpen();else lvOpen("b");};
-document.querySelectorAll(".edtabs button").forEach(b=>b.onclick=async()=>{const t=b.dataset.et;if(!job)return;
- if(b.classList.contains("off")){toast("位置・大きさは、施工後を撮ると使えます");return;}
- if(!$("adjEd").hidden){if(t==="pos")return;const k=adjSel.size===1?adjKeys()[0]:"b";await adjCommit();await lvOpen(k,t);$("adjEd").hidden=true;return;}
- if(!lv||lvBusy)return;if(t!=="pos"){lvTab(t);return;}
- if(!await lvApply())return;await adjOpen();lvClose();});
+document.querySelectorAll(".edtabs button").forEach(b=>b.onclick=async()=>{const t=b.dataset.et, two=t==="pos"||t==="txt";if(!job)return;
+ if(b.classList.contains("off")){toast("位置・拡大と文字は、施工後を撮ると使えます");return;}
+ if(!$("adjEd").hidden){if(two){if(t!==edMode)adjMode(t);return;}const k=adjSel.size===1?adjKeys()[0]:"b";await adjCommit();await lvOpen(k,t);$("adjEd").hidden=true;return;}
+ if(!lv||lvBusy)return;if(!two){lvTab(t);return;}
+ if(!await lvApply())return;await adjOpen(t);lvClose();});
 document.querySelectorAll(".edph button").forEach(b=>b.onclick=async()=>{const k=b.dataset.k;if(!lv||lvBusy||lv.k===k||b.disabled)return;
  const p=document.querySelector("#lvEd .edtabs button.on").dataset.et;if(!await lvApply())return;await lvOpen(k,p);});
 const fmtTn=v=>(v>0?"+":v<0?"−":"")+Math.abs(v);
@@ -4138,13 +4189,21 @@ function compose(c,k,iB,iA){
  const cells=[{im:iB,t:en?"BEFORE":"施工前",d:job.beforeAt,x:pad,y:pad,c1:"#5C7CFA",c2:"#3B5BDB",fg:"#FFFFFF"},
   {im:iA,t:en?"AFTER":"施工後",d:job.afterAt,x:layout==="h"?pad+vis[0].cw+gap:pad,y:layout==="h"?pad:pad+vis[0].ch+gap,c1:"#FFC53D",c2:"#F59F00",fg:"#2B1D00"}];
  const adj=job.adj||{};
- c._lay={cells:cells.map((q,i)=>({x:q.x,y:q.y,w:vis[i].cw,h:vis[i].ch}))};
+ c._lay={cells:cells.map((q,i)=>({x:q.x,y:q.y,w:vis[i].cw,h:vis[i].ch})),badges:[]};
  cells.forEach((q,i)=>{const v=vis[i];
   x.save();x.beginPath();x.rect(q.x,q.y,v.cw,v.ch);x.clip();
   x.translate(q.x,q.y);x.scale(v.s,v.s);x.translate(-v.e.l*fw,-v.e.t*fh);
   drawAdj(x,q.im,0,0,fw,fh,adj[i?"a":"b"]);x.restore();
-  if(withLabels)badge(x,q,k,en,font);});
+  if(withLabels)c._lay.badges[i]=badge(x,q,k,en,font,(job.txp||{})[i?"a":"b"],v.cw,v.ch);});
 }
+// 文字 (写真の編集): the look of 施工前・施工後 on the photo, the same for every site (on this phone).
+// sz = size, bg = the coloured band behind (1) or the letters alone (0), fg = letter colour ("" = as
+// the band), ol / ow = outline colour ("" = none) and thickness 1-3. Nothing changed = as before.
+const TX0={sz:1,bg:1,fg:"",ol:"",ow:2};
+let txStyle=null;
+function txSt(){if(txStyle)return txStyle;let o={};try{o=JSON.parse(localStorage.getItem("ba-txst")||"{}")||{};}catch(e){}
+ txStyle={sz:Math.min(2,Math.max(0.6,+o.sz||1)),bg:o.bg===0?0:1,fg:typeof o.fg==="string"?o.fg:"",ol:typeof o.ol==="string"?o.ol:"",ow:[1,2,3].includes(o.ow)?o.ow:2};return txStyle;}
+function txSave(st){txStyle=st;try{localStorage.setItem("ba-txst",JSON.stringify(st));}catch(e){}}
 // Both-photo cut plus this photo's own cut (at least 15% of each side stays).
 let noCropDraw=false;
 function effCrop(i,j){
@@ -4162,27 +4221,36 @@ function drawAdj(x,im,cx,cy,w,h,a){
  x.drawImage(im,cx+(w-dw)/2+a.x*w,cy+(h-dh)/2+a.y*h,dw,dh);x.restore();
 }
 // The 施工前 / 施工後 (BEFORE / AFTER) badge: a glossy pill in the photo's corner with the date.
-function badge(x,q,k,en,font){
- const H=74*k, m=22*k, r=H/2, fs=en?34*k:38*k, ds=23*k;
+// pos = where in the photo ({x, y}: 0 = left / top … 1 = right / bottom of the room there is); returns
+// where it was drawn (canvas pixels), for moving it with a finger
+function badge(x,q,k,en,font,pos,cw,ch){
+ const st=txSt(), s=k*st.sz;
+ const H=74*s, m=22*k, r=H/2, fs=en?34*s:38*s, ds=23*s;
  const tf=(en?'800 '+fs+'px "Helvetica Neue",Arial,':'800 '+fs+'px ')+font, df='700 '+ds+'px "Helvetica Neue",Arial,'+font;
  const d=new Date(q.d||Date.now()), dt=d.getFullYear()+"."+pad2(d.getMonth()+1)+"."+pad2(d.getDate());
  x.save();
  const ls=en&&"letterSpacing" in x;
- if(ls)x.letterSpacing=Math.round(4*k)+"px";x.font=tf;const tw=x.measureText(q.t).width;if(ls)x.letterSpacing="0px";
+ if(ls)x.letterSpacing=Math.round(4*s)+"px";x.font=tf;const tw=x.measureText(q.t).width;if(ls)x.letterSpacing="0px";
  x.font=df;const dw=x.measureText(dt).width;
- const w=labDate?26*k+tw+22*k+2*k+20*k+dw+28*k:26*k+tw+26*k, bx=q.x+m, by=q.y+m;
- x.shadowColor="rgba(0,0,0,.35)";x.shadowBlur=18*k;x.shadowOffsetY=4*k;
- const g=x.createLinearGradient(bx,by,bx+w,by+H);g.addColorStop(0,q.c1);g.addColorStop(1,q.c2);
- x.fillStyle=g;x.beginPath();x.roundRect?x.roundRect(bx,by,w,H,r):x.rect(bx,by,w,H);x.fill();
- x.shadowColor="transparent";
- // soft shine on the top half
- const sh=x.createLinearGradient(0,by,0,by+H);sh.addColorStop(0,"rgba(255,255,255,.28)");sh.addColorStop(.55,"rgba(255,255,255,0)");
- x.fillStyle=sh;x.beginPath();x.roundRect?x.roundRect(bx,by,w,H,r):x.rect(bx,by,w,H);x.fill();
- x.fillStyle=q.fg;x.textBaseline="middle";x.textAlign="left";
- if(ls)x.letterSpacing=Math.round(4*k)+"px";x.font=tf;x.fillText(q.t,bx+26*k,by+H/2+2*k);if(ls)x.letterSpacing="0px";
- if(labDate){x.globalAlpha=.45;x.fillRect(bx+26*k+tw+22*k,by+18*k,2*k,H-36*k);x.globalAlpha=.9;
-  x.font=df;x.fillText(dt,bx+26*k+tw+22*k+2*k+20*k,by+H/2+2*k);}
+ const w=labDate?26*s+tw+22*s+2*s+20*s+dw+28*s:26*s+tw+26*s;
+ const fx=Math.max(0,(cw||0)-w-2*m), fy=Math.max(0,(ch||0)-H-2*m), bx=q.x+m+(pos?pos.x:0)*fx, by=q.y+m+(pos?pos.y:0)*fy;
+ if(st.bg){
+  x.shadowColor="rgba(0,0,0,.35)";x.shadowBlur=18*s;x.shadowOffsetY=4*s;
+  const g=x.createLinearGradient(bx,by,bx+w,by+H);g.addColorStop(0,q.c1);g.addColorStop(1,q.c2);
+  x.fillStyle=g;x.beginPath();x.roundRect?x.roundRect(bx,by,w,H,r):x.rect(bx,by,w,H);x.fill();
+  x.shadowColor="transparent";
+  // soft shine on the top half
+  const sh=x.createLinearGradient(0,by,0,by+H);sh.addColorStop(0,"rgba(255,255,255,.28)");sh.addColorStop(.55,"rgba(255,255,255,0)");
+  x.fillStyle=sh;x.beginPath();x.roundRect?x.roundRect(bx,by,w,H,r):x.rect(bx,by,w,H);x.fill();
+ }
+ const fg=st.fg||q.fg;x.fillStyle=fg;x.textBaseline="middle";x.textAlign="left";
+ // the outline goes under the letters (drawn first, twice as wide: half of it shows)
+ const text=(t,tx,ty)=>{if(st.ol){x.save();x.globalAlpha=1;x.strokeStyle=st.ol;x.lineJoin="round";x.lineWidth=[0,5,9,14][st.ow]*s;x.strokeText(t,tx,ty);x.restore();}x.fillText(t,tx,ty);};
+ if(ls)x.letterSpacing=Math.round(4*s)+"px";x.font=tf;text(q.t,bx+26*s,by+H/2+2*s);if(ls)x.letterSpacing="0px";
+ if(labDate){x.globalAlpha=.45;x.fillRect(bx+26*s+tw+22*s,by+18*s,2*s,H-36*s);x.globalAlpha=.9;
+  x.font=df;text(dt,bx+26*s+tw+22*s+2*s+20*s,by+H/2+2*s);}
  x.restore();
+ return {x:bx,y:by,w,h:H,x0:q.x+m,y0:q.y+m,fx,fy};
 }
 $("cLabel").checked=withLabels;
 $("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}showLab();make();};
