@@ -3918,21 +3918,22 @@ function rpCkl(j,i){
   if(cklChk(k)){if(cklDone(p,k,st.t))lines.push(cklLab(k)+" ✓ 確認済み");continue;}
   if(cklSkipped(p,k,st.t)){lines.push({t:cklLab(k)+"："+cklSkipTx(k),c:"#475467"});continue;}
   if(CKL_PAIR[k]){if(p[CKL_PAIR[k]])inTop=true;continue;} // shown big above, not again here
-  for(const e of cklPh(p,k,st.t)){has.add(e);if(e.blob&&!e.noRep)items.push({blob:e.blob,at:e.at,e,cap:cklLab(k)+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":""),grp:k});}
+  for(const e of cklPh(p,k,st.t)){has.add(e);if(e.blob)items.push({blob:e.blob,at:e.at,e,cap:cklLab(k)+(k==="air"&&v.air?"("+CKL_AIR[v.air]+")":""),grp:k});}
  }
  return {items,has,lines,inTop};
 }
 // which その他の写真 go in: all at first; tap a photo to see it big, ✓ to put it in or take it out.
 // What was taken out stays out next time (x.noRep).
 const rpIn=p=>(p.extras||[]).filter(x=>x.blob&&!x.noRep);
+// Only the real その他の写真: the checklist's photos have their own part of the report (always in).
 async function rpPick(j){
- const P=pairsOf(j).map((p,i)=>({p,i})).filter(o=>(o.p.extras||[]).some(x=>x.blob));
+ const P=pairsOf(j).map((p,i)=>{const ck=rpCkl(j,i);return {p,i,xs:(p.extras||[]).map((x,k)=>({x,k})).filter(e=>e.x.blob&&!(ck&&ck.has.has(e.x)))};}).filter(o=>o.xs.length);
  if(!P.length)return true;
  const multi=pairsOf(j).length>1||!!(spotList(j)&&spotList(j)[0].name), out=new Set();
- P.forEach(o=>o.p.extras.forEach(x=>{if(x.noRep)out.add(x);}));
+ P.forEach(o=>o.xs.forEach(({x})=>{if(x.noRep)out.add(x);}));
  const html='<p class="rpxn">写真を押すと、入れる・外すが切り替わります(何度でも)。左下の虫めがねで大きく見られます。</p>'+
   P.map(o=>'<div class="rpxh"><b>'+esc(multi?(o.i+1)+". "+spotName(j,o.i):"その他の写真")+'</b><button type="button" data-all="'+o.i+'">全部入れる</button><button type="button" data-none="'+o.i+'">全部外す</button></div><div class="rpxs">'+
-   o.p.extras.map((x,k)=>x.blob?'<div class="rpxc" data-s="'+o.i+'" data-k="'+k+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="rpxk" aria-hidden="true">✓</span><button type="button" class="rpxz" aria-label="大きく見る"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div>':'').join("")+'</div>').join("")+
+   o.xs.map(({x,k})=>x.blob?'<div class="rpxc" data-s="'+o.i+'" data-k="'+k+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="rpxk" aria-hidden="true">✓</span><button type="button" class="rpxz" aria-label="大きく見る"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div>':'').join("")+'</div>').join("")+
   '<p class="rpxcnt" id="rpxN"></p><div class="rpxv" id="rpxV" hidden><img id="rpxVi" alt="拡大表示"><p id="rpxVt"></p><button type="button" id="rpxVx">戻る</button></div>';
  const ask=bkDialog("報告書に入れる その他の写真",html,"作る","やめる");$("bkDlg").classList.add("rpx");
  const X=(si,k)=>pairsOf(j)[+si].extras[+k];
@@ -3942,13 +3943,13 @@ async function rpPick(j){
  document.querySelectorAll("#bkDB .rpxc").forEach(c=>c.onclick=e=>{const x=X(c.dataset.s,c.dataset.k);
   if(e.target.closest(".rpxz")){$("rpxVi").src=c.querySelector("img").src;$("rpxVt").textContent=notesOf(x).map(n=>n.t).join(" / ");$("rpxV").hidden=false;return;}
   if(out.has(x))out.delete(x);else out.add(x);show();});
- document.querySelectorAll("#bkDB [data-all],#bkDB [data-none]").forEach(b=>b.onclick=()=>{const p=pairsOf(j)[+(b.dataset.all||b.dataset.none)];
-  (p.extras||[]).forEach(x=>{if(b.dataset.all!=null)out.delete(x);else out.add(x);});show();});
+ document.querySelectorAll("#bkDB [data-all],#bkDB [data-none]").forEach(b=>b.onclick=()=>{const o=P.find(o=>o.i===+(b.dataset.all||b.dataset.none));
+  if(o)o.xs.forEach(({x})=>{if(b.dataset.all!=null)out.delete(x);else out.add(x);});show();});
  $("rpxVx").onclick=()=>{$("rpxV").hidden=true;};
  show();
  const ok=await ask;$("bkDlg").classList.remove("rpx");
  if(!ok)return false;
- P.forEach(o=>o.p.extras.forEach(x=>{if(out.has(x))x.noRep=true;else delete x.noRep;}));
+ P.forEach(o=>o.xs.forEach(({x})=>{if(out.has(x))x.noRep=true;else delete x.noRep;}));
  if(job===j)await saveJob();else await putJob(j);
  return true;
 }
@@ -4057,6 +4058,7 @@ function levelOf(p,W,H,score,idScore,dBeta){
 }
 // 一致 %: 90% and over = within ぴったり on every count
 function matchPct(p,W,H,dBeta){const o=offBy(p,W,H,dBeta);return Math.max(0,Math.min(100,Math.round(100-10*Math.max(...Object.values(o).map(Math.abs)))));}
+const PCT_BAND={ok:[90,100],near:[70,89],far:[0,69]};
 const LIVE_LABEL={ok:"ぴったり 撮影どうぞ",near:"おしい",far:"ずれています",na:"比べられません"};
 let lvlShown=null, lvlPend=null, lvlCount=0;
 function setFrame(l,text){const c=l==="na"?"":l;$("frame").className="frame "+c;$("fLabel").className="flab "+c;$("fLabel").textContent=text;}
@@ -4150,10 +4152,13 @@ function showDiff(){
   lvlShown=l;setFrame(l,LIVE_LABEL[l]);gdKey="";$("fLabel").classList.remove("hasbar");
  }
  // and how well it matches, 一致 %: each reading of the picture wobbles, so the number shown moves
- // toward it a little at a time (at most 3 a reading) — 80, 81, 82 … rather than 90 → 50 → 85
+ // toward it a little at a time (at most 3 a reading) — 80, 81, 82 … rather than 90 → 50 → 85.
+ // It always stays within the colour shown (ぴったり 90-100, おしい 70-89, ずれています 0-69), so the
+ // words and the number never disagree: when the colour changes, the number goes to its edge at once.
  if(lvlShown==null||lvlShown==="na"){gdVal=null;gdShown="";autoStep();return;}
- const raw=matchPct(est,AW,AH,dB);
+ const raw=matchPct(est,AW,AH,dB), [lo,hi]=PCT_BAND[lvlShown];
  gdVal=gdVal==null?raw:gdVal+Math.max(-3,Math.min(3,(raw-gdVal)*0.3));
+ gdVal=Math.max(lo,Math.min(hi,gdVal));
  gdShown=String(Math.round(gdVal));
  const a=autoStep(), bar=a.st==="wait"||a.st==="go", key=lvlShown+"|"+gdShown+"|"+a.st;
  if(key!==gdKey){gdKey=key;const f=$("fLabel");f.classList.toggle("hasbar",bar);
