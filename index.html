@@ -599,6 +599,8 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cand .cdview{position:relative;flex:1;min-height:42vh;display:flex;align-items:center;justify-content:center;touch-action:pan-y;user-select:none}
 .cand .cdview img{max-width:100%;max-height:52vh;object-fit:contain;border-radius:10px;background:#000}
 .cand .cdinfo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:700;color:#E2E8F0}
+.cand .cdpct{position:absolute;padding:4px 10px;border-radius:999px;background:rgba(16,24,40,.72);color:#fff;font-size:16px;font-weight:800;line-height:1.2;pointer-events:none;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
+.cand .cdstrip .mpct{position:absolute;left:3px;top:3px;padding:0 5px;border-radius:7px;background:rgba(16,24,40,.72);color:#fff;font-size:12px;font-weight:800;line-height:18px;pointer-events:none}
 .cand .cdcur{background:#2F9E44;color:#fff;font-size:14px;font-weight:800;padding:3px 10px;border-radius:999px}
 .cand .cdnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;border-radius:12px;background:rgba(255,255,255,.14);color:#fff;display:grid;place-items:center}
 .cand .cdnav.p{left:0}.cand .cdnav.n{right:0}.cand .cdnav[disabled]{opacity:.2}
@@ -1020,7 +1022,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 </div>
 <div class="adj cand" id="cand" hidden>
  <div class="adjhd"><b id="cdT">施工前の写真を選ぶ</b><span>撮った写真から1枚を選んで「この写真を採用」を押します(下の写真を長押しすると、まとめて削除できます)</span></div>
- <div class="cdview" id="cdView"><img id="cdImg" alt=""><button class="cdnav p" id="cdP" aria-label="前の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="cdnav n" id="cdN" aria-label="次の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>
+ <div class="cdview" id="cdView"><img id="cdImg" alt=""><span class="cdpct" id="cdPct" hidden></span><button class="cdnav p" id="cdP" aria-label="前の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="cdnav n" id="cdN" aria-label="次の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>
  <div class="cdlow"><div class="cdbef" id="cdBef"><img id="cdBefImg" alt="施工前の写真"><span class="piptag">施工前</span></div><div class="cdright">
  <div class="cdinfo"><span id="cdNo"></span><span id="cdDt"></span><span class="cdcur" id="cdCur">採用中</span></div>
  <div class="cdstrip" id="cdStrip"></div>
@@ -1297,7 +1299,7 @@ let MEM=[];
    the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}].
    その他の写真 (extras) belong to a place too; on a site from before that (no exSpot), they were the
    site's and go to 1か所目 when it is next opened. */
-const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
+const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","afterPct","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
 const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
 const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
 const jobDone=j=>pairsOf(j).every(p=>!!p.after);
@@ -2049,10 +2051,11 @@ $("cShot").onclick=async()=>{
  const s=camSess;if(!s)return;
  shooting=true;
  const mode=camMode, o=oriOK?{...ori}:null, g=gravOK?{...grav}:null;
+ const pct=mode==="after"&&gdShown!==""&&lvlShown&&lvlShown!=="na"?+gdShown:null; // the 一致 % on the screen when pressed
  // pressed: the button says so at once and can't be pressed again; the flash and a buzz
  // come when the picture is really taken (shotMoment), then a big "撮れました" with the photo
  $("cShot").classList.add("busy");setTx2("cShot","撮影中…");$("holdStill").style.transform="translateX(-50%)"+(sideDeg?" rotate("+sideDeg+"deg)":"");$("holdStill").style.top=sideDeg?"45%":"";$("holdStill").hidden=false;
- let b=null;try{b=await grab();}finally{$("holdStill").hidden=true;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
+ let b=null;try{b=await grab();if(b)b.pct=pct;}finally{$("holdStill").hidden=true;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
  if(s.cut){ // the camera was closed while waiting for it: keep it if it came after all
   if(b&&mode!=="extra"){s.n++;s.got=camGot=s.got.then(()=>gotPhoto(mode,b,o,true,g)).then(()=>{if(job)justShot(mode==="before"?"sB":"sA");}).catch(()=>{});}
   else if(b)s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl)).catch(()=>{});
@@ -2443,7 +2446,7 @@ async function gotPhoto(mode,blob,o,shot,g,ck){
   // a new 施工前 starts without the old photo's 比べない frame: 枠で囲む on = the frame screen opens
   // (with the standard frame in the middle), off = no frame
   job.mask=null;}
- else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;}
+ else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;job.afterPct=blob.pct==null?null:blob.pct;}
  if(prev)oldNids.push(...candKeep(lk,prev)); // the photo it replaces stays as a 候補
  job.cmpSavedAt=null;
  // show it at once; writing it into the phone's storage follows
@@ -3182,7 +3185,7 @@ function snapOf(k){
  const b=k==="b"?job.before:job.after;if(!b)return null;
  const g=(o,d)=>{const v=(job[o]||{})[k];return v==null?d:v;};
  return {blob:b,at:k==="b"?job.beforeAt:job.afterAt,ori:(k==="b"?job.beforeOri:job.afterOri)||null,nid:(k==="b"?job.beforeNid:job.afterNid)||null,
-  raw:g("raw",null),rawNid:g("rawNid",null),rot:g("rot",0),qt:g("qt",0),auto:g("auto",null),grav:g("grav",null),lvBg:g("lvBg",null),tone:g("tone",null),mask:k==="b"?(job.mask||null):null};
+  raw:g("raw",null),rawNid:g("rawNid",null),rot:g("rot",0),qt:g("qt",0),auto:g("auto",null),grav:g("grav",null),lvBg:g("lvBg",null),tone:g("tone",null),mask:k==="b"?(job.mask||null):null,pct:k==="a"&&job.afterPct!=null?job.afterPct:null};
 }
 // adds c; returns the phone copies of the 候補 it pushes out
 function candKeep(k,c){
@@ -3196,7 +3199,7 @@ async function candAdopt(k,c){
  const cur=snapOf(k);L.splice(i,1);if(cur)L.push(cur);L.sort((x,y)=>x.at-y.at);
  if(c.blob.nid==null&&c.nid)c.blob.nid=c.nid;
  if(k==="b"){job.before=c.blob;job.beforeAt=c.at;job.beforeOri=c.ori;job.beforeNid=c.nid||null;job.mask=c.mask||null;}
- else{job.after=c.blob;job.afterAt=c.at;job.afterOri=c.ori;job.afterNid=c.nid||null;}
+ else{job.after=c.blob;job.afterAt=c.at;job.afterOri=c.ori;job.afterNid=c.nid||null;job.afterPct=c.pct==null?null:c.pct;}
  ["raw","rawNid","rot","auto","grav","lvBg"].forEach(o=>{job[o]=job[o]||{};});
  job.raw[k]=c.raw||null;job.rawNid[k]=c.rawNid||null;job.rot[k]=c.rot||0;job.qt=job.qt||{};job.qt[k]=c.qt||0;job.auto[k]=c.auto==null?null:c.auto;job.grav[k]=c.grav||null;
  if(c.lvBg)job.lvBg[k]=c.lvBg;else delete job.lvBg[k];
@@ -3234,18 +3237,21 @@ function candBuild(toCur){
 const fmtDT=t=>{const d=new Date(t);return fmtD(t)+" "+d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");};
 function candShow(fromStrip){
  if(!cd)return;const e=cd.list[cd.i];
- $("cdImg").src=cd.urls[cd.i];$("cdNo").textContent=(cd.i+1)+" / "+cd.list.length;$("cdDt").textContent=fmtDT(e.c.at);
+ $("cdImg").src=cd.urls[cd.i];const pc=e.c.pct;$("cdPct").textContent=pc==null?"":"一致 "+pc+"%";$("cdPct").hidden=pc==null;cdPctAt();$("cdNo").textContent=(cd.i+1)+" / "+cd.list.length;$("cdDt").textContent=fmtDT(e.c.at);
  $("cdCur").hidden=!e.cur;$("cdP").disabled=cd.i===0;$("cdN").disabled=cd.i===cd.list.length-1;
  setTx2("cdOk",e.cur?"この写真のまま":"この写真を採用");
  $("cdDel").hidden=e.cur||!!cd.pick;cd.delArm=false;setTx("cdDel","この候補を削除");$("cdDel").classList.remove("arm");
  const S=$("cdStrip");
  if(S.childElementCount!==cd.list.length||S.dataset.sig!==cd.list.map(x=>x.c.at).join()){
   S.dataset.sig=cd.list.map(x=>x.c.at).join();
-  S.innerHTML=cd.list.map((x,i)=>'<button data-i="'+i+'" aria-label="'+(i+1)+'枚目"><img src="'+cd.urls[i]+'" alt="" decoding="async"><span class="sck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span></button>').join("");}
+  S.innerHTML=cd.list.map((x,i)=>'<button data-i="'+i+'" aria-label="'+(i+1)+'枚目"><img src="'+cd.urls[i]+'" alt="" decoding="async">'+(x.c.pct==null?'':'<span class="mpct">'+x.c.pct+'%</span>')+'<span class="sck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span></button>').join("");}
  S.querySelectorAll("button").forEach((b,i)=>{b.classList.toggle("on",i===cd.i);b.classList.toggle("cur",cd.list[i].cur);b.classList.toggle("pick",!!cd.pick&&cd.pick.has(cd.list[i].c));});
  cdSelShow();
  const on=S.children[cd.i];if(on&&!fromStrip){stripAuto=Date.now()+600;S.scrollTo({left:on.offsetLeft+on.offsetWidth/2-S.clientWidth/2,behavior:S.dataset.shown?"smooth":"auto"});S.dataset.shown="1";}
 }
+// 一致 % on the big photo's top-left corner (the photo is fitted inside the area)
+function cdPctAt(){const im=$("cdImg"), t=$("cdPct");if(t.hidden)return;t.style.left=(im.offsetLeft+8)+"px";t.style.top=(im.offsetTop+8)+"px";}
+$("cdImg").addEventListener("load",cdPctAt);window.addEventListener("resize",()=>{if(cd)cdPctAt();});
 // The strip slides under the finger; the photo in the middle of it is the one shown.
 let stripAuto=0, stripRaf=0;
 {const S=$("cdStrip");
