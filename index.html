@@ -874,8 +874,9 @@ html.natcam #vid,html.app #vid{display:none}
 .cam .fl.auto{background:rgba(250,204,21,.18);color:#FACC15;box-shadow:inset 0 0 0 1.5px #FACC15}
 /* phone held sideways: labels and controls turn to face the user, laid over the picture */
 .camhud{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none}
-.cam .camhud .bar{position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:rgba(11,13,18,.62);flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:8px 16px 10px}
-/* sideways: one low row [zoom ......] [やめる] [shutter], the 濃さ slider above it */
+.cam .camhud .bar{position:absolute;left:0;right:var(--hudw,0px);bottom:0;pointer-events:auto;background:rgba(11,13,18,.62);flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:8px 16px 10px}
+/* sideways: one low row [zoom ......] [やめる], the 濃さ slider above it; it stops at the column of
+   tools and the shutter (--hudw), which has the whole height (so the shutter is never over a slider) */
 .cam .camhud #opRow{flex-basis:100%;order:-1}
 .cam .camhud #zoomRow{flex:1;min-width:0}
 .cam .camhud .shoot{display:flex;gap:14px;align-items:center;padding:0}
@@ -900,6 +901,7 @@ html.natcam #vid,html.app #vid{display:none}
 /* held the other way round: the shutter stays at the same end of the phone (now on the left),
    the labels go to the other side */
 .camhud.mir .hudcol{right:auto;left:0}
+.cam .camhud.mir .bar{left:var(--hudw,0px);right:0}
 .camhud.mir .cmode,.camhud.mir .sidew,.camhud.mir .shotn{left:auto;right:10px}
 
 input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
@@ -2165,15 +2167,14 @@ function setSideUI(deg){
  }else{
   moves.slice().reverse().forEach(([e])=>{const h=homes.get(e);if(h){if(h.n&&h.n.parentNode===h.p)h.p.insertBefore(e,h.n);else h.p.appendChild(e);}});
   homes.clear();
-  hud.hidden=true;hud.classList.remove("mir");$("hudCol").style.width=$("hudCol").style.bottom="";
+  hud.hidden=true;hud.classList.remove("mir");$("hudCol").style.width="";hud.style.removeProperty("--hudw");
  }
  pinchPts.clear();pinch0=null;
  fitStage();alignRot=null;prepAlign();
  if(deg){
   // the black band beside the picture: tools at the top, the shutter centred under them
   const free=(cam.clientHeight-$("stage").clientHeight)/2;
-  $("hudCol").style.width=Math.max(186,free)+"px"; // room for 3 large tool buttons a row
-  $("hudCol").style.bottom=cam.querySelector(".bar").offsetHeight+"px";
+  const w=Math.max(186,free)+"px";$("hudCol").style.width=w;hud.style.setProperty("--hudw",w); // room for 3 large tool buttons a row
  }
 }
 function turnFixed(el,deg){
@@ -2185,8 +2186,6 @@ setInterval(()=>{
  if(NATIVE&&!camStarting&&$("cam").style.display!=="flex"&&(stream||document.documentElement.classList.contains("natcam")))stopCam();
  const rot=camRot();
  if(stream){$("sideW").hidden=rot===0;setSideUI(-rot);natLayout();
-  // keep the tool column clear of the bottom panel (it grows when 重ね具合 appears)
-  if(sideDeg)$("hudCol").style.bottom=$("cam").querySelector(".bar").offsetHeight+"px";
   pipFit();}
  if(!$("med").hidden&&-rot!==medDeg){medDeg=-rot;turnFixed($("med"),medDeg);layoutMask();}
 },300);
@@ -4096,7 +4095,7 @@ function prepAlign(){
  const im=beforeImg, iw=im.naturalWidth, ih=im.naturalHeight, deg=-rot;
  Bgray=grayOf(ctx=>drawRotCover(ctx,im,iw,ih,AW,AH,deg));
  Bmask=maskBuf(job.mask,iw,ih,AW,AH,deg);
- est={tx:0,ty:0,s:1,r:0};estScore=-1;estId=-1;lvlShown=null;
+ est={tx:0,ty:0,s:1,r:0};estScore=-1;estId=-1;lvlShown=null;gdVal=null;
  const st=$("stage"), g=$("ghost");
  if(deg){g.classList.add("rot");g.style.width=st.clientHeight+"px";g.style.height=st.clientWidth+"px";g.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";}
  else{g.classList.remove("rot");g.style.width=g.style.height=g.style.transform="";}
@@ -4118,7 +4117,7 @@ async function tick(gen){
  }
  loop=setTimeout(()=>tick(gen),60);
 }
-let gdShown="", gdPend="", gdCount=0, gdKey="";
+let gdShown="", gdKey="", gdVal=null;
 // 自動撮影 (施工後 camera, with 色判定): ぴったり for 0.7 s with the phone still = the shutter, once; again
 // only after it has left ぴったり (a manual shot meanwhile counts as the one).
 const AUTO_MS=700;
@@ -4141,13 +4140,14 @@ function showDiff(){
  if(l===lvlPend)lvlCount++;else{lvlPend=l;lvlCount=1;}
  if(l!==lvlShown&&(lvlShown===null||lvlCount>=2)){
   if(l==="ok"&&lvlShown!==null)vib(60);
-  lvlShown=l;setFrame(l,LIVE_LABEL[l]);gdShown="";gdKey="";$("fLabel").classList.remove("hasbar");
+  lvlShown=l;setFrame(l,LIVE_LABEL[l]);gdKey="";$("fLabel").classList.remove("hasbar");
  }
- // and how well it matches, 一致 % (changed after two readings agree too)
- if(lvlShown==null||lvlShown==="na"){autoStep();return;}
- const txt=String(matchPct(est,AW,AH,dB));
- if(txt===gdPend)gdCount++;else{gdPend=txt;gdCount=1;}
- if(txt!==gdShown&&(gdShown===""||gdCount>=2))gdShown=txt;
+ // and how well it matches, 一致 %: each reading of the picture wobbles, so the number shown moves
+ // toward it a little at a time (at most 3 a reading) — 80, 81, 82 … rather than 90 → 50 → 85
+ if(lvlShown==null||lvlShown==="na"){gdVal=null;gdShown="";autoStep();return;}
+ const raw=matchPct(est,AW,AH,dB);
+ gdVal=gdVal==null?raw:gdVal+Math.max(-3,Math.min(3,(raw-gdVal)*0.3));
+ gdShown=String(Math.round(gdVal));
  const a=autoStep(), bar=a.st==="wait"||a.st==="go", key=lvlShown+"|"+gdShown+"|"+a.st;
  if(key!==gdKey){gdKey=key;const f=$("fLabel");f.classList.toggle("hasbar",bar);
   f.innerHTML=esc(AUTO_LABEL[a.st]||LIVE_LABEL[lvlShown])+' <span class="fpct">一致 '+gdShown+'%</span>'+(bar?'<span class="fbar"><i></i></span>':'');}
