@@ -452,7 +452,9 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit .cklph{display:flex;gap:6px;flex:none}
 .cklit .cklph button{width:48px;height:48px;padding:0;border-radius:10px;overflow:hidden;background:var(--fill)}
 .cklit .cklph img{width:100%;height:100%;object-fit:cover;display:block}
-.cklit .cklph.cklrow{flex-basis:100%;margin:-2px 0 2px 38px}
+.cklit .cklph.cklrow{flex-basis:calc(100% - 38px);min-width:0;margin:-2px 0 2px 38px}
+/* up to 5 in the line: each 48px, a little smaller when a narrow phone has no room for 5 */
+.cklit .cklph.cklrow button{flex:0 1 48px;min-width:0;height:auto;aspect-ratio:1}
 .cklit .cklgo{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:17px;font-weight:800;background:var(--cks);color:var(--ckt);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .cklit .cklgo svg.i{width:24px;height:24px}
 /* the card's items in frames: taken / ticked green with the ✓, not yet red, 今回なし grey (編集 keeps the lines) */
@@ -2654,7 +2656,7 @@ const CKL_T={kyuto:{name:"給湯器",keys:["b_body","b_plate","pipe","line","a_b
 // the colour of an item's 撮る: 施工前 blue, 施工後 orange (as the 施工前 / 施工後 buttons), the rest teal
 const cklPhase=k=>/^b_|^pipe$/.test(k)?" cklpb":/^a_/.test(k)?" cklpa":" cklpx";
 const CKL_AIR={liq:"検知液/検知器",prs:"圧力測定器"}, CKL_PAIR={b_body:"before",a_body:"after"};
-const cklMax=k=>cklChk(k)?0:3; // photos an item can have (each 撮る / 追加 takes one)
+const cklMax=k=>cklChk(k)?0:5; // photos an item can have (each 撮る / 追加 takes one)
 const cklOn=()=>getPref("ba-ckl")==="1";
 // each list as the user set it (編集): {kyuto:{keys:[...], add:{u…:{n:"名前",chk:1}}}, ...} in "ba-ckltpl",
 // the same for every site from then on; a list never changed is the one above. keys = the items in
@@ -2740,7 +2742,7 @@ function cklRender(){
    if(k==="air"&&!v.air)sub="下のどちらかを選んでから撮ります";
    if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+(xs.length?'追加':'撮る')+'</button>';
    if(!xs.length&&cklCanSkip(k))go='<button type="button" class="cklsk" data-skip="'+k+'" aria-label="'+esc(cklLab(k))+'を今回なしにする">なし</button>'+go;}
-  const many=(ph.match(/<img/g)||[]).length>1; // 2-3 photos: a line of their own under the name
+  const many=(ph.match(/<img/g)||[]).length>1; // 2-5 photos: a line of their own under the name
   h+='<div class="cklit cklbx'+cklPhase(k)+(done?" ckldone":" cklng")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
  box.innerHTML=h;box.hidden=false;
@@ -2776,12 +2778,12 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
   cklNext={k,t,left:1};startCam("extra");}
 });
 $("nExtra").addEventListener("click",()=>{cklFile=null;});
-// 編集: ＋項目を追加 (a name, and 写真 up to 3 or 確認のみ), × takes one off (the list's own come back
+// 編集: ＋項目を追加 (a name, and 写真 up to 5 or 確認のみ), × takes one off (the list's own come back
 // from 外した項目; the user's are deleted, asked first), 最初の項目に戻す. Photos stay: taken off the
 // list they are その他の写真 again
 async function cklAdd(){const t=cklEd;if(!t||!job)return;
  setTimeout(()=>{const e=$("cklNm");if(e)e.focus();},60);
- if(!await bkDialog("項目を追加",'<input class="spnm" id="cklNm" maxlength="20" placeholder="例:ガス栓"><div class="cklkind" role="radiogroup"><label><input type="radio" name="cklKd" value="p" checked><span>写真(最大3枚)</span></label><label><input type="radio" name="cklKd" value="c"><span>確認のみ(写真なし)</span></label></div>',"追加する","やめる"))return;
+ if(!await bkDialog("項目を追加",'<input class="spnm" id="cklNm" maxlength="20" placeholder="例:ガス栓"><div class="cklkind" role="radiogroup"><label><input type="radio" name="cklKd" value="p" checked><span>写真(最大5枚)</span></label><label><input type="radio" name="cklKd" value="c"><span>確認のみ(写真なし)</span></label></div>',"追加する","やめる"))return;
  const n=String(($("cklNm")||{}).value||"").replace(/\s+/g," ").trim().slice(0,20), chk=!!document.querySelector('input[name="cklKd"][value="c"]:checked');
  if(!n){toast("名前を入れてください",true);return;}
  const ks=cklKeys(t);if(ks.some(k=>cklLab(k)===n)){toast("「"+n+"」はもうあります",true);return;}
@@ -3922,14 +3924,15 @@ async function rpPages(j,co,tel,staff){
   // その他の写真: 3 to a row, each with when it was taken and its comments
   await rpGrid(xs.map(e=>({blob:e.blob,at:e.at,e})),"その他の写真",hd,top||!!(ck&&ck.items.length));
  }
- // 3 to a row. A checklist item's photos (up to 3, same grp) stay together on one row under one bar
+// 3 to a row. A checklist item's photos (same grp) stay together on one row under one bar (up to a row's
+ // worth; an item with more, up to 5, goes on to the next row under its bar again)
  // with its step; items fill a row while they fit. Under each photo when it was taken and its
  // comments: a row is only as tall as what it holds (no empty room kept for comments).
  // tight (撮影チェック): 4 to a row, closer together, the date on the photo's corner. The photos are
  // mostly upright, so a narrower box shows them as big as before (what goes is the grey either side).
  async function rpGrid(xs,name,hd,shown,tight,note){
   const N=tight?4:3, GAP=tight?14:20, cw=(CW-GAP*(N-1))/N, chh=250, G=[];
-  for(const e of xs){const g=G[G.length-1];if(g&&e.grp!=null&&g[0].grp===e.grp&&g.length<3)g.push(e);else G.push([e]);}
+  for(const e of xs){const g=G[G.length-1];if(g&&e.grp!=null&&g[0].grp===e.grp&&g.length<N)g.push(e);else G.push([e]);}
   const rows=[];let cur=[];
   for(const g of G){if(cur.reduce((n,h)=>n+h.length,0)+g.length>N){rows.push(cur);cur=[];}cur.push(g);}
   if(cur.length)rows.push(cur);
