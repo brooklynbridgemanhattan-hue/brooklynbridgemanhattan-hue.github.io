@@ -796,6 +796,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 @media (max-width:480px){.med .mt li{white-space:normal}}
 .med .mt li::before{content:"・"}
 .med .mt b{color:#FACC15}
+.med .mt .mtl{margin:6px 0 0;padding:8px 10px;border-radius:10px;background:rgba(250,204,21,.12);font-size:15px;font-weight:700;line-height:1.5;color:#F2F4F7} /* what the frame is for */
 .mstage{position:relative;flex:1;min-height:0}
 #mImg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .mwrap{position:absolute;overflow:hidden;touch-action:none}
@@ -1105,7 +1106,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
 <div class="med" id="med" hidden>
- <div class="mt">交換する機器を枠で囲んでください<ul><li>枠の中は、施工前と施工後で<b>比べません</b></li><li>新しい機器が大きくなる場合は、<b>少し大きめ</b>に囲む</li><li>枠の中を引っぱると<b>移動</b>、角の丸で<b>大きさ</b>を変更</li></ul></div>
+ <div class="mt">交換する機器を枠で囲んでください<p class="mtl">施工前と施工後で、機器の<b>形や大きさが大きく変わる</b>ときに使います。囲んだ所を比べないので、施工後の撮影で<b>色判定</b>がずれにくくなります。</p><ul><li>枠の中は、施工前と施工後で<b>比べません</b></li><li>新しい機器が大きくなる場合は、<b>少し大きめ</b>に囲む</li><li>枠の中を引っぱると<b>移動</b>、角の丸で<b>大きさ</b>を変更</li></ul></div>
  <div class="mstage" id="mStage"><img id="mImg" alt="施工前の写真"><div class="mwrap" id="mWrap"><div class="mrect" id="mRect"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div></div></div>
  <div class="mbtns"><button class="btn o2" id="mNone">枠なし(全体で比べる)</button><button class="btn ok" id="mOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>決定</button></div>
 </div>
@@ -1977,7 +1978,7 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
  $("opRow").style.display=after?"flex":"none";["tGhost","tLine","tDiff","tAuto","tAllOff"].forEach(id=>$(id).style.display=after?"":"none");
  autoSt={t0:0,done:false};$("tAuto").classList.toggle("on",after&&autoOn());
  if(after&&autoOn()&&!$("tDiff").classList.contains("on"))$("tDiff").click();
- $("tMask").style.display=mode==="before"?"":"none";$("tMask").classList.toggle("on",maskAfterShot);
+ $("tMask").style.display="none";$("tMask").classList.toggle("on",maskAfterShot);
  savedLook=null;setTx("tAllOff","表示オフ");$("tAllOff").classList.remove("on");$("cam").classList.remove("clean");
  $("frame").style.display=after&&$("tDiff").classList.contains("on")?"block":"none";
  $("cam").classList.toggle("judging",after&&$("tDiff").classList.contains("on"));
@@ -2038,7 +2039,9 @@ function ghostLook(){const line=$("tLine").classList.contains("on"), g=$("tGhost
  $("ghost").style.display=camMode==="after"&&(g||line)?"block":"none";
  $("ghost").style.opacity=line?1:$("op").value/100;$("opRow").style.display=g&&!line&&camMode==="after"?"flex":"none";}
 // 交換する機器を枠で囲む (before camera): open the box editor right after the shot or not.
-let maskAfterShot=true;try{maskAfterShot=localStorage.getItem("ba-maskshot")!=="0";}catch(e){}
+// 枠で囲む is not opened after the 施工前 shot any more (it is on the site page: 交換する機器を枠で囲む), so the
+// camera's 枠で囲む switch is not shown either
+let maskAfterShot=false;
 $("tMask").onclick=()=>{maskAfterShot=$("tMask").classList.toggle("on");try{localStorage.setItem("ba-maskshot",maskAfterShot?"1":"0");}catch(e){}
  toast(maskAfterShot?"撮影後に枠で囲む画面を出します":"撮影後に枠で囲む画面を出しません");};
 // 表示オフ: turn every overlay off for a clean view; 元に戻す brings back what was on.
@@ -2607,8 +2610,7 @@ async function gotPhoto(mode,blob,o,shot,g,ck){
  }
  const firstB=mode==="before"&&!!shot&&!pairsOf(job).some(p=>p.before);
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;
-  // a new 施工前 starts without the old photo's 比べない frame: 枠で囲む on = the frame screen opens
-  // (with the standard frame in the middle), off = no frame
+  // a new 施工前 starts without the old photo's 比べない frame (one is drawn from the site page when wanted)
   job.mask=null;}
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;job.afterPct=blob.pct==null?null:blob.pct;}
  if(prev)oldNids.push(...candKeep(lk,prev)); // the photo it replaces stays as a 候補
