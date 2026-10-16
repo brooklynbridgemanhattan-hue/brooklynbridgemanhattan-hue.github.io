@@ -2593,6 +2593,7 @@ async function gotPhoto(mode,blob,o,shot,g,ck){
   job.raw[lk]=blob;job.rawNid[lk]=blob.nid||null;
   // no automatic levelling (it could tilt photos the wrong way); 傾きを補正 does it by hand
  }
+ const firstB=mode==="before"&&!!shot&&!pairsOf(job).some(p=>p.before);
  if(mode==="before"){job.before=blob;job.beforeAt=now;job.beforeOri=o;job.beforeNid=blob.nid||null;
   // a new 施工前 starts without the old photo's 比べない frame: 枠で囲む on = the frame screen opens
   // (with the standard frame in the middle), off = no frame
@@ -2600,6 +2601,7 @@ async function gotPhoto(mode,blob,o,shot,g,ck){
  else{job.after=blob;job.afterAt=now;job.afterOri=o;job.afterNid=blob.nid||null;job.afterPct=blob.pct==null?null:blob.pct;}
  if(prev)oldNids.push(...candKeep(lk,prev)); // the photo it replaces stays as a 候補
  job.cmpSavedAt=null;
+ if(firstB)placeAtShot(job);
  // show it at once; writing it into the phone's storage follows
  refreshDetail();
  $("result").style.display="none";
@@ -2633,14 +2635,27 @@ function placeText(a){
  const m=t.match(/^([^\s]+?郡[^\s]+?[町村]|[^\s]+?[市区町村])/);
  return m?m[1]:"";
 }
-let placeFor=null;
+let placeFor=null, placeQuiet=null;
 function setPlace(a,err){
- const j=placeFor;placeFor=null;$("bPlace").disabled=false;setTx("bPlace","現在地を取得");
+ const j=placeFor, quiet=placeQuiet===j;placeFor=null;placeQuiet=null;$("bPlace").disabled=false;setTx("bPlace","現在地を取得");
  if(!j)return;
  const text=a?placeText(a):"";
- if(!text){if(j===job)toast(err==="denied"?"位置情報が許可されていません":"場所を取得できませんでした",true);return;}
+ if(!text){if(j===job&&!quiet)toast(err==="denied"?"位置情報が許可されていません":"場所を取得できませんでした",true);return;} // asked by itself: no answer = the place stays as it is, nothing said
+ const old=j.place&&j.place.text;
  j.place={text,at:Date.now()};putJob(j);if(j===job)showPlace();
+ // back on the list meanwhile (still at its top, nothing searched or picked): the card shows the new place
+ if(quiet&&old!==text&&!job&&!$("home").hidden&&window.scrollY<50&&!hSel.size&&!$("hSearch").value)showHome();
+ if(quiet&&old!==text)toastQuiet(old?"現在地を "+text+" に更新しました":"現在地を取得しました("+text+")",j);
 }
+// The site's first 施工前 photo taken with this app's camera: then the phone is surely at the site, so the
+// place is fetched again (a site made beforehand, at the office, got the office's place; and 現在地を取得
+// is easily forgotten there). Not for a photo chosen from the phone, a retake or another place's photo.
+function placeAtShot(j){if(job!==j||placeFor)return;placeQuiet=j;getPlace();}
+// A notice said once nothing else is on: the camera closed and its saving said, no other notice, hint,
+// frame screen or question (a little later than 写真を編集's hint, which goes first).
+async function toastQuiet(t,j){const w=ms=>new Promise(r=>setTimeout(r,ms));
+ const busy=()=>$("cam").style.display==="flex"||saveHeld>0||!$("toast").hidden||!!document.querySelector(".hint")||!$("med").hidden||!$("bkDlg").hidden;
+ for(let i=0;i<200;i++){if(job!==j)return;if(!busy()){await w(700);if(job===j&&!busy()){toast(t);return;}}await w(300);}}
 window.onAppPlace=json=>{let a=null,err="";try{const o=JSON.parse(json);if(o.error)err=o.error;else a=o;}catch(e){}setPlace(a,err);};
 function getPlace(){
  if(!job||placeFor)return;
