@@ -814,6 +814,9 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cam .view{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;touch-action:none}
 /* the stage has the camera picture's own shape, so the preview shows exactly what is saved */
 .cam .stage{position:relative;overflow:hidden;width:100%;height:100%}
+/* ピント: the yellow square where the picture was tapped (it shrinks onto the spot, then fades) */
+.focring{position:absolute;z-index:5;width:68px;height:68px;margin:-34px 0 0 -34px;border:2.5px solid #FACC15;border-radius:12px;box-shadow:0 0 0 1px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.25);pointer-events:none;animation:focring 1s ease-out forwards}
+@keyframes focring{0%{transform:scale(1.45);opacity:1}25%{transform:scale(1)}75%{opacity:1}100%{opacity:0}}
 .cam video,.cam .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #vid{transform-origin:50% 50%}
 /* app camera: the phone's own preview shows through under the stage */
@@ -1115,6 +1118,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <img class="ghost" id="ghost" alt="">
   <div class="grid" id="grid"></div>
   <div class="cmask" id="camMask" hidden><span>比べない</span></div>
+  <div class="focring" id="focRing" hidden></div>
   <div class="flash" id="flash"></div>
   <div class="pill cmode" id="camMode"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>施工前を撮影</span></div>
   <div class="pill shotn" id="shotN" hidden></div>
@@ -2427,6 +2431,26 @@ const pinchEnd=e=>{pinchPts.delete(e.pointerId);if(pinchPts.size<2)pinch0=null;}
 // a finger lifted outside the picture (over the controls) is let go of too
 ["pointerup","pointercancel"].forEach(t=>document.addEventListener(t,e=>{if(pinchPts.has(e.pointerId))pinchEnd(e);},true));
 camView.addEventListener("pointerup",pinchEnd);camView.addEventListener("pointercancel",pinchEnd);
+// ピント: a quick tap with one finger on the picture focuses there (and reads the light there), shown by a
+// yellow square. Not on a pinch (2 fingers), a slide, a long press, a button or the 施工前 photo (which
+// keeps its own touches), nor while a photo is being taken.
+let focTap=null;
+camView.addEventListener("pointerdown",e=>{focTap=pinchPts.size===1&&!e.target.closest("button,input,.pip")?{id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now()}:null;});
+camView.addEventListener("pointermove",e=>{if(focTap&&focTap.id===e.pointerId&&Math.hypot(e.clientX-focTap.x,e.clientY-focTap.y)>10)focTap=null;});
+camView.addEventListener("pointerup",e=>{const f=focTap;focTap=null;
+ if(f&&f.id===e.pointerId&&performance.now()-f.t<400&&Math.hypot(e.clientX-f.x,e.clientY-f.y)<=10)camFocus(e.clientX,e.clientY);});
+camView.addEventListener("pointercancel",()=>{focTap=null;});
+function camFocus(cx,cy){
+ if(shooting||!stream||!camReady()||$("cam").classList.contains("loading"))return;
+ const r=$("stage").getBoundingClientRect(), x=(cx-r.left)/r.width, y=(cy-r.top)/r.height;
+ if(!(x>=0&&x<=1&&y>=0&&y<=1))return;
+ if(NATIVE){if(!window.AndroidCam.focus)return;window.AndroidCam.focus(x,y);}
+ else{ // the browser's camera, where it can (the picture may be zoomed in from the middle)
+  let ok=false;try{ok=!!navigator.mediaDevices.getSupportedConstraints().pointsOfInterest;}catch(e){}
+  if(!ok||!track)return;const z=digitalZoom||1;
+  track.applyConstraints({advanced:[{pointsOfInterest:[{x:0.5+(x-0.5)/z,y:0.5+(y-0.5)/z}]}]}).catch(()=>{});}
+ const g=$("focRing");g.hidden=true;g.style.left=(cx-r.left)+"px";g.style.top=(cy-r.top)+"px";void g.offsetWidth;g.hidden=false; // hidden → shown starts the square's animation again
+ clearTimeout(camFocus.t);camFocus.t=setTimeout(()=>{g.hidden=true;},1000);}
 const hasFlash=()=>NATIVE?!!(natInfo&&natInfo.flash):!!(trackCaps.torch||(photoCaps&&photoCaps.fillLightMode&&photoCaps.fillLightMode.indexOf("flash")>=0));
 function showFlash(){
  const b=$("tFlash");b.hidden=!hasFlash();
