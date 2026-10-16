@@ -314,6 +314,7 @@ input.t:focus,textarea.t:focus{border-color:var(--brand);background:#fff;box-sha
 .col.after.off .slot:not(.has){background:var(--fill);box-shadow:inset 0 0 0 2px var(--line);cursor:default}
 .slot.has{cursor:zoom-in}
 .slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#101828}
+.slot .scmt{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none} /* the photo's コメント, as on the comparison photo */
 .tag{position:absolute;top:8px;left:8px;z-index:2;font-size:18px;font-weight:800;padding:5px 14px;border-radius:999px;background:var(--before);color:#fff}
 .col.after .tag{background:var(--after);color:var(--after-ink)}
 .slot .ph{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:18px;font-weight:800;margin-top:22px;color:var(--before);text-align:center;padding:0 10px;line-height:1.45}
@@ -1646,13 +1647,24 @@ let delArm=false;
 // Remembered per phone: whether the comparison photo carries the 施工前/施工後 bands.
 let withLabels=true, layout="h";
 try{withLabels=localStorage.getItem("ba-labels")!=="0";layout=localStorage.getItem("ba-lay")==="v"?"v":"h";}catch(e){}
+// コメント (写真の編集) on the 施工前・施工後 photos up top too, looking as on the comparison photo and at the
+// same place within the photo (the whole photo is shown here)
+function slotCmt(slot){const s=$(slot);if(!s)return;s.querySelectorAll(".scmt").forEach(x=>x.remove());
+ const k=slot==="sB"?"b":"a", cm=job&&job.cmt&&job.cmt[k], im=s.querySelector("img");
+ if(!cm||!String(cm.t||"").trim()||!im)return;
+ const draw=()=>{if(!im.isConnected||!im.naturalWidth)return;s.querySelectorAll(".scmt").forEach(x=>x.remove());
+  const W=s.clientWidth, H=s.clientHeight;if(!W||!H)return;
+  const r=Math.min(W/im.naturalWidth,H/im.naturalHeight), w=im.naturalWidth*r, h=im.naturalHeight*r, dpr=window.devicePixelRatio||1;
+  const c=document.createElement("canvas");c.className="scmt";c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);
+  const x=c.getContext("2d");x.scale(dpr,dpr);cmtDraw(x,cm,(W-w)/2,(H-h)/2,w,h);s.appendChild(c);};
+ if(im.complete&&im.naturalWidth)draw();else im.addEventListener("load",draw,{once:true});}
 function setSlot(slot,blob,at){
  const s=$(slot);s.querySelectorAll("img,.ph,.dt,.cbadge").forEach(x=>x.remove());
  s.querySelectorAll(".tmask").forEach(x=>x.remove());
  if(blob){s.classList.add("has");const i=document.createElement("img");i.alt="";i.src=blobUrl(blob);s.appendChild(i);
   const mk=slot==="sB"&&job.mask?{...job.mask}:null;
   if(mk)i.onload=()=>{if(!i.isConnected||s.querySelector(".tmask"))return;const m=document.createElement("div");m.className="tmask";m.innerHTML="<span>比べない</span>";s.appendChild(m);placeBox(m,mk,i.naturalWidth,i.naturalHeight,s.clientWidth,s.clientHeight);};
-  const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);
+  const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);slotCmt(slot);
   const k=slot==="sB"?"b":"a", n=((job.cand&&job.cand[k])||[]).length;
   if(n){const c=document.createElement("button");c.className="cbadge";c.innerHTML='<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></svg>候補 '+n+'枚';
    c.setAttribute("aria-label","ほかの候補 "+n+"枚から選ぶ");c.onclick=e=>{e.stopPropagation();candOpen(k);};s.appendChild(c);}}
@@ -3319,7 +3331,8 @@ function cmShow(){const has=job.cmt&&job.cmt[cmK], cm=has||CMT0, on=(id,f)=>$(id
 function cmSel(k){if(k===cmK)return;cmK=k;cmShow();ovShow();}
 function cmSet(f){f(cmOf(cmK));cmShow();adjDraw();}
 $("cmWho").onclick=e=>{const b=e.target.closest("[data-k]");if(b)cmSel(b.dataset.k);};
-$("cmText").addEventListener("input",()=>{cmOf(cmK).t=$("cmText").value;$("cmDel").disabled=!$("cmText").value.trim();adjDraw();});
+$("cmText").addEventListener("input",()=>{if($("adjEd").hidden)return; // late from the keyboard after closing: cmFlush has it
+ cmOf(cmK).t=$("cmText").value;$("cmDel").disabled=!$("cmText").value.trim();adjDraw();});
 $("cmFg").onclick=e=>{const b=e.target.closest("button");if(b)cmSet(c=>{c.fg=b.dataset.c;});};
 $("cmBg").onclick=e=>{const b=e.target.closest("[data-v]");if(b)cmSet(c=>{c.bg=+b.dataset.v;});};
 $("cmOl").onclick=e=>{const b=e.target.closest("button");if(b)cmSet(c=>{c.ol=b.dataset.c;});};
@@ -3380,7 +3393,13 @@ function autoCrop(t){
  adjDraw();toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");return true;
 }
 $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
-async function adjCommit(){if(trimOn)trimSet(false);if(adjSnap()!==adjOld){adjOld=adjSnap();job.cmpSavedAt=null;await saveJob();make();showNext();}}
+// The comment being written: a word still on the keyboard (underlined, not yet 確定) reaches the box
+// only when the box is left, which is after the tap on 完了 / a tab. So the box is left first, the
+// keyboard is given a moment, and what is in the box is what is kept.
+async function cmFlush(){const t=$("cmText");if(edMode!=="cm")return;
+ if(document.activeElement===t){t.blur();await new Promise(r=>setTimeout(r,80));}
+ const v=t.value, has=job&&job.cmt&&job.cmt[cmK];if(job&&v!==(has?has.t||"":"")&&(v||has))cmOf(cmK).t=v;}
+async function adjCommit(){await cmFlush();if(trimOn)trimSet(false);if(adjSnap()!==adjOld){adjOld=adjSnap();job.cmpSavedAt=null;await saveJob();make();showNext();slotCmt("sB");slotCmt("sA");}}
 $("adjOk").onclick=async()=>{$("adjEd").hidden=true;await adjCommit();};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;if(o.cmt)job.cmt=o.cmt;else delete job.cmt;}$("adjEd").hidden=true;}
 
