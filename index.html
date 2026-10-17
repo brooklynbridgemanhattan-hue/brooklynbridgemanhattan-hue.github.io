@@ -443,7 +443,6 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit{--ckc:var(--extra);--cks:var(--extra-soft);--ckt:#0B6E7D;--cki:#fff}
 .cklit.cklpb{--ckc:var(--before);--cks:var(--before-soft);--ckt:var(--before);--cki:#fff}
 .cklit.cklpa{--ckc:var(--after);--cks:var(--after-soft);--ckt:var(--after-text);--cki:var(--after-ink)}
-.cklit.cklnx{background:var(--cks);border-radius:12px;border-top-color:transparent}
 .cklit .cklmk{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:inset 0 0 0 2px #D0D5DD}
 .cklit .cklmk svg{width:18px;height:18px;stroke:#fff;stroke-width:3.2;fill:none}
 .cklit.ckldone .cklmk{background:#12B76A;box-shadow:none}
@@ -458,12 +457,25 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit .cklph.cklrow button{flex:0 1 48px;min-width:0;height:auto;aspect-ratio:1}
 .cklit .cklgo{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:17px;font-weight:800;background:var(--cks);color:var(--ckt);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .cklit .cklgo svg.i{width:24px;height:24px}
-/* the card's items in frames: taken / ticked green with the ✓, not yet red, 今回なし grey (編集 keeps the lines) */
-.cklit.cklbx{border:2px solid #E4E7EC;border-radius:12px;margin-top:6px;padding:4px} /* a border: the glow after a shot (box-shadow) leaves it */
-.cklit.cklbx.ckldone{border-color:#12B76A;background:#F6FEF9}
-.cklit.cklbx.cklng{border-color:#F04438}
+/* the card's items in frames, under their 段階 (施工前・施工中・施工後: a heading with how many are done, a thin
+   strip on the left; the 段階's colour only there and on the buttons). Not yet: white with a grey line;
+   taken / ticked: one thin light-green line with the ✓; 今回なし: grey. (編集 keeps the lines) */
+.cklsec,.cklgrp{--ckc:var(--extra);--cks:var(--extra-soft);--ckt:#0B6E7D}
+.cklsec.cklpb,.cklgrp.cklpb{--ckc:var(--before);--cks:var(--before-soft);--ckt:var(--before)}
+.cklsec.cklpa,.cklgrp.cklpa{--ckc:var(--after);--cks:var(--after-soft);--ckt:var(--after-text)}
+.cklsec{display:flex;align-items:center;gap:8px;margin:14px 2px 2px;font-size:17px;font-weight:900;color:var(--ckt)}
+.cklsec::before{content:"";width:5px;height:20px;border-radius:3px;background:var(--ckc)}
+.cklsec span{padding:1px 9px;border-radius:999px;font-size:13px;font-weight:800;background:var(--cks)}
+.cklsec::after{content:"";flex:1;height:2px;border-radius:2px;background:var(--cks)}
+.cklgrp{border-left:4px solid var(--cks);padding-left:8px;margin-left:2px}
+.cklit.cklbx{border:1.5px solid #D0D5DD;border-radius:12px;margin-top:6px;padding:4px;background:#fff} /* a border: the glow after a shot (box-shadow) leaves it */
+.cklit.cklbx.ckldone{border-color:#B7EBC6;background:#F4FBF6;min-height:46px;padding:2px 4px}
+.cklit.cklbx.ckldone .cklmk{width:24px;height:24px}.cklit.cklbx.ckldone .cklmk svg{width:15px;height:15px}
+.cklit.cklbx.ckldone .cklnm{font-size:16px}.cklit.cklbx.ckldone .cklnm small{display:none}
+.cklit.cklbx.ckldone .cklph button{width:36px;height:36px;border-radius:8px}
+.cklit.cklbx.ckldone .cklph.cklrow button{flex-basis:36px;width:auto;height:auto}
+.cklit.cklbx.ckldone .cklgo{min-height:36px;padding:0 10px;font-size:15px}.cklit.cklbx.ckldone .cklgo svg.i{width:19px;height:19px}
 @media (max-width:380px){.cklit.cklbx{gap:7px;padding:4px 3px}.cklit .cklgo{padding:0 9px;font-size:16px;gap:4px}.cklit .cklgo svg.i{width:22px;height:22px}.cklit .cklsk{padding:0 8px}}
-.cklit.cklnx .cklgo{background:var(--ckc);color:var(--cki)}
 .cklit .cklgo:disabled{opacity:.45}
 .cklit .cklgo.on{background:#E6F6EC;color:#067647}
 .cklpg .ckledb{flex:none;min-height:36px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:var(--fill);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
@@ -489,8 +501,9 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklebar{display:flex;gap:8px;margin-top:10px}
 .cklebar button{flex:1;min-height:48px;border-radius:12px;font-size:15px;font-weight:800;background:var(--fill);color:var(--ink)}
 .cklebar button.on{background:#12B76A;color:#fff}
-.cklit .cklsk{flex:none;min-height:44px;padding:0 10px;border-radius:12px;font-size:14px;font-weight:800;background:transparent;color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line)}
-.cklit.cklskp .cklmk{box-shadow:inset 0 0 0 2px #D0D5DD;background:repeating-linear-gradient(-45deg,transparent 0 5px,#E4E7EC 5px 7px)}
+.cklit .cklsk{flex:none;min-height:44px;padding:0 6px;border-radius:8px;font-size:14px;font-weight:800;background:transparent;color:var(--sub);text-decoration:underline;text-underline-offset:3px} /* なし: a quiet word beside 撮る */
+.cklit.cklbx.cklskp{background:#F8F9FA;border-color:#E9ECEF}
+.cklit.cklskp .cklmk{box-shadow:none;background:#ADB5BD}.cklit.cklskp .cklmk::after{content:"";width:12px;height:3px;border-radius:2px;background:#fff}
 .cklit.cklskp .cklgo{background:var(--fill);color:var(--ink)}
 .cklit.cklskp .cklnm s{color:#98A2B3;text-decoration-thickness:1.5px}
 .cklit.cklskp .cklnm small{color:var(--sub);font-weight:700}
@@ -2781,11 +2794,17 @@ function cklRender(){
  if(!t){const n=pn.trim();
   box.innerHTML=h+(n?'<p class="cklnone">「'+esc(n)+'」のチェックリストはまだありません。作ると、次の現場からも箇所名が「'+esc(n)+'」なら自動で出ます。</p><button type="button" class="ckladd" data-new="1">＋「'+esc(n)+'」のチェックリストを作る</button>'
    :'<p class="cklnone">上の箇所のボタンで箇所名を選ぶと、その名前のチェックリストが出ます。</p><button type="button" class="ckladd" data-name="1">箇所名を選ぶ</button>');box.hidden=false;return;}
- const st=cklStat(job,i), nx=st.left[0];
+ const st=cklStat(job,i);
  h+='<div class="cklpg"><span class="cklbar"><i style="width:'+(st.tot?Math.round(100*st.n/st.tot):100)+'%"></i></span><b>'+st.n+' / '+st.tot+'</b><button type="button" class="ckledb" data-ed="1">項目を編集</button></div>';
- for(const k of st.ks){const done=cklDone(p,k,t);let sub="", ph="", go="";
+ // by 段階: 施工前 (施工前・配管), 施工中 (the others before the first 施工後 item), 施工後 (施工後 and the others
+ // after it); a heading over each run of them, with how many of it are done (今回なし not counted)
+ const a0=st.ks.findIndex(k=>/^a_/.test(k)), GRP={b:["施工前"," cklpb"],m:["施工中"," cklpx"],a:["施工後"," cklpa"]}, runs=[];
+ st.ks.forEach((k,n)=>{const g=/^b_|^pipe$/.test(k)?"b":/^a_/.test(k)||(a0>=0&&n>a0)?"a":"m", r=runs[runs.length-1];if(r&&r.g===g)r.ks.push(k);else runs.push({g,ks:[k]});});
+ for(const r of runs){const on=r.ks.filter(k=>!cklSkipped(p,k,t)), G=GRP[r.g];
+ h+='<div class="cklsec'+G[1]+'">'+G[0]+'<span>'+(on.length?on.filter(k=>cklDone(p,k,t)).length+' / '+on.length:'今回なし')+'</span></div><div class="cklgrp'+G[1]+'">'; // all of it なし: no 0 / 0
+ for(const k of r.ks){const done=cklDone(p,k,t);let sub="", ph="", go="";
   if(cklSkipped(p,k,t)){
-   h+='<div class="cklit cklbx cklskp" data-k="'+k+'"><span class="cklmk"></span><span class="cklnm"><s>'+esc(cklLab(k))+'</s><small>今回なし：'+cklSkipTx(k)+'</small></span><button type="button" class="cklgo" data-unskip="'+k+'">戻す</button></div>';continue;}
+   h+='<div class="cklit cklbx cklskp'+G[1]+'" data-k="'+k+'"><span class="cklmk"></span><span class="cklnm"><s>'+esc(cklLab(k))+'</s><small>今回なし：'+cklSkipTx(k)+'</small></span><button type="button" class="cklgo" data-unskip="'+k+'">戻す</button></div>';continue;}
   if(CKL_PAIR[k]){const b=p[CKL_PAIR[k]];sub=k==="b_body"?"上の施工前の写真":"上の施工後の写真";
    if(b)ph='<button type="button" data-pair="'+(k==="b_body"||!p.before?0:1)+'"><img src="'+galUrl(b)+'" alt="'+cklLab(k)+'"></button>';
    else go='<button type="button" class="cklgo" data-up="'+k+'">'+CAM_SVG+'上で撮る</button>';}
@@ -2797,8 +2816,9 @@ function cklRender(){
    if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+(xs.length?'追加':'撮る')+'</button>';
    if(!xs.length&&cklCanSkip(k))go='<button type="button" class="cklsk" data-skip="'+k+'" aria-label="'+esc(cklLab(k))+'を今回なしにする">なし</button>'+go;}
   const many=(ph.match(/<img/g)||[]).length>1; // 2-5 photos: a line of their own under the name
-  h+='<div class="cklit cklbx'+cklPhase(k)+(done?" ckldone":" cklng")+(k===nx?" cklnx":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
+  h+='<div class="cklit cklbx'+G[1]+(done?" ckldone":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
+ h+='</div>';}
  box.innerHTML=h;box.hidden=false;
 }
 $("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)renderThumbs();};
