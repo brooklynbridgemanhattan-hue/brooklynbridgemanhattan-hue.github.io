@@ -468,14 +468,17 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklsec span{padding:1px 9px;border-radius:999px;font-size:13px;font-weight:800;background:var(--cks)}
 .cklsec::after{content:"";flex:1;height:2px;border-radius:2px;background:var(--cks)}
 .cklgrp{border-left:4px solid var(--cks);padding-left:8px;margin-left:2px}
-.cklit.cklbx{border:1.5px solid #D0D5DD;border-radius:12px;margin-top:6px;padding:4px;background:#fff} /* a border: the glow after a shot (box-shadow) leaves it */
-.cklit.cklbx.ckldone{border-color:#B7EBC6;background:#F4FBF6;min-height:46px;padding:2px 4px}
-.cklit.cklbx.ckldone .cklmk{width:24px;height:24px}.cklit.cklbx.ckldone .cklmk svg{width:15px;height:15px}
+.cklit.cklbx{position:relative;overflow:hidden;border:1px solid #F04438;border-radius:12px;margin-top:6px;padding:4px 4px 4px 24px;background:#fff} /* a border: the glow after a shot (box-shadow) leaves it */
+/* the mark is a band down the left side: まだ = a thin red one, 済み = a green one with ✓, なし = a grey one with ー */
+.cklit.cklbx .cklmk{position:absolute;left:0;top:0;bottom:0;width:16px;height:auto;border-radius:0;box-shadow:none;background:#F04438}
+.cklit.cklbx .cklph.cklrow{flex-basis:100%;margin-left:0}.cklit.cklbx .cklair{margin-left:0}
+.cklit.cklbx.ckldone{margin-left:40px;border:2px solid #40C057;background:#F4FBF6;min-height:46px;padding:2px 4px 2px 44px}
+.cklit.cklbx.ckldone .cklmk{width:34px;background:#40C057}.cklit.cklbx.ckldone .cklmk svg{width:20px;height:20px}
 .cklit.cklbx.ckldone .cklnm{font-size:16px}.cklit.cklbx.ckldone .cklnm small{display:none}
 .cklit.cklbx.ckldone .cklph button{width:36px;height:36px;border-radius:8px}
 .cklit.cklbx.ckldone .cklph.cklrow button{flex-basis:36px;width:auto;height:auto}
 .cklit.cklbx.ckldone .cklgo{min-height:36px;padding:0 10px;font-size:15px}.cklit.cklbx.ckldone .cklgo svg.i{width:19px;height:19px}
-@media (max-width:380px){.cklit.cklbx{gap:7px;padding:4px 3px}.cklit .cklgo{padding:0 9px;font-size:16px;gap:4px}.cklit .cklgo svg.i{width:22px;height:22px}.cklit .cklsk{padding:0 8px}}
+@media (max-width:380px){.cklit.cklbx{gap:7px;padding:4px 3px 4px 24px}.cklit .cklgo{padding:0 9px;font-size:16px;gap:4px}.cklit .cklgo svg.i{width:22px;height:22px}.cklit .cklsk{padding:0 8px}}
 .cklit .cklgo:disabled{opacity:.45}
 .cklit .cklgo.on{background:#E6F6EC;color:#067647}
 .cklpg .ckledb{flex:none;min-height:36px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:800;background:var(--fill);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
@@ -502,8 +505,8 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklebar button{flex:1;min-height:48px;border-radius:12px;font-size:15px;font-weight:800;background:var(--fill);color:var(--ink)}
 .cklebar button.on{background:#12B76A;color:#fff}
 .cklit .cklsk{flex:none;min-height:44px;padding:0 6px;border-radius:8px;font-size:14px;font-weight:800;background:transparent;color:var(--sub);text-decoration:underline;text-underline-offset:3px} /* なし: a quiet word beside 撮る */
-.cklit.cklbx.cklskp{background:#F8F9FA;border-color:#E9ECEF}
-.cklit.cklskp .cklmk{box-shadow:none;background:#ADB5BD}.cklit.cklskp .cklmk::after{content:"";width:12px;height:3px;border-radius:2px;background:#fff}
+.cklit.cklbx.cklskp{background:#F8F9FA;border-color:#DEE2E6;padding-left:44px}
+.cklit.cklbx.cklskp .cklmk{width:34px;background:#ADB5BD}.cklit.cklskp .cklmk::after{content:"";width:12px;height:3px;border-radius:2px;background:#fff}
 .cklit.cklskp .cklgo{background:var(--fill);color:var(--ink)}
 .cklit.cklskp .cklnm s{color:#98A2B3;text-decoration-thickness:1.5px}
 .cklit.cklskp .cklnm small{color:var(--sub);font-weight:700}
