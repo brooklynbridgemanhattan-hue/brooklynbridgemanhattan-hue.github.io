@@ -416,10 +416,19 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .thumbs .cm{position:absolute;right:5px;bottom:5px;min-width:24px;height:24px;padding:0 5px;border-radius:12px;background:rgba(16,24,40,.75);display:flex;align-items:center;justify-content:center;gap:2px;color:#fff;font-size:12px;font-weight:800}
 .thumbs .cm svg{width:13px;height:13px;stroke:#fff;stroke-width:2.4;fill:none}
 .selbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 8px;background:#101828;color:#fff;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
-.selbar .cnt{flex:1;min-width:0;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.selbar .cnt{flex:1;min-width:2.6em;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .selbar button{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:50px;border-radius:14px;border:0;font-size:18px;font-weight:800;white-space:nowrap}
 .selbar .x{width:50px;background:transparent;color:#fff}
 .selbar .del{padding:0 16px;background:var(--danger);color:#fff}
+.selbar .ckmv{padding:0 14px;background:#12B76A;color:#fff}
+@media (max-width:430px){.selbar{gap:6px}.selbar .ckmv,.selbar .del{padding:0 10px;font-size:16px}.selbar .ckmv svg.i,.selbar .del svg.i{display:none}}
+/* チェックリストへ: the items to choose from, as on the checklist (without the 済み indent) */
+#bkDlg.ckmv .bkbody{max-height:calc(100vh - 230px);overflow:auto;margin:0 -6px;padding:0 6px}
+#bkDlg.ckmv .cklit{width:100%;margin-left:0;text-align:left;color:var(--ink);font:inherit}
+#bkDlg.ckmv .cklit .cklnm small{display:block}
+#bkDlg.ckmv .cklsec:first-of-type{margin-top:4px}
+.cklbki{display:block;width:110px;height:110px;object-fit:cover;border-radius:12px;margin:2px 0 10px} /* その他の写真に戻す: the photo */
+#bkDlg.ckmv #bkDYes{background:var(--fill);color:#344054;box-shadow:none} /* やめる: not the main thing here */
 .selbar svg.i{width:22px;height:22px}
 .allsave{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:62px;margin-top:14px;padding:8px 16px;border-radius:16px;background:var(--extra);color:#fff;box-shadow:0 8px 20px rgba(12,133,153,.25)}
 .allsave svg.i{width:26px;height:26px}
@@ -1120,7 +1129,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="adjbtns"><button class="o2" id="cdX">閉じる</button><button class="ok" id="cdOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>この写真を採用</span></button></div>
 </div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
-<div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
+<div class="selbar" id="selBar" hidden><button class="x" id="selX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="selN"></span><button class="ckmv" id="selCk" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span class="tx">チェックリストへ</span></button><button class="del" id="selDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
 
 <div class="med" id="med" hidden>
  <div class="mt">交換する機器を枠で囲んでください<p class="mtl">施工前と施工後で、機器の<b>形や大きさが大きく変わる</b>ときに使います。囲んだ所を比べないので、施工後の撮影で<b>色判定</b>がずれにくくなります。</p><ul><li>枠の中は、施工前と施工後で<b>比べません</b></li><li>新しい機器が大きくなる場合は、<b>少し大きめ</b>に囲む</li><li>枠の中を引っぱると<b>移動</b>、角の丸で<b>大きさ</b>を変更</li></ul></div>
@@ -2863,13 +2872,25 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
  else if(d.tick==="leak")cklSet(v=>{if(v.leak)delete v.leak;else v.leak=1;});
  else if(d.tick)cklSet(v=>{const m=Object.assign({},v.tick);if(m[d.tick])delete m[d.tick];else m[d.tick]=1;if(Object.keys(m).length)v.tick=m;else delete v.tick;});
  else if(d.air)cklSet(v=>{v.air=d.air;});
- else if(d.x!=null)openGallery(+d.x);
+ else if(d.x!=null){if(cklPressFired){cklPressFired=false;return;}openGallery(+d.x);}
  else if(d.go){const k=d.go;
   const t=cklTplOf(job,spotIdx(job));if(!t)return;
   const left=cklMax(k)-cklPh(job,k,t).length;if(left<=0)return;
   if(camFail){cklFile={k,t};$("fExtra").click();return;}
   cklNext={k,t,left:1};startCam("extra");}
 });
+// その他の写真に戻す: a checklist photo held down (put in the wrong item, or not a checklist photo) loses the
+// item's mark and is back in その他の写真; the photo itself stays. A tap still opens it.
+let cklPressT=0, cklPressAt=null, cklPressFired=false;
+$("cklList").addEventListener("pointerdown",e=>{const b=e.target.closest("[data-x]");if(!b||!job)return;cklPressFired=false;cklPressAt={x:e.clientX,y:e.clientY};
+ clearTimeout(cklPressT);cklPressT=setTimeout(()=>{cklPressFired=true;if(window.AndroidApp)try{AndroidApp.vibrate(25);}catch(err){}cklBack(+b.dataset.x);},450);});
+$("cklList").addEventListener("pointermove",e=>{if(cklPressAt&&Math.hypot(e.clientX-cklPressAt.x,e.clientY-cklPressAt.y)>10)clearTimeout(cklPressT);});
+["pointerup","pointercancel","pointerleave"].forEach(t=>$("cklList").addEventListener(t,()=>clearTimeout(cklPressT)));
+$("cklList").addEventListener("contextmenu",e=>{if(e.target.closest("[data-x]"))e.preventDefault();});
+async function cklBack(i){const x=job&&(job.extras||[])[i];if(!x||!x.ckl)return;
+ const ok=await bkDialog("その他の写真に戻しますか?",'<img class="cklbki" src="'+galUrl(x.blob)+'" alt="">「'+esc(cklLab(x.ckl))+'」の写真を、その他の写真に戻します。写真は消えません。',"戻す","やめる");
+ if(!ok||!job||(job.extras||[])[i]!==x)return;delete x.ckl;delete x.cklT;await saveJob();renderThumbs();toast("その他の写真に戻しました");
+ const t=$("thumbs").querySelector('[data-x="'+i+'"]');if(t){t.scrollIntoView({block:"center",behavior:"smooth"});glow(t,1);}}
 $("nExtra").addEventListener("click",()=>{cklFile=null;});
 // 編集: ＋項目を追加 (a name, and 写真 up to 5 or 確認のみ), × takes one off (the list's own come back
 // from 外した項目; the user's are deleted, asked first), 最初の項目に戻す. Photos stay: taken off the
@@ -2945,7 +2966,8 @@ const sel=new Set();let selDelArm=false;
 function selShow(){
  $("thumbs").classList.toggle("sel",sel.size>0);
  $("thumbs").querySelectorAll("[data-x]").forEach(b=>b.classList.toggle("on",sel.has(+b.dataset.x)));
- $("selBar").hidden=sel.size===0;$("selN").textContent=sel.size+"枚を選択中";
+ $("selCk").hidden=!(cklOn()&&job&&cklTplOf(job,spotIdx(job)));
+ $("selBar").hidden=sel.size===0;$("selN").textContent=sel.size+($("selCk").hidden?"枚を選択中":"枚"); // short beside チェックリストへ
  selDelArm=false;setTx("selDel","削除");
 }
 function selClear(){sel.clear();selShow();}
@@ -2962,9 +2984,28 @@ $("thumbs").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;
 $("selX").onclick=selClear;
 $("selDel").onclick=async()=>{
  if(!sel.size)return;
- if(!selDelArm){selDelArm=true;setTx("selDel","もう一度押すと削除");return;}
+ if(!selDelArm){selDelArm=true;$("selCk").hidden=true;$("selN").textContent=sel.size+"枚を選択中";setTx("selDel","もう一度押すと削除");return;} // the long words: チェックリストへ steps aside
  const n=sel.size, rm=(job.extras||[]).filter((x,i)=>sel.has(i)), gone=rm.map(x=>x.nid), dn=dropFromPhone(rm.flatMap(x=>x.saved||[]));job.extras=(job.extras||[]).filter((x,i)=>!sel.has(i));
  await saveJob();renderThumbs();toast(n+"枚 削除しました"+(dn?"(スマホの写真からも削除)":""));photoGC(gone);
+};
+// チェックリストへ: photos taken here by mistake (a 銘板, 施工途中 …) go to a checklist item: they only get
+// its mark (x.ckl), as if taken from its 撮る; the photo itself stays. The items: photo ones with room for them all.
+$("selCk").onclick=async()=>{
+ if(!sel.size||!job)return;const t=cklTplOf(job,spotIdx(job));if(!t)return;
+ const n=sel.size, v=job.cklv||{}, all=cklKeys(t), a0=all.findIndex(k=>/^a_/.test(k)), GRP={b:["施工前"," cklpb"],m:["施工中"," cklpx"],a:["施工後"," cklpa"]};
+ const ok=k=>!CKL_PAIR[k]&&!cklChk(k)&&!(k==="air"&&!v.air)&&cklPh(job,k,t).length+n<=cklMax(k);
+ if(!all.some(ok)){toast("入れられる項目がありません(1つの項目に5枚まで)",true);return;}
+ let h='<p class="rpxn">選んだ写真 '+n+'枚を入れます。その他の写真からチェックリストへ移ります(写真は消えません)。</p>', g0="";
+ all.forEach((k,i)=>{if(!ok(k))return;const g=/^b_|^pipe$/.test(k)?"b":/^a_/.test(k)||(a0>=0&&i>a0)?"a":"m", G=GRP[g], m=cklPh(job,k,t).length;
+  if(g!==g0){h+='<div class="cklsec'+G[1]+'">'+G[0]+'</div>';g0=g;}
+  h+='<button type="button" class="cklit cklbx'+G[1]+(m?" ckldone":"")+'" data-mv="'+k+'"><span class="cklmk">'+(m?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(k==="air"?"("+CKL_AIR[v.air]+")":"")+'<small>'+(m?m+'枚 ・ あと'+(cklMax(k)-m)+'枚入ります':'まだ')+'</small></span></button>';});
+ let pick=null;const ask=bkDialog("どの項目に入れますか?",h,"やめる");$("bkDlg").classList.add("ckmv");
+ $("bkDB").querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{pick=b.dataset.mv;if(bkDlgEnd)bkDlgEnd();});
+ await ask;$("bkDlg").classList.remove("ckmv");if(!pick||!job)return;
+ (job.extras||[]).forEach((x,i)=>{if(sel.has(i)){x.ckl=pick;x.cklT=t;}});
+ if(v.skip&&v.skip[pick]){delete v.skip[pick];if(!Object.keys(v.skip).length)delete v.skip;} // it was 今回なし: now it has a photo
+ await saveJob();selClear();renderThumbs();toast("「"+cklLab(pick)+"」に"+n+"枚入れました");
+ const el=document.querySelector('#cklList [data-k="'+pick+'"]');if(el){el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);}
 };
 // Full-screen gallery: kind "extra" = other photos (save / delete), "pair" = 施工前 / 施工後 (save).
 let gal=null, galDelArm=false;
