@@ -1676,12 +1676,28 @@ function slotCmt(slot){const s=$(slot);if(!s)return;s.querySelectorAll(".scmt").
   const c=document.createElement("canvas");c.className="scmt";c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);
   const x=c.getContext("2d");x.scale(dpr,dpr);cmtDraw(x,cm,(W-w)/2,(H-h)/2,w,h);s.appendChild(c);};
  if(im.complete&&im.naturalWidth)draw();else im.addEventListener("load",draw,{once:true});}
+// The tile shows the photo zoomed / moved / cut like the comparison photo (位置・拡大, トリミング), as the
+// home screen does; map takes a box on the photo as taken (the 比べない frame) to the same box on it.
+async function slotAdjUrl(blob,j,k){
+ const sm=async(b,w)=>{try{return await createImageBitmap(b,{resizeWidth:w,resizeQuality:"high"});}catch(e){return await createImageBitmap(b);}};
+ const im=await sm(blob,900);let ref=im;if(k==="a"&&j.before){try{ref=await sm(j.before,240);}catch(e){}}
+ const portrait=ref.height>=ref.width, fw=portrait?900:1200, fh=portrait?1200:900;if(ref!==im&&ref.close)ref.close();
+ const e=effCrop(k,j), rw=Math.round(fw*(1-e.l-e.r)), rh=Math.round(fh*(1-e.t-e.b)), a=(j.adj||{})[k]||{s:1,x:0,y:0};
+ const c=document.createElement("canvas");c.width=rw;c.height=rh;const x=c.getContext("2d");
+ x.fillStyle="#FFFFFF";x.fillRect(0,0,rw,rh);x.translate(-e.l*fw,-e.t*fh);drawAdj(x,im,0,0,fw,fh,(j.adj||{})[k]);
+ const iw=im.width, ih=im.height, r=Math.max(fw/iw,fh/ih)*a.s, ox=(fw-iw*r)/2+a.x*fw-e.l*fw, oy=(fh-ih*r)/2+a.y*fh-e.t*fh;if(im.close)im.close();
+ const out=await new Promise(res=>c.toBlob(res,"image/jpeg",0.9));if(!out)throw new Error("slot");
+ return {url:blobUrl(out),map:m=>({x:(ox+m.x*iw*r)/rw,y:(oy+m.y*ih*r)/rh,w:m.w*iw*r/rw,h:m.h*ih*r/rh})};}
 function setSlot(slot,blob,at){
  const s=$(slot);s.querySelectorAll("img,.ph,.dt,.cbadge").forEach(x=>x.remove());
  s.querySelectorAll(".tmask").forEach(x=>x.remove());
- if(blob){s.classList.add("has");const i=document.createElement("img");i.alt="";i.src=blobUrl(blob);s.appendChild(i);
+ if(blob){s.classList.add("has");const i=document.createElement("img");i.alt="";s.appendChild(i);
+  const k0=slot==="sB"?"b":"a", jb=job;let map=null;
+  if(thAdj(job,k0))slotAdjUrl(blob,jb,k0).then(r=>{if(i.isConnected&&job===jb&&(k0==="b"?job.before:job.after)===blob){map=r.map;i.src=r.url;}})
+   .catch(()=>{if(i.isConnected&&!i.src)i.src=blobUrl(blob);});
+  else i.src=blobUrl(blob);
   const mk=slot==="sB"&&job.mask?{...job.mask}:null;
-  if(mk)i.onload=()=>{if(!i.isConnected||s.querySelector(".tmask"))return;const m=document.createElement("div");m.className="tmask";m.innerHTML="<span>比べない</span>";s.appendChild(m);placeBox(m,mk,i.naturalWidth,i.naturalHeight,s.clientWidth,s.clientHeight);};
+  if(mk)i.onload=()=>{if(!i.isConnected||s.querySelector(".tmask"))return;const m=document.createElement("div");m.className="tmask";m.innerHTML="<span>比べない</span>";s.appendChild(m);placeBox(m,map?map(mk):mk,i.naturalWidth,i.naturalHeight,s.clientWidth,s.clientHeight);};
   const d=document.createElement("span");d.className="dt";d.textContent=fmtD(at);s.appendChild(d);slotCmt(slot);
   const k=slot==="sB"?"b":"a", n=((job.cand&&job.cand[k])||[]).length;
   if(n){const c=document.createElement("button");c.className="cbadge";c.innerHTML='<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></svg>候補 '+n+'枚';
@@ -3425,7 +3441,7 @@ $("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crop
 async function cmFlush(){const t=$("cmText");if(edMode!=="cm")return;
  if(document.activeElement===t){t.blur();await new Promise(r=>setTimeout(r,80));}
  const v=t.value, has=job&&job.cmt&&job.cmt[cmK];if(job&&v!==(has?has.t||"":"")&&(v||has))cmOf(cmK).t=v;}
-async function adjCommit(){await cmFlush();if(trimOn)trimSet(false);if(adjSnap()!==adjOld){adjOld=adjSnap();job.cmpSavedAt=null;await saveJob();make();showNext();slotCmt("sB");slotCmt("sA");}}
+async function adjCommit(){await cmFlush();if(trimOn)trimSet(false);if(adjSnap()!==adjOld){adjOld=adjSnap();job.cmpSavedAt=null;await saveJob();make();showNext();setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);}}
 $("adjOk").onclick=async()=>{$("adjEd").hidden=true;await adjCommit();};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;if(o.cmt)job.cmt=o.cmt;else delete job.cmt;}$("adjEd").hidden=true;}
 
