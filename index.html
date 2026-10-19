@@ -972,6 +972,24 @@ html.natcam #vid,html.app #vid{display:none}
 .camhud.mir .hudcol{right:auto;left:0}
 .cam .camhud.mir .bar{left:var(--hudw,0px);right:0}
 .camhud.mir .cmode,.camhud.mir .sidew,.camhud.mir .shotn{left:auto;right:10px}
+/* sideways with room beside the picture (the side away from the shutter, --spw wide): ズーム・明るさ・濃さ stand
+   upright there under the labels (from --spt), out of the picture, large and easy to hold; やめる under them */
+.cam .camhud.spanel .bar{left:0;right:auto;top:var(--spt);width:var(--spw);background:transparent;flex-wrap:wrap;justify-content:center;align-content:flex-start;align-items:flex-start;gap:12px 4px;padding:0 6px 10px}
+.cam .camhud.spanel.mir .bar{left:auto;right:0}
+.cam .camhud.spanel .bar .r{flex:1 1 0!important;min-width:0!important;max-width:70px;order:1!important;flex-direction:column;gap:6px;padding:0}
+.cam .camhud.spanel #evRow{order:2!important}.cam .camhud.spanel #opRow{order:3!important}
+.cam .camhud.spanel .rl{flex-direction:column;gap:2px;font-size:13px}
+.cam .camhud.spanel .rl svg.i{width:22px;height:22px}
+.cam .camhud.spanel #zoomRow .rl::after{content:"ズーム"}
+.cam .camhud.spanel .sl{flex:none;position:relative;width:100%;height:var(--slh);padding:0}
+.cam .camhud.spanel .sl input{position:absolute;left:50%;top:50%;width:var(--slh);height:48px;transform:translate(-50%,-50%) rotate(-90deg)}
+.cam .camhud.spanel input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:rgba(255,255,255,.3)}
+.cam .camhud.spanel input[type=range]::-webkit-slider-thumb{width:38px;height:38px;margin-top:-15px}
+.cam .camhud.spanel #zmV,.cam .camhud.spanel #evV{min-width:0;width:100%;padding:7px 0;font-size:16px}
+.cam .camhud.spanel .shoot{flex-basis:100%;order:9;display:flex;justify-content:center}
+.cam .camhud.spanel .shoot .cancel{width:100%;margin:0}
+.camhud.spanel .shotn{top:10px;left:calc(var(--spw) + 10px)}
+.camhud.spanel.mir .shotn{left:auto;right:calc(var(--spw) + 10px)}
 
 input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 </style>
@@ -2050,6 +2068,7 @@ function fitStage(){
  if(h>box.clientHeight){h=box.clientHeight;w=h*ar;}
  st.style.width=w+"px";st.style.height=h+"px";
  natLayout();
+ if(sideDeg){sidePanel();pipFit();} // the band beside the picture follows its size
 }
 window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
 let stopWanted=false, stopT=0;
@@ -2141,18 +2160,21 @@ function pipFit(){
  const im=$("pipImg"), ar=im.naturalWidth&&im.naturalHeight?im.naturalWidth/im.naturalHeight:0.75;
  let w=side?Math.min(260,hud.clientWidth*0.24):Math.min(220,st.clientWidth*0.34);
  // sideways the space above the controls is low: keep photo + button inside it
- if(side){const room=hud.clientHeight-$("cam").querySelector(".bar").offsetHeight-10-12-34-6;w=Math.max(70,Math.min(w,room*ar));}
+ const sp=side&&hud.classList.contains("spanel"), spw=sp?parseFloat(hud.style.getPropertyValue("--spw"))||0:0; // sliders beside the picture: the inset stays off them
+ const barH=sp?0:$("cam").querySelector(".bar").offsetHeight;
+ if(side){const room=hud.clientHeight-barH-10-12-34-6;w=Math.max(70,Math.min(w,room*ar));}
  // moved / resized by hand (kept per phone, upright and sideways each): size x pipSt.k, place pipSt.u / .s
  const box=side?hud:st, cw=box.clientWidth, ch=box.clientHeight;
  pipBase=w;
- const lo=side?$("cam").querySelector(".bar").offsetHeight:0; // sideways: not over the controls
+ const lo=side?barH:0; // sideways: not over the controls
  if(cw&&ch){w=Math.max(60,Math.min(w*pipSt.k,cw*0.92,(ch-lo-46)*0.92*ar));}
  pip.style.setProperty("--pipw",Math.round(w)+"px");
  const at=pipSt[pipKey()];
- if(!cw||!ch){pip.style.left="";pip.style.bottom=side?($("cam").querySelector(".bar").offsetHeight+10)+"px":"";return;}
+ if(!cw||!ch){pip.style.left="";pip.style.bottom=side?(barH+10)+"px":"";return;}
  // always kept inside the picture (sideways: the turned panel)
- const pw=pip.offsetWidth, ph=pip.offsetHeight, l=at?at.l*cw:side&&sideDeg<0?cw-pw-10:10, b=at?at.b*ch:side?$("cam").querySelector(".bar").offsetHeight+10:10;
- pip.style.left=Math.round(Math.max(0,Math.min(cw-pw,l)))+"px";pip.style.bottom=Math.round(Math.max(lo,Math.min(ch-ph,b)))+"px";
+ const pw=pip.offsetWidth, ph=pip.offsetHeight, L0=sp&&sideDeg>0?spw:0, L1=cw-pw-(sp&&sideDeg<0?spw:0); // the room beside the sliders
+ const l=at?at.l*cw:side&&sideDeg<0?L1-10:L0+10, b=at?at.b*ch:side?barH+10:10;
+ pip.style.left=Math.round(Math.max(L0,Math.min(L1,l)))+"px";pip.style.bottom=Math.round(Math.max(lo,Math.min(ch-ph,b)))+"px";
 }
 let pipBase=0; // the inset's width before its own size (pipSt.k)
 // The 施工前 inset: drag to move, pinch (or the corner mark) to resize, double tap = back to where it was.
@@ -2318,6 +2340,17 @@ function setSideUI(deg){
   const free=(cam.clientHeight-$("stage").clientHeight)/2;
   const w=Math.max(186,free)+"px";$("hudCol").style.width=w;hud.style.setProperty("--hudw",w); // room for 3 large tool buttons a row
  }
+ sidePanel();pipFit();
+}
+// Sideways, the sliders go beside the picture (sideways they lay over the bottom of it) when that black band is
+// wide enough for them (150px: most phones; a short one keeps the low band). Their top: under 施工前を撮影 /
+// 横向きで保存 (fixed for the camera, so nothing moves while shooting); their length: the rest above やめる.
+function sidePanel(){
+ const hud=$("camHud"), cam=$("cam"), band=sideDeg?(cam.clientHeight-$("stage").clientHeight)/2:0, on=band>=150;
+ hud.classList.toggle("spanel",on);if(!on)return;
+ const sw=$("sideW"), top=Math.round(sw.hidden?10:sw.offsetTop+sw.offsetHeight+12);
+ hud.style.setProperty("--spw",Math.floor(band)+"px");hud.style.setProperty("--spt",top+"px");
+ hud.style.setProperty("--slh",Math.max(100,Math.round(hud.clientHeight-top-10-40-12-40-12-52))+"px"); // label, value, やめる
 }
 function turnFixed(el,deg){
  if(deg){el.style.inset="auto";el.style.left="50%";el.style.top="50%";el.style.width=window.innerHeight+"px";el.style.height=window.innerWidth+"px";el.style.transform="translate(-50%,-50%) rotate("+deg+"deg)";}
@@ -2471,7 +2504,8 @@ function fingerSlider(input){
  const wrap=document.createElement("span");wrap.className="sl";
  input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
  const set=e=>{
-  const w=wrap.clientWidth, r=16, t=Math.min(1,Math.max(0,(e.offsetX-r)/Math.max(1,w-2*r)));
+  const w=wrap.clientWidth, h=wrap.clientHeight, r=16, up=h>w*1.5; // up: standing (sideways, beside the picture)
+  const t=Math.min(1,Math.max(0,up?1-(e.offsetY-r)/Math.max(1,h-2*r):(e.offsetX-r)/Math.max(1,w-2*r)));
   const min=+input.min, max=+input.max, step=+input.step||1;
   input.value=Math.round((min+t*(max-min))/step)*step;
   input.dispatchEvent(new Event("input"));
