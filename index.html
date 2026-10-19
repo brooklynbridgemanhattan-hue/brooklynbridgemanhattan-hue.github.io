@@ -273,6 +273,19 @@ textarea.t{display:block;resize:none;line-height:1.5} /* 施工内容: Enter is 
 .mdone svg.i{width:18px;height:18px;stroke:#fff;stroke-width:3}
 input.t:focus,textarea.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .place{display:flex;gap:8px}
+/* 日付 | 伝票番号 side by side; 法人: typed, or chosen from the ones typed before (▾), each with × to take it off */
+.frow{display:flex;gap:10px}.frow .field{flex:1;min-width:0}.frow .fday{flex:0 0 54%}
+input.t[type=date]{min-height:52px;-webkit-appearance:none;appearance:none}
+.corpw{display:flex;gap:8px}.corpw input.t{flex:1;min-width:0}
+.corpdd{flex:none;width:52px;border-radius:var(--r-s);background:#EAF1FF;color:var(--brand);display:grid;place-items:center}.corpdd svg.i{width:24px;height:24px;transition:transform .15s}
+.corpdd[aria-expanded=true] svg.i{transform:rotate(180deg)}
+.corpls{margin-top:6px;border-radius:var(--r-s);background:var(--card);box-shadow:0 8px 24px rgba(16,24,40,.16),0 0 0 1.5px var(--line);overflow:hidden}
+.corpls .cr{display:flex;align-items:center;border-top:1px solid var(--line)}.corpls .cr:first-child{border-top:0}
+.corpls .cr.on{background:#EEF4FF}
+.corpls .cp{flex:1;min-width:0;min-height:52px;padding:0 14px;text-align:left;font-size:17px;font-weight:700;background:transparent;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.corpls .cr.on .cp{color:var(--brand)}.corpls .cr.on .cp::before{content:"✓ "}
+.corpls .cx{flex:none;width:52px;min-height:52px;display:grid;place-items:center;background:transparent;color:#98A2B3}.corpls .cx svg.i{width:20px;height:20px}
+.corpls .cn{padding:14px;font-size:14px;color:var(--sub)}
 .pv{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:13px 14px;border-radius:var(--r-s);background:var(--fill);border:1.5px solid var(--line);font-size:17px;font-weight:700}
 .pv span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pv.none{color:var(--sub);font-weight:500}
@@ -1020,10 +1033,15 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <main class="wrap dwrap">
  <section class="card c-info">
   <div class="sh2"><span class="cdot"></span><h2>現場の情報</h2></div>
-  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><span class="sama"><input class="t" id="site" type="text" placeholder="例:山田" enterkeyhint="done" autocomplete="off"><span class="suf" aria-hidden="true">様</span></span></label>
+  <div class="frow"><label class="field fday" for="day"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>日付</span><input class="t" id="day" type="date"></label>
+   <label class="field" for="slip"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 7 20M17 4l-2 16M4 9h17M3 15h17"/></svg>伝票番号</span><input class="t" id="slip" type="text" placeholder="英数字" enterkeyhint="done" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24"></label></div>
   <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
    <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
-  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>施工内容</span><textarea class="t" id="memo" rows="2" enterkeyhint="enter" placeholder="例:ビルトインコンロ交換・レンジフード交換"></textarea><button type="button" class="mdone" id="memoDone" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></label>
+  <div class="field"><label class="fl-l" for="corp"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 8h3M8 12h3M8 16h3"/></svg>法人</label>
+   <div class="corpw"><input class="t" id="corp" type="text" placeholder="例:○○ガス株式会社" enterkeyhint="done" autocomplete="off"><button type="button" class="corpdd" id="corpDd" aria-label="前に入れた法人から選ぶ" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+   <div class="corpls" id="corpLs" hidden></div></div>
+  <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><span class="sama"><input class="t" id="site" type="text" placeholder="例:山田" enterkeyhint="done" autocomplete="off"><span class="suf" aria-hidden="true">様</span></span></label>
+  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>施工内容</span><textarea class="t" id="memo" rows="1" enterkeyhint="enter" placeholder="例:レンジフード交換"></textarea><button type="button" class="mdone" id="memoDone" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></label>
  </section>
 
  <div class="spots" id="spotBar"></div>
@@ -1629,7 +1647,7 @@ const z2h=t=>String(t||"").replace(/[０-９Ａ-Ｚａ-ｚ／－．]/g,c=>String
 function jobDays(j){const t=pairsOf(j).flatMap(p=>[p.beforeAt,p.afterAt]).filter(Boolean);if(!t.length&&j.created)t.push(j.created);return t.map(x=>new Date(x));}
 // one word: true when the site has it in its text, or on one of its dates
 function hitWord(j,w){
- const text=z2h(custName(j)+" "+((j.place&&j.place.text)||"")+" "+(j.memo||"")+" "+(spotList(j)||[]).map(x=>x.name||"").join(" ")).toLowerCase();
+ const text=z2h(custName(j)+" "+((j.place&&j.place.text)||"")+" "+(j.memo||"")+" "+(j.slip||"")+" "+(j.corp||"")+" "+(spotList(j)||[]).map(x=>x.name||"").join(" ")).toLowerCase();
  if(text.includes(w))return true;
  const ds=jobDays(j), on=f=>ds.some(f);let m;
  if((m=w.match(/^(\d{4})年?$/)))return on(d=>d.getFullYear()==m[1]);
@@ -1741,6 +1759,7 @@ function openJob(j){
  if($("hSearch").value){$("hSearch").value="";hFilter();} // back from a site found by search: the usual list
  job=j;setPref("ba-open",j.id);$("home").hidden=true;$("detail").hidden=false;
  $("site").value=bareName(j.site);$("memo").value=j.memo||"";memoFit();
+ $("slip").value=j.slip||"";$("corp").value=j.corp||"";$("day").value=j.day||defDay(j);corpShow(false);
  $("result").style.display="none";$("saveMsg").textContent="";delArm=false;setTx("bDel","この現場を削除");
  refreshDetail();make();window.scrollTo(0,0);startGlow();spotHintWant=false;if(jobDone(j))spotHint();
 }
@@ -1805,7 +1824,30 @@ $("sA").addEventListener("click",()=>{if(job&&job.before&&!job.after&&!camFail)$
 // お客様名 is kept without 様 (an older "山田様" is read the same); shown as "山田様".
 const bareName=t=>String(t||"").trim().replace(/\s*(様|さま)$/,"").trim();
 const custName=j=>{const n=bareName(j&&j.site);return n?n+"様":"";};
-async function saveJob(){job.site=bareName($("site").value);job.memo=$("memo").value.trim();await putJob(job);}
+async function saveJob(){job.site=bareName($("site").value);job.memo=$("memo").value.trim();
+ const sl=$("slip").value.trim(), co=$("corp").value.trim();if(sl)job.slip=sl;else delete job.slip;if(co)job.corp=co;else delete job.corp;await putJob(job);}
+// 日付: the day of the work (the report's 施工日); until it is set by hand, the day of the first photo (or the day the
+// site was made), as the report would have it
+const ymd=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+function defDay(j){const ats=pairsOf(j).flatMap(p=>[p.beforeAt,p.afterAt]).filter(Boolean);return ymd(ats.length?Math.min(...ats):j.created||Date.now());}
+$("day").addEventListener("change",async()=>{if(!job)return;const v=$("day").value;if(v&&v!==defDay(job))job.day=v;else{delete job.day;if(!v)$("day").value=defDay(job);}await saveJob();make();});
+// 伝票番号: letters and numbers only (full-width ones made half-width, small letters capital), nothing else
+$("slip").addEventListener("input",()=>{const t=$("slip"), v=z2h(t.value).toUpperCase().replace(/[^0-9A-Z]/g,"");if(v!==t.value)t.value=v;});
+// 法人: the ones typed before are kept on this phone (newest first) and offered under ▾; × takes one off the list
+// (sites and reports that have it keep it)
+function corpGet(){try{const a=JSON.parse(getPref("ba-corps")||"[]");return Array.isArray(a)?a.filter(x=>typeof x==="string"&&x):[];}catch(e){return [];}}
+function corpRemember(n){n=(n||"").trim();if(!n)return;setPref("ba-corps",JSON.stringify([n].concat(corpGet().filter(x=>x!==n)).slice(0,40)));}
+function corpShow(on){const ls=$("corpLs");$("corpDd").setAttribute("aria-expanded",on);ls.hidden=!on;if(!on){ls.innerHTML="";return;}
+ const cur=$("corp").value.trim(), a=corpGet();
+ ls.innerHTML=a.length?a.map((n,i)=>'<div class="cr'+(n===cur?" on":"")+'"><button type="button" class="cp" data-i="'+i+'">'+esc(n)+'</button><button type="button" class="cx" data-x="'+i+'" aria-label="'+esc(n)+'を候補から消す"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>').join("")
+  :'<p class="cn">まだありません。法人名を入力すると、次からここで選べます。</p>';}
+$("corpDd").onclick=()=>corpShow($("corpLs").hidden);
+$("corpLs").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b||!job)return;const a=corpGet();
+ if(b.dataset.i!=null){const n=a[+b.dataset.i];if(n==null)return;$("corp").value=n;corpRemember(n);corpShow(false);await saveJob();make();}
+ else if(b.dataset.x!=null){const n=a[+b.dataset.x];if(n==null)return;
+  if(await bkDialog("「"+n+"」を候補から消しますか?","これまでの現場や報告書に入っている法人名は消えません。","消す","やめる")){setPref("ba-corps",JSON.stringify(corpGet().filter(x=>x!==n)));toast("候補から消しました");}
+  corpShow(true);}});
+document.addEventListener("pointerdown",e=>{if(!$("corpLs").hidden&&!e.target.closest("#corpLs,#corpDd")&&$("bkDlg").hidden)corpShow(false);});
 $("site").addEventListener("input",()=>{const n=bareName($("site").value);$("dTitle").textContent=n?n+"様":"現場の詳細";});
 // The keyboard's ✓ (完了) finishes typing: the keyboard closes and what was typed is kept.
 // (Enter while still converting kana/kanji only confirms the conversion.)
@@ -1821,9 +1863,11 @@ $("memo").addEventListener("focus",()=>{$("memoDone").hidden=false;});
 $("memo").addEventListener("blur",()=>{$("memoDone").hidden=true;});
 $("memoDone").addEventListener("pointerdown",e=>e.preventDefault());
 $("memoDone").addEventListener("click",e=>{e.preventDefault();$("memo").blur();});
-$("site").onchange=$("memo").onchange=async()=>{await saveJob();make();};
+$("site").onchange=$("memo").onchange=$("slip").onchange=async()=>{await saveJob();make();};
+$("corp").onchange=async()=>{corpRemember($("corp").value);await saveJob();make();};
+$("slip").addEventListener("keydown",e=>{if(e.key==="Enter")$("slip").blur();});$("corp").addEventListener("keydown",e=>{if(e.key==="Enter")$("corp").blur();});
 const hasPhotos=j=>pairsOf(j).some(p=>p.before||p.after);
-const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||hasPhotos(job)||(job.extras||[]).length||spotList(job));
+const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||$("slip").value.trim()||$("corp").value.trim()||hasPhotos(job)||(job.extras||[]).length||spotList(job));
 let typeT=0;["site","memo"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(typeT);typeT=setTimeout(()=>{if(worthKeeping())saveJob();},500);}));
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("detail").hidden&&worthKeeping()){clearTimeout(typeT);saveJob();}});
 // Photos just taken are still being put in (and saved): leave only once they are in, so none is
@@ -4082,9 +4126,14 @@ async function rpPages(j,co,tel,staff){
  let ry=y+192;if(tel){ry+=40;rpText(x,"TEL "+tel,W-M,ry,24,600,"#344054","right");}
  if(staff){ry+=38;rpText(x,"施工担当者 "+staff,W-M,ry,24,600,"#344054","right");}
  // the details table
- const rows=[["施工場所",(j.place&&j.place.text)||"―"],["施工日",ats.length?(fmtFull(ats[0])+(fmtFull(ats[ats.length-1])!==fmtFull(ats[0])?" 〜 "+fmtFull(ats[ats.length-1]):"")):"―"],["施工内容",j.memo||"―"]];
+ const rows=[["施工場所",(j.place&&j.place.text)||"―"],["施工日",j.day?fmtFull(new Date(j.day+"T00:00").getTime()):ats.length?(fmtFull(ats[0])+(fmtFull(ats[ats.length-1])!==fmtFull(ats[0])?" 〜 "+fmtFull(ats[ats.length-1]):"")):"―"],["施工内容",j.memo||"―"]];
  if(multi||named)rows.push(["施工箇所",pairsOf(j).map((p,i)=>spotName(j,i)).join("・")]);
  let ty=Math.max(y+262,ry+34);x.font="600 26px "+rpFont();
+ // 伝票番号 | 法人 on one row, above the rest (only when either is filled in)
+ if(j.slip||j.corp){const rh=64, hw=CW/2;x.fillStyle="#F2F4F7";x.fillRect(M,ty,190,rh);x.fillRect(M+hw,ty,150,rh);
+  x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(M,ty,CW,rh);x.beginPath();[M+190,M+hw,M+hw+150].forEach(v=>{x.moveTo(v,ty);x.lineTo(v,ty+rh);});x.stroke();
+  rpText(x,"伝票番号",M+95,ty+rh/2+9,24,800,"#344054","center");x.font="600 26px "+rpFont();rpText(x,(rpLines(x,j.slip||"―",hw-210,1)[0])||"",M+210,ty+44,26,600);
+  rpText(x,"法人",M+hw+75,ty+rh/2+9,24,800,"#344054","center");x.font="600 26px "+rpFont();rpText(x,(rpLines(x,j.corp||"―",hw-170,1)[0])||"",M+hw+170,ty+44,26,600);ty+=rh;x.font="600 26px "+rpFont();}
  for(const [k,v] of rows){const L=rpLines(x,v,CW-210,k==="施工内容"?6:2), rh=26+L.length*38;
   x.fillStyle="#F2F4F7";x.fillRect(M,ty,190,rh);x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(M,ty,CW,rh);x.beginPath();x.moveTo(M+190,ty);x.lineTo(M+190,ty+rh);x.stroke();
   rpText(x,k,M+95,ty+rh/2+9,24,800,"#344054","center");L.forEach((l,n)=>rpText(x,l,M+210,ty+46+n*38,26,600));ty+=rh;}
