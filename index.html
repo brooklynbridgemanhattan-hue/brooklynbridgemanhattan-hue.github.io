@@ -3738,10 +3738,11 @@ $("lvZero").onclick=()=>{if(!lv)return;const t=lv.q%2;lv.q=0;lvSet(0);if(t)lvFit
 $("lvTurn").onclick=()=>{if(!lv)return;lv.q=(lv.q+1)%4;lvShow();lvFit();};
 // 明るさ / コントラスト (-50…+50): shown live with the same filter the finished photo is made with
 const toneOn=t=>!!t&&(!!t.br||!!t.ct);
-// 明るさ is a curve like the phone's photo editors (darks and middle move a lot, white stays white,
-// black stays black); コントラスト spreads around the middle. The phone uses the same table.
-function toneLut(t){const ex=Math.pow(2,-t.br/33), k=1+t.ct/100, l=new Uint8ClampedArray(256);
- for(let i=0;i<256;i++)l[i]=Math.round(Math.max(0,Math.min(1,(Math.pow(i/255,ex)-0.5)*k+0.5))*255);return l;}
+// 明るさ is a curve like Google フォト: the middle moves the most, black stays black (not lifted to grey,
+// which looked white and foggy) and white stays white: x(1+a)/(1+ax), a = 4^(br/50)-1 (+50: the middle to 0.8).
+// コントラスト spreads around the middle. The phone uses the same table.
+function toneLut(t){const a=Math.pow(4,t.br/50)-1, k=1+t.ct/100, l=new Uint8ClampedArray(256);
+ for(let i=0;i<256;i++){const x=i/255;l[i]=Math.round(Math.max(0,Math.min(1,(x*(1+a)/(1+a*x)-0.5)*k+0.5))*255);}return l;}
 // the live preview: an SVG filter with the same table
 function tonePreview(t){const l=toneLut(t), v=[];for(let i=0;i<256;i+=4)v.push((l[i]/255).toFixed(4));v.push((l[255]/255).toFixed(4));
  const tv=v.join(" ");["tnFR","tnFG","tnFB"].forEach(id=>$(id).setAttribute("tableValues",tv));}
@@ -3774,9 +3775,10 @@ $("tnAuto").onclick=async()=>{if(!lv)return;const b=$("tnAuto");b.disabled=true;
   const d=x.getImageData(0,0,W,H).data, h=new Uint32Array(256);let n=0;for(let i=0;i<d.length;i+=4){h[(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])|0]++;n++;}
   const pct=q=>{let a=0;for(let i=0;i<256;i++){a+=h[i];if(a>=n*q)return i/255;}return 1;};
   const lo=pct(0.01), hi=pct(0.99), mid=pct(0.5);
-  // the curve that takes the middle brightness to the middle, then contrast to spread lo…hi
-  const m=Math.max(0.03,Math.min(0.97,mid)), br=Math.max(-50,Math.min(50,Math.round(-33*Math.log2(Math.log(0.5)/Math.log(m))))), ex=Math.pow(2,-br/33);
-  const lo2=Math.pow(lo,ex), hi2=Math.pow(hi,ex), ct=Math.max(0.5,Math.min(1.5,0.94/Math.max(0.1,hi2-lo2)));
+  // the curve that takes the middle brightness to the middle (at most ±40, not too far), then contrast to
+  // spread lo…hi, only as far as neither end goes past 0.03 / 0.97 (no part of it made all white or all black)
+  const m=Math.max(0.03,Math.min(0.97,mid)), br=Math.max(-40,Math.min(40,Math.round(25*Math.log2((1-m)/m)))), a=Math.pow(4,br/50)-1;
+  const lo2=lo*(1+a)/(1+a*lo), hi2=hi*(1+a)/(1+a*hi), ct=Math.max(0.5,Math.min(1.5,0.47/Math.max(0.05,0.5-lo2),0.47/Math.max(0.05,hi2-0.5)));
   if(lv){lv.tn={br,ct:Math.round((ct-1)*100)};tnShow();toast("明るさ・コントラストを自動で調整しました");}
  }catch(e){toast("自動で調整できませんでした",true);}
  b.disabled=false;};
