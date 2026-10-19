@@ -388,6 +388,9 @@ label.btn{cursor:pointer}
 .addbtn{flex-basis:100%;white-space:nowrap;margin-top:2px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 18px;border-radius:999px;background:linear-gradient(135deg,#22B8CF,#1C7ED6);color:#fff;font-size:19px;font-weight:800;box-shadow:0 6px 16px rgba(28,126,214,.35)}
 .addbtn svg.i{width:24px;height:24px}
 .c-extra .sh2 h2{white-space:nowrap}
+.exck{margin-left:auto;display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 12px;border-radius:999px;background:#E6F6EC;color:#067647;font-size:14px;font-weight:800;box-shadow:inset 0 0 0 1.5px #A6E3BC;white-space:nowrap} /* その他の写真 → チェックリスト, without the long press */
+.exck svg.i{width:18px;height:18px}
+.cklbkn{margin:10px 2px 0;font-size:13px;font-weight:700;color:var(--sub)} /* 長押しで その他の写真に戻せます */
 .linkrow{display:flex;align-items:center;gap:12px;width:100%;padding:16px;margin-bottom:14px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh);font-size:17px;font-weight:700;text-align:left;color:var(--ink)}
 .linkrow .li{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--ok-soft);color:var(--ok)}
 .linkrow .tx{flex:1}
@@ -420,7 +423,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .selbar button{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:50px;border-radius:14px;border:0;font-size:18px;font-weight:800;white-space:nowrap}
 .selbar .x{width:50px;background:transparent;color:#fff}
 .selbar .del{padding:0 16px;background:var(--danger);color:#fff}
-.selbar .ckmv{padding:0 14px;background:#12B76A;color:#fff}
+.selbar .ckmv{padding:0 14px;background:#12B76A;color:#fff}.selbar .ckmv:disabled{opacity:.45}
 @media (max-width:430px){.selbar{gap:6px}.selbar .ckmv,.selbar .del{padding:0 10px;font-size:16px}.selbar .ckmv svg.i,.selbar .del svg.i{display:none}}
 /* チェックリストへ: the items to choose from, as on the checklist (without the 済み indent) */
 #bkDlg.ckmv .bkbody{max-height:calc(100vh - 230px);overflow:auto;margin:0 -6px;padding:0 6px}
@@ -1057,7 +1060,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </section>
 
  <section class="card c-extra">
-  <div class="sh2"><span class="cdot"></span><h2>その他の写真<span class="exsp" id="exSpotNm"></span></h2><button class="addbtn" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>カメラで撮る</span></button></div>
+  <div class="sh2"><span class="cdot"></span><h2>その他の写真<span class="exsp" id="exSpotNm"></span></h2><button class="exck" id="exCk" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>チェックリストへ</button><button class="addbtn" id="bExtra"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>カメラで撮る</span></button></div>
   <label class="btn b-extra full" id="nExtra" for="fExtra" hidden style="margin-bottom:10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg>スマホのカメラで撮る</label>
   <div class="thumbs" id="thumbs"></div>
   <p class="none" id="thumbsNone">まだありません。タップで拡大、長押しで選択できます。</p>
@@ -2735,6 +2738,7 @@ function renderThumbs(){
  $("exSpotNm").textContent=job&&spotList(job)?"("+spotName(job,spotIdx(job))+")":"";
  $("thumbs").innerHTML=xs.map((x,i)=>cklHides(x)?'':'<button data-x="'+i+'" aria-label="写真 '+(i+1)+(notesOf(x).length?' '+esc(notesOf(x).map(n=>n.t).join(' / ')):'')+'"><img src="'+blobUrl(x.blob)+'" alt=""><span class="ck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span>'+(notesOf(x).length?'<span class="cm"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+(notesOf(x).length>1?notesOf(x).length:'')+'</span>':'')+'</button>').join("");
  $("thumbsNone").hidden=xs.some(x=>!cklHides(x));
+ $("exCk").hidden=!(cklOn()&&job&&cklTplOf(job,spotIdx(job))&&xs.some(x=>!cklHides(x)));
  selClear();allInfo();cklRender();
 }
 /* ---------- 撮影チェックリスト ---------- */
@@ -2847,6 +2851,7 @@ function cklRender(){
   h+='<div class="cklit cklbx'+G[1]+(done?" ckldone":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
  h+='</div>';}
+ if(/data-x="/.test(h))h+='<p class="cklbkn">写真を長押しすると、その他の写真に戻せます</p>';
  box.innerHTML=h;box.hidden=false;
 }
 $("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)renderThumbs();};
@@ -2962,15 +2967,15 @@ function cklSee(){const c=$("cklCard"), top=$("detail").querySelector(".topbar")
 // the camera's title for an item: 施工前 銘板 / 気密試験結果(圧力測定器)
 const cklCamLab=c=>cklLab(c.k)+(c.k==="air"&&job&&job.cklv&&job.cklv.air?"("+CKL_AIR[job.cklv.air]+")":"");
 // Like Google Photos: tap = full screen; long press = select (then tap picks / un-picks).
-const sel=new Set();let selDelArm=false;
+const sel=new Set();let selDelArm=false, selPick=false; // selPick: chosen by tapping, from チェックリストへ (no photo yet needed)
 function selShow(){
- $("thumbs").classList.toggle("sel",sel.size>0);
+ $("thumbs").classList.toggle("sel",sel.size>0||selPick);
  $("thumbs").querySelectorAll("[data-x]").forEach(b=>b.classList.toggle("on",sel.has(+b.dataset.x)));
- $("selCk").hidden=!(cklOn()&&job&&cklTplOf(job,spotIdx(job)));
- $("selBar").hidden=sel.size===0;$("selN").textContent=sel.size+($("selCk").hidden?"枚を選択中":"枚"); // short beside チェックリストへ
+ $("selCk").hidden=!(cklOn()&&job&&cklTplOf(job,spotIdx(job)));$("selCk").disabled=!sel.size;$("selDel").hidden=selPick;
+ $("selBar").hidden=sel.size===0&&!selPick;$("selN").textContent=!sel.size?"写真を選ぶ":sel.size+($("selCk").hidden?"枚を選択中":"枚"); // short beside チェックリストへ
  selDelArm=false;setTx("selDel","削除");
 }
-function selClear(){sel.clear();selShow();}
+function selClear(){sel.clear();selPick=false;selShow();}
 function selToggle(i){if(sel.has(i))sel.delete(i);else sel.add(i);if(navigator.vibrate)try{navigator.vibrate(15);}catch(e){}selShow();}
 let pressT=0, pressAt=null, pressFired=false;
 $("thumbs").addEventListener("pointerdown",e=>{const b=e.target.closest("[data-x]");if(!b)return;pressFired=false;pressAt={x:e.clientX,y:e.clientY};
@@ -2980,8 +2985,9 @@ $("thumbs").addEventListener("pointermove",e=>{if(pressAt&&Math.hypot(e.clientX-
 $("thumbs").addEventListener("contextmenu",e=>e.preventDefault());
 $("thumbs").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;
  if(pressFired){pressFired=false;return;}
- const i=+b.dataset.x;if(sel.size)selToggle(i);else openGallery(i);};
+ const i=+b.dataset.x;if(sel.size||selPick)selToggle(i);else openGallery(i);};
 $("selX").onclick=selClear;
+$("exCk").onclick=()=>{sel.clear();selPick=true;selShow();}; // the bar says 写真を選ぶ (a notice would hide the photos)
 $("selDel").onclick=async()=>{
  if(!sel.size)return;
  if(!selDelArm){selDelArm=true;$("selCk").hidden=true;$("selN").textContent=sel.size+"枚を選択中";setTx("selDel","もう一度押すと削除");return;} // the long words: チェックリストへ steps aside
@@ -4770,7 +4776,7 @@ window.appBack=()=>{
  if(!$("viewer").hidden){if(editing)noteEnd(true);else viewerBack();return true;}
  if(!$("med").hidden){$("med").hidden=true;return true;}
  if($("cam").style.display==="flex"){stopCam();return true;}
- if(sel.size){selClear();return true;}
+ if(sel.size||selPick){selClear();return true;}
  if(!$("detail").hidden){$("dBack").click();return true;}
  return false;
 };
