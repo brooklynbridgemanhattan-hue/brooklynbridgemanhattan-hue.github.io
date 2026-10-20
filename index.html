@@ -861,12 +861,12 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cam[data-mode=extra]{--mode:#15AABF;--mode-ink:#00262E}
 /* a checklist item: its step's colour (施工前 blue, 施工後 deep yellow; the others teal), and いま撮るのは in a wide band */
 .cam.ckcam[data-ckp=b]{--mode:#3B5BDB;--mode-ink:#fff}.cam.ckcam[data-ckp=a]{--mode:#C27C00;--mode-ink:#fff}
-.cam.ckcam .cmode{left:12px;right:12px;transform:none;border-radius:18px;padding:8px 14px;white-space:normal}
+.cam.ckcam .cmode{left:12px;right:auto;max-width:calc(100% - 24px);transform:none;border-radius:16px;padding:6px 12px;white-space:normal} /* only as wide as its words: less of the picture hidden */
 .cam.ckcam .cmode>svg.i{display:none}
-.cam.ckcam .cmode small{display:block;font-size:14px;font-weight:800;opacity:.9}
-.cam.ckcam .cmode b{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:30px;font-weight:900;line-height:1.25}
-.cam.ckcam .cmode .ckltg{background:#fff;color:var(--mode);font-size:22px;padding:2px 9px;margin:0;vertical-align:0}
-.cam.ckcam .shotn{top:110px}
+.cam.ckcam .cmode small{display:block;font-size:12px;font-weight:800;opacity:.9}
+.cam.ckcam .cmode b{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:22px;font-weight:900;line-height:1.25}
+.cam.ckcam .cmode .ckltg{background:#fff;color:var(--mode);font-size:17px;padding:1px 8px;margin:0;vertical-align:0}
+.cam.ckcam .shotn{top:84px}
 .cam.ckcam .camhud .cmode small{display:none}.cam.ckcam .camhud .cmode{left:10px;right:auto;padding:7px 12px}.cam.ckcam .camhud.mir .cmode{left:auto;right:10px} /* sideways: one line, where the title was */
 .cam.ckcam .camhud .cmode b{font-size:20px;gap:6px}.cam.ckcam .camhud .cmode .ckltg{font-size:16px}
 .cam.ckcam .camhud .shotn{top:102px}
@@ -2549,11 +2549,30 @@ $("zm").oninput=e=>setZoom(+e.target.value);
 let evInfo=null, evTarget=0, evRaf=0;
 function evSetup(info){
  evInfo=info&&info.max>info.min&&info.step>0?info:null;$("evRow").hidden=!evInfo;if(!evInfo)return;
- const e=$("ev"), lim=Math.round(2/evInfo.step);e.min=Math.max(evInfo.min,-lim);e.max=Math.min(evInfo.max,lim);e.step=1;setEv(0);}
+ const e=$("ev"), lim=Math.round(2/evInfo.step);e.min=Math.max(evInfo.min,-lim);e.max=Math.min(evInfo.max,lim);e.step=1;evNoPrev=null;clearTimeout(evChkT);setEv(0);}
 function evLabel(i){const v=Math.round(i*evInfo.step*10)/10;return v===0?"±0":(v>0?"+":"−")+Math.abs(v).toFixed(1);}
 function applyEv(i){
- if(NATIVE){if(window.AndroidCam.exposure)window.AndroidCam.exposure(i);return;}
+ if(NATIVE){if(window.AndroidCam.exposure)window.AndroidCam.exposure(i);evScreen(i);return;}
  if(track)track.applyConstraints({advanced:[{exposureCompensation:i*evInfo.step}]}).catch(()=>{});}
+// 明るさ on the screen: most phones show the picture brighter / darker with it, but some only make the photo so.
+// The small frames (the same light as the screen's picture) tell which: a moment after moving away from ±0, if they
+// have not changed (about) as much, the screen's picture is shown brighter / darker by the phone instead
+// (previewGain; the photo itself is as the camera makes it). Found again each time the camera opens (a reading
+// spoilt by the phone moving is not kept).
+let evApplied=0, evL0=null, evChkT=0, evNoPrev=null;
+function frameLuma(){if(!natFrame)return null;const c=frameLuma.c||(frameLuma.c=document.createElement("canvas"));c.width=16;c.height=12;
+ const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(natFrame,0,0,16,12);const d=x.getImageData(0,0,16,12).data;let t=0;
+ for(let k=0;k<d.length;k+=4)t+=0.299*d[k]+0.587*d[k+1]+0.114*d[k+2];return t/(d.length/4)/255;}
+const evGain=ev=>Math.min(2.5,Math.max(0.4,Math.pow(2,ev/2.2))); // as bright as so many EV, on the screen's 0-255 scale
+function evScreen(i){const A=window.AndroidCam;if(!A.previewGain||!evInfo)return;
+ if(evApplied===0&&i!==0)evL0=frameLuma(); // the light at ±0, just before it changes
+ evApplied=i;const ev=i*evInfo.step;clearTimeout(evChkT);
+ A.previewGain(evNoPrev===true?evGain(ev):1);
+ if(evNoPrev!=null||!ev)return;
+ evChkT=setTimeout(()=>{const L=frameLuma(), L0=evL0;if(evApplied!==i||L==null||L0==null||L0<0.06||L0>0.85)return; // too dark / bright to tell
+  const r=Math.log2(Math.pow(Math.max(L,0.01)/L0,2.2)); // how far the camera itself went (EV)
+  evNoPrev=r*Math.sign(ev)<Math.abs(ev)*0.35;
+  if(evNoPrev)A.previewGain(evGain(ev));},1200);}
 function setEv(i){
  if(!evInfo)return;const e=$("ev");i=Math.min(+e.max,Math.max(+e.min,Math.round(i)));
  e.value=i;$("evV").textContent=evLabel(i);evTarget=i;
