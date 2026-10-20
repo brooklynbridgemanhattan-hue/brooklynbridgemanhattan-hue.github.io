@@ -499,7 +499,11 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit.cklbx .cklph.cklrow{flex-basis:100%;margin-left:0}.cklit.cklbx .cklair{margin-left:0}
 .cklit.cklbx.ckldone{margin-left:40px;border:2px solid #40C057;background:#F4FBF6;min-height:46px;padding:2px 4px 2px 44px}
 .cklit.cklbx.ckldone .cklmk{width:34px;background:#40C057}.cklit.cklbx.ckldone .cklmk svg{width:20px;height:20px}
-.cklit.cklbx.ckldone .cklnm{font-size:16px}.cklit.cklbx.ckldone .cklnm small{display:none}
+.cklit.cklbx.ckldone .cklnm{font-size:18px}.cklit.cklbx.ckldone .cklnm small{display:none}
+.cklit.cklbx .cklnt{display:block;font-size:22px;line-height:1.3}.ckln1{white-space:nowrap}.ckln2{font-size:.86em} /* まだ: the name large; 済み: as above */
+.cklit.cklbx.ckldone .cklnt{font-size:18px}
+.ckltg{display:inline-block;font-size:.76em;line-height:1.3;padding:.12em .42em;border-radius:9px;color:#fff;vertical-align:.12em;margin-right:.1em}
+.ckltg.b{background:var(--before)}.ckltg.a{background:#C27C00} /* 施工後: a deep yellow, so white words read */
 .cklit.cklbx.ckldone .cklph button{width:36px;height:36px;border-radius:8px}
 .cklit.cklbx.ckldone .cklph.cklrow button{flex-basis:36px;width:auto;height:auto}
 .cklit.cklbx.ckldone .cklgo{min-height:36px;padding:0 10px;font-size:15px}.cklit.cklbx.ckldone .cklgo svg.i{width:19px;height:19px}
@@ -855,6 +859,17 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cam[data-mode=before]{--mode:#4C6EF5;--mode-ink:#fff}
 .cam[data-mode=after]{--mode:#F59F00;--mode-ink:#2B1D00}
 .cam[data-mode=extra]{--mode:#15AABF;--mode-ink:#00262E}
+/* a checklist item: its step's colour (施工前 blue, 施工後 deep yellow; the others teal), and いま撮るのは in a wide band */
+.cam.ckcam[data-ckp=b]{--mode:#3B5BDB;--mode-ink:#fff}.cam.ckcam[data-ckp=a]{--mode:#C27C00;--mode-ink:#fff}
+.cam.ckcam .cmode{left:12px;right:12px;transform:none;border-radius:18px;padding:8px 14px;white-space:normal}
+.cam.ckcam .cmode>svg.i{display:none}
+.cam.ckcam .cmode small{display:block;font-size:14px;font-weight:800;opacity:.9}
+.cam.ckcam .cmode b{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:30px;font-weight:900;line-height:1.25}
+.cam.ckcam .cmode .ckltg{background:#fff;color:var(--mode);font-size:22px;padding:2px 9px;margin:0;vertical-align:0}
+.cam.ckcam .shotn{top:110px}
+.cam.ckcam .camhud .cmode small{display:none}.cam.ckcam .camhud .cmode{left:10px;right:auto;padding:7px 12px}.cam.ckcam .camhud.mir .cmode{left:auto;right:10px} /* sideways: one line, where the title was */
+.cam.ckcam .camhud .cmode b{font-size:20px;gap:6px}.cam.ckcam .camhud .cmode .ckltg{font-size:16px}
+.cam.ckcam .camhud .shotn{top:102px}
 .cam .view{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;touch-action:none}
 /* the stage has the camera picture's own shape, so the preview shows exactly what is saved */
 .cam .stage{position:relative;overflow:hidden;width:100%;height:100%}
@@ -2052,11 +2067,15 @@ async function startCam(mode){
  try{await startCamRun(mode,seq);}
  finally{camStarting=false;$("camLoad").hidden=true;$("cam").classList.remove("loading");}
 }
+// the camera's title; for a checklist item いま撮るのは + its name, in its step's colour
+function camLab(mode,lab,ckl){const cam=$("cam"), sp=$("camMode").querySelector("span"), m=ckl&&/^(施工前|施工後)/.exec(lab);
+ cam.dataset.mode=mode;cam.classList.toggle("ckcam",!!ckl);cam.dataset.ckp=m?(m[1]==="施工前"?"b":"a"):"";
+ if(ckl)sp.innerHTML='<small>いま撮るのは</small><b>'+cklNmTag(lab).replace(/^<span class="cklnt">|<\/span>$/g,"")+'</b>';else sp.textContent=lab;}
 async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(x=>x.remove());
  camMode=mode;const ckl=mode==="extra"?cklNext:null;cklNext=null; // 撮影チェックリストの項目
  const lab=ckl?cklCamLab(ckl):{before:"施工前を撮影",after:"施工後を撮影",extra:"その他の写真"}[mode];
  // the camera screen comes up straight away, saying it is starting; やめる works meanwhile
- $("cam").dataset.mode=mode;$("camMode").querySelector("span").textContent=lab;
+ camLab(mode,lab,ckl);
  $("camLoad").hidden=false;$("cam").classList.add("loading");$("cam").style.display="flex";
  await askOri();
  const v=$("vid");
@@ -2078,7 +2097,7 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
   setupTrack();
  }
  const after=mode==="after";
- $("cam").dataset.mode=mode;$("camMode").querySelector("span").textContent=lab;
+ camLab(mode,lab,ckl);
  // After camera starts with every overlay off; switch on what is needed.
  if(after){["tGrid","tGhost","tLine","tDiff"].forEach(id=>$(id).classList.remove("on"));$("grid").classList.remove("on");}
  $("ghost").style.display=after&&$("tGhost").classList.contains("on")?"block":"none";
@@ -2867,6 +2886,10 @@ function cklForName(n){n=String(n||"").trim();if(!n)return null;
  return /給湯/.test(n)?"kyuto":/コンロ/.test(n)?"konro":null;}
 // an item's photos in list t (給湯器 and コンロ are separate jobs: a photo belongs to the list it was
 // taken for, cklT; one from v1.121-122 has none and counts for the place's list)
+// 施工前 / 施工後 as a coloured tag before the rest of the name (施工前 blue, 施工後 dark yellow), so 施工前 銘板 and
+// 施工後 銘板 are told apart at a glance; the words stay the same ("施工後 銘板")
+function cklNmTag(l){const m=/^(施工前|施工後)\s*(.+)$/.exec(l), w=t=>t.length<=5?'<span class="ckln1">'+esc(t)+'</span>':t.length<=7?'<span class="ckln2">'+esc(t)+'</span>':esc(t); // a short name is not split (配/管); 6-7 letters a little smaller, to stay on one line
+ return '<span class="cklnt">'+(m?'<b class="ckltg '+(m[1]==="施工前"?"b":"a")+'">'+m[1]+'</b> '+w(m[2]):w(l))+'</span>';}
 const cklPh=(p,k,t)=>(p.extras||[]).filter(x=>x.ckl===k&&(!x.cklT||x.cklT===t));
 // 今回なし (this place only, no reason asked): what the report says instead of the photos. Only the
 // photo items (not 施工前 本体 / 施工後 本体 above, 漏水確認, 気密試験結果), and only while it has none
@@ -2926,7 +2949,7 @@ function cklRender(){
    if(xs.length<cklMax(k))go='<button type="button" class="cklgo" data-go="'+k+'"'+(k==="air"&&!v.air?' disabled':'')+'>'+CAM_SVG+(xs.length?'追加':'撮る')+'</button>';
    if(!xs.length&&cklCanSkip(k))go='<button type="button" class="cklsk" data-skip="'+k+'" aria-label="'+esc(cklLab(k))+'を今回なしにする">なし</button>'+go;}
   const many=(ph.match(/<img/g)||[]).length>1; // 2-5 photos: a line of their own under the name
-  h+='<div class="cklit cklbx'+G[1]+(done?" ckldone":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
+  h+='<div class="cklit cklbx'+G[1]+(done?" ckldone":"")+'" data-k="'+k+'"><span class="cklmk">'+(done?CKL_OK:'')+'</span><span class="cklnm">'+cklNmTag(cklLab(k))+(sub?'<small>'+sub+'</small>':'')+'</span>'+(ph&&!many?'<span class="cklph">'+ph+'</span>':'')+go+(many?'<span class="cklph cklrow">'+ph+'</span>':'')+
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
  h+='</div>';}
  if(/data-x="/.test(h))h+='<p class="cklbkn">写真を長押しすると、その他の写真に戻せます</p>';
