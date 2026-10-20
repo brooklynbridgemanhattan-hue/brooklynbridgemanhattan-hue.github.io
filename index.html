@@ -867,6 +867,8 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cam.ckcam .cmode b{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:22px;font-weight:900;line-height:1.25}
 .cam.ckcam .cmode .ckltg{background:#fff;color:var(--mode);font-size:17px;padding:1px 8px;margin:0;vertical-align:0}
 .cam.ckcam .shotn{top:84px}
+/* a checklist item's 戻る: wider, by the shutter (as 完了 for 施工前 / 施工後), with a gap so it is not hit by mistake */
+.cam.ckcam .shoot .cancel{justify-self:end;margin-right:14px;padding:0 22px;min-width:118px}
 .cam.ckcam .camhud .cmode small{display:none}.cam.ckcam .camhud .cmode{left:10px;right:auto;padding:7px 12px}.cam.ckcam .camhud.mir .cmode{left:auto;right:10px} /* sideways: one line, where the title was */
 .cam.ckcam .camhud .cmode b{font-size:20px;gap:6px}.cam.ckcam .camhud .cmode .ckltg{font-size:16px}
 .cam.ckcam .camhud .shotn{top:102px}
@@ -2153,6 +2155,8 @@ function stopCam(force){
  if(NATIVE){natGen++;natFrame=null;natPlace="";window.AndroidCam.close();document.documentElement.classList.remove("natcam");}
  $("cam").style.display="none";
  if(sess&&sess.n&&sess.mode!=="extra")camDone(sess);
+ // back from a checklist item with its photo(s): the item glows in the list
+ if(sess&&sess.ckl&&shotCount){const k=sess.ckl.k;sess.got.then(()=>{const el=document.querySelector('#cklList [data-k="'+k+'"]');if(el&&!$("detail").hidden){el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);}});}
 }
 $("cCancel").onclick=()=>stopCam();
 $("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
@@ -2319,10 +2323,10 @@ $("cShot").onclick=async()=>{
   // Other photos: stay in the camera so several can be taken in a row.
   shotCount++;$("shotN").textContent=shotCount+"枚 撮影";$("shotN").hidden=false;
   s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl)).catch(()=>{});
-  if(s.ckl){ // a checklist item: back to the list once it has its photo(s); the item glows there
+  if(s.ckl){ // a checklist item: several in a row; back to the list with 戻る, or by itself once the item is full
    const c=s.ckl, last=shotCount>=c.left;
-   await shotDone(b,cklCamLab(c)+(c.left>1?" "+shotCount+"枚目":"")+"を撮影しました",650);shotEnd();
-   if(last&&camSess===s){stopCam();s.got.then(()=>{const el=document.querySelector('#cklList [data-k="'+c.k+'"]');if(el&&!$("detail").hidden){el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);}});}
+   await shotDone(b,cklCamLab(c)+"を撮影しました"+(shotCount>1?"("+shotCount+"枚目)":""),650);shotEnd();
+   if(last&&camSess===s)stopCam();
    return;}
   await shotDone(b,shotCount+"枚目を撮影しました",650);shotEnd();
   return;
@@ -2375,8 +2379,8 @@ function camRot(){
 let sideDeg=0;const homes=new Map();
 // 完了 (after a shot) when sideways: under the shutter; やめる / 戻る stay in the low row
 const finHome=$("cCancel").parentNode;
-function placeFin(){const c=$("cCancel");
- if(sideDeg&&c.classList.contains("fin")){if(c.parentNode!==$("hudShot"))$("hudShot").appendChild(c);}
+function placeFin(){const c=$("cCancel"); // sideways: 完了, and a checklist item's 戻る, under the shutter
+ if(sideDeg&&(c.classList.contains("fin")||$("cam").classList.contains("ckcam"))){if(c.parentNode!==$("hudShot"))$("hudShot").appendChild(c);}
  else if(c.parentNode!==finHome)finHome.insertBefore(c,finHome.firstChild);}
 function setSideUI(deg){
  if(deg===sideDeg)return;const was=sideDeg;sideDeg=deg;
@@ -3002,7 +3006,7 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
   const t=cklTplOf(job,spotIdx(job));if(!t)return;
   const left=cklMax(k)-cklPh(job,k,t).length;if(left<=0)return;
   if(camFail){cklFile={k,t};$("fExtra").click();return;}
-  cklNext={k,t,left:1};startCam("extra");}
+  cklNext={k,t,left};startCam("extra");} // as many as the item still takes; 戻る goes back to the list sooner
 });
 // その他の写真に戻す: a checklist photo held down (put in the wrong item, or not a checklist photo) loses the
 // item's mark and is back in その他の写真; the photo itself stays. A tap still opens it.
