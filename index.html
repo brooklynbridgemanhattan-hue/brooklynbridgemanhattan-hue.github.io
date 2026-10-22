@@ -1455,7 +1455,7 @@ let MEM=[];
    the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}].
    その他の写真 (extras) belong to a place too; on a site from before that (no exSpot), they were the
    site's and go to 1か所目 when it is next opened. */
-const PAIR_KEYS=["extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","afterPct","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmt","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
+const PAIR_KEYS=["memo","extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","afterPct","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmt","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
 const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
 const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
 // the list's photos are of the first place that has some.
@@ -1664,7 +1664,7 @@ const z2h=t=>String(t||"").replace(/[０-９Ａ-Ｚａ-ｚ／－．]/g,c=>String
 function jobDays(j){const t=pairsOf(j).flatMap(p=>[p.beforeAt,p.afterAt]).filter(Boolean);if(!t.length&&j.created)t.push(j.created);return t.map(x=>new Date(x));}
 // one word: true when the site has it in its text, or on one of its dates
 function hitWord(j,w){
- const text=z2h(custName(j)+" "+((j.place&&j.place.text)||"")+" "+(j.memo||"")+" "+(j.slip||"")+" "+(j.corp||"")+" "+(spotList(j)||[]).map(x=>x.name||"").join(" ")).toLowerCase();
+ const text=z2h(custName(j)+" "+((j.place&&j.place.text)||"")+" "+pairsOf(j).map(p=>p.memo||"").join(" ")+" "+(j.slip||"")+" "+(j.corp||"")+" "+(spotList(j)||[]).map(x=>x.name||"").join(" ")).toLowerCase();
  if(text.includes(w))return true;
  const ds=jobDays(j), on=f=>ds.some(f);let m;
  if((m=w.match(/^(\d{4})年?$/)))return on(d=>d.getFullYear()==m[1]);
@@ -1947,7 +1947,8 @@ async function spotGo(i,quiet){
  spotBusy=true;
  try{await busyWait(Promise.all([camGot,autoPend.b,autoPend.a,rawPend.b,rawPend.a]));
   if(job!==j||!L[i]||L[i].live)return false;
-  spotSwap(j,i);await saveJob();
+  j.memo=$("memo").value.trim(); // 施工内容 is the place's own: kept with the place left, the chosen place's shown
+  spotSwap(j,i);$("memo").value=j.memo||"";memoFit();await saveJob();
   $("result").style.display="none";$("saveMsg").textContent="";refreshDetail();make();if(!quiet)startGlow(); // quiet: from the checklist card (its 施工前 hint would cover the card)
   return true;
  }finally{spotBusy=false;}
@@ -4155,6 +4156,9 @@ async function rpPhoto(x,blob,at,X,Y,w,h,kind){
  x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(X,by,w,h);
  if(at)rpText(x,"撮影 "+fmtFull(at)+" "+new Date(at).getHours()+":"+String(new Date(at).getMinutes()).padStart(2,"0"),X,by+h+36,24,600,"#475467");
 }
+// 施工内容: each place's own; with several places, each on its own line after the place's name
+function rpMemo(j,multi){const L=pairsOf(j).map((p,i)=>({n:spotName(j,i),m:String(p.memo||"").trim()})).filter(o=>o.m);
+ return !L.length?"―":multi?L.map(o=>o.n+":"+o.m).join("\n"):L[0].m;}
 async function rpPages(j,co,tel,staff){
  const P=pairsOf(j).map((p,i)=>({p,i})).filter(o=>o.p.before||o.p.after||rpIn(o.p).length), multi=pairsOf(j).length>1, named=!!(spotList(j)&&spotList(j)[0].name);
  const W=RP.W,H=RP.H,M=RP.M,CW=W-2*M, bw=(CW-30)/2, bh=330, SEC=56+52+bh+44+30, BOTTOM=H-84;
@@ -4172,7 +4176,7 @@ async function rpPages(j,co,tel,staff){
  let ry=y+192;if(tel){ry+=40;rpText(x,"TEL "+tel,W-M,ry,24,600,"#344054","right");}
  if(staff){ry+=38;rpText(x,"施工担当者 "+staff,W-M,ry,24,600,"#344054","right");}
  // the details table
- const rows=[["施工場所",(j.place&&j.place.text)||"―"],["施工日",j.day?fmtFull(new Date(j.day+"T00:00").getTime()):ats.length?(fmtFull(ats[0])+(fmtFull(ats[ats.length-1])!==fmtFull(ats[0])?" 〜 "+fmtFull(ats[ats.length-1]):"")):"―"],["施工内容",j.memo||"―"]];
+ const rows=[["施工場所",(j.place&&j.place.text)||"―"],["施工日",j.day?fmtFull(new Date(j.day+"T00:00").getTime()):ats.length?(fmtFull(ats[0])+(fmtFull(ats[ats.length-1])!==fmtFull(ats[0])?" 〜 "+fmtFull(ats[ats.length-1]):"")):"―"],["施工内容",rpMemo(j,multi)]];
  if(multi||named)rows.push(["施工箇所",pairsOf(j).map((p,i)=>spotName(j,i)).join("・")]);
  let ty=Math.max(y+262,ry+34);x.font="600 26px "+rpFont();
  // 伝票番号 | 法人 on one row, above the rest (only when either is filled in)
@@ -4180,7 +4184,7 @@ async function rpPages(j,co,tel,staff){
   x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(M,ty,CW,rh);x.beginPath();[M+190,M+hw,M+hw+150].forEach(v=>{x.moveTo(v,ty);x.lineTo(v,ty+rh);});x.stroke();
   rpText(x,"伝票番号",M+95,ty+rh/2+9,24,800,"#344054","center");x.font="600 26px "+rpFont();rpText(x,(rpLines(x,j.slip||"―",hw-210,1)[0])||"",M+210,ty+44,26,600);
   rpText(x,"法人",M+hw+75,ty+rh/2+9,24,800,"#344054","center");x.font="600 26px "+rpFont();rpText(x,(rpLines(x,j.corp||"―",hw-170,1)[0])||"",M+hw+170,ty+44,26,600);ty+=rh;x.font="600 26px "+rpFont();}
- for(const [k,v] of rows){const L=rpLines(x,v,CW-210,k==="施工内容"?6:2), rh=26+L.length*38;
+ for(const [k,v] of rows){const L=rpLines(x,v,CW-210,k==="施工内容"?10:2), rh=26+L.length*38;
   x.fillStyle="#F2F4F7";x.fillRect(M,ty,190,rh);x.strokeStyle="#D0D5DD";x.lineWidth=2;x.strokeRect(M,ty,CW,rh);x.beginPath();x.moveTo(M+190,ty);x.lineTo(M+190,ty+rh);x.stroke();
   rpText(x,k,M+95,ty+rh/2+9,24,800,"#344054","center");L.forEach((l,n)=>rpText(x,l,M+210,ty+46+n*38,26,600));ty+=rh;}
  y=ty+40;
