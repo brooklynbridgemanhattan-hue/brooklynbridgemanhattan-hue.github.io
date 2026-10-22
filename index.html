@@ -170,26 +170,29 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 /* where you are: 施工前 -> 施工後 -> 比較写真 */
 .steps{display:flex;align-items:center;gap:6px;list-style:none;margin:0 0 14px;padding:0}
 /* 複数か所: the places of this site, side by side (wrapping; over 2 rows the rest go under 「ほか」) */
-.spots{display:flex;flex-wrap:wrap;gap:8px;margin:-8px -16px 4px;padding:10px 16px 12px;scrollbar-width:none} /* room for a button's glow ring (same place on the page) */
+/* 施工箇所: folder tabs over a frame holding everything of the open place; the tabs slide sideways (finger or the big arrows) */
+.sphead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 4px}
+.sphead b{font-size:18px;font-weight:800;color:var(--ink)}.sphead small{margin-left:8px;font-size:14px;font-weight:700;color:var(--sub)}
+.spadd{flex:none;display:flex;align-items:center;gap:4px;height:42px;padding:0 14px;border-radius:999px;background:var(--card);color:#1D3FBF;font-size:15px;font-weight:800;border:2px solid #3B5BDB}
+.spadd svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.8;fill:none}
+.sptabs{display:flex;align-items:flex-end;gap:6px;margin:0 -10px;position:relative;z-index:1}
+.sparr{flex:none;width:46px;height:46px;margin-bottom:8px;border-radius:50%;background:#3B5BDB;display:grid;place-items:center;box-shadow:0 3px 10px rgba(59,91,219,.35)}
+.sparr svg{width:26px;height:26px;stroke:#fff;stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sparr.end{background:#D0D5DD;box-shadow:none}
+@media (max-width:380px){.sptabs{gap:4px}.sparr{width:40px;height:40px}} /* narrow phones: the open tab still fits between them */
+.spots{position:relative;flex:1;min-width:0;display:flex;align-items:flex-end;gap:4px;overflow-x:auto;padding:12px 0 0;scrollbar-width:none;overscroll-behavior-x:contain} /* top: room for a tab's glow ring */
 .spots::-webkit-scrollbar{display:none}
-.spb{flex:none;display:flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 8px;border-radius:999px;background:var(--card);color:#475467;font-size:15px;font-weight:700;box-shadow:inset 0 0 0 1.5px #D0D5DD}
-.spb i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--fill)}
-.spb.on{background:#3B5BDB;color:#fff;box-shadow:0 4px 12px rgba(59,91,219,.3)}
-.spb.on i{background:rgba(255,255,255,.25)}
+.spb{flex:none;display:flex;align-items:center;gap:6px;height:46px;margin-bottom:2px;padding:0 12px 0 8px;border-radius:14px 14px 0 0;background:#E9ECF1;color:#475467;font-size:15px;font-weight:700;border:1.5px solid #D0D5DD;border-bottom:0}
+.spb i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--card)}
+.spb.on{height:52px;margin-bottom:0;padding-bottom:4px;background:#EEF2FF;color:#1D3FBF;font-size:16px;font-weight:800;border:2px solid #3B5BDB;border-bottom:0}
+.spb.on i{background:#3B5BDB;color:#fff}
 .spb .ok{width:18px;height:18px;stroke:#12B886;stroke-width:3;fill:none}
-.spb.on .ok{stroke:#B2F2BB}
 .spb .ed{width:16px;height:16px;stroke:currentColor;stroke-width:2.2;fill:none;opacity:.85}
-.spb .spedt{display:flex;align-items:center;gap:3px;height:26px;margin-left:2px;padding:0 9px 0 7px;border-radius:999px;background:rgba(255,255,255,.22);font-size:13px;font-weight:800}
+.spb .spedt{display:flex;align-items:center;gap:3px;height:26px;margin-left:2px;padding:0 9px 0 7px;border-radius:999px;background:var(--card);color:#3B5BDB;font-size:13px;font-weight:800;box-shadow:inset 0 0 0 1.5px #BAC8FF}
 .spb .spedt .ed{width:14px;height:14px;opacity:1}
-.spadd{flex:none;display:flex;align-items:center;gap:4px;height:44px;padding:0 14px;border-radius:999px;background:#EDF2FF;color:#3B5BDB;font-size:15px;font-weight:800;border:1.5px dashed #91A7FF}
-.spadd svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none}
-/* more than 2 rows of places: the rest are under 「ほか」, opened as a list below the buttons */
-.spmore{flex:none;display:flex;align-items:center;gap:4px;height:44px;padding:0 12px 0 14px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:800;box-shadow:inset 0 0 0 1.5px #D0D5DD}
-.spmore svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none;transition:transform .15s}
-.spmore.open svg{transform:rotate(180deg)}
-.spmenu{flex-basis:100%;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:16px;background:var(--card);box-shadow:0 6px 20px rgba(16,24,40,.16),inset 0 0 0 1px var(--line)}
-.spmenu .spb{height:48px;border-radius:12px;box-shadow:none;background:none}
-.spmenu .spb:active{background:var(--fill)}
+.spframe{margin:-2px -10px 14px;padding:14px 8px 1px;border:2px solid #3B5BDB;border-radius:16px;background:#EEF2FF}
+.spframe > .card:last-child{margin-bottom:8px}
+.memof{font-size:14px;color:#3B5BDB;font-weight:800}
 .spnm{width:100%;height:48px;margin:8px 0 10px;padding:0 12px;border-radius:12px;border:1.5px solid #D0D5DD;font-size:17px;font-weight:700}
 .sppre{display:flex;flex-wrap:wrap;gap:8px}
 .sppre button{height:38px;padding:0 12px;border-radius:999px;background:var(--fill);color:#344054;font-size:15px;font-weight:700}
@@ -1058,10 +1061,12 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    <div class="corpw"><input class="t" id="corp" type="text" placeholder="例:○○ガス株式会社" enterkeyhint="done" autocomplete="off"><button type="button" class="corpdd" id="corpDd" aria-label="前に入れた法人から選ぶ" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
    <div class="corpls" id="corpLs" hidden></div></div>
   <label class="field" for="site"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>お客様名</span><span class="sama"><input class="t" id="site" type="text" placeholder="例:山田" enterkeyhint="done" autocomplete="off"><span class="suf" aria-hidden="true">様</span></span></label>
-  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>施工内容</span><textarea class="t" id="memo" rows="1" enterkeyhint="enter" placeholder="例:レンジフード交換"></textarea><button type="button" class="mdone" id="memoDone" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></label>
  </section>
 
- <div class="spots" id="spotBar"></div>
+ <div class="sphead"><b>施工箇所<small id="spCnt"></small></b><button class="spadd" id="spotAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>施工箇所を追加</button></div>
+ <div class="sptabs"><button class="sparr" id="spPrev" aria-label="前の施工箇所を見る" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><div class="spots" id="spotBar"></div><button class="sparr" id="spNext" aria-label="次の施工箇所を見る" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button></div>
+ <div class="spframe" id="spFrame">
+  <label class="field" for="memo"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>施工内容<small class="memof" id="memoOf"></small></span><textarea class="t" id="memo" rows="1" enterkeyhint="enter" placeholder="例:レンジフード交換"></textarea><button type="button" class="mdone" id="memoDone" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></label>
  <ol class="steps" id="steps"><li data-s="b"><i>1</i>施工前</li><li data-s="a"><i>2</i>施工後</li><li data-s="c"><i>3</i>比較写真</li></ol>
 
  <section class="card c-shot">
@@ -1119,7 +1124,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <p class="none" id="thumbsNone">まだありません。タップで拡大、長押しで選択できます。</p>
   <button class="allsave" id="bAll" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx2"><b class="tx">すべての写真を保存</b><small id="bAllSub"></small></span></button>
  </section>
-
+ </div>
 
  <button class="linkrow" id="bReport"><span class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span><span class="tx">施工報告書(PDF)を作る</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
  <p class="msg" id="saveMsg"></p>
@@ -1902,40 +1907,33 @@ function spotShow(){
  const ED='<svg class="ed" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4z"/></svg>';
  // a place without a name: 「箇所名を選ぶ」while it is the only one, 「1か所目」… once there are more
  const lab=i=>(L&&L[i]&&L[i].name)?esc(L[i].name):one?"箇所名を選ぶ":esc(spotName(job,i));
- const add='<button class="spadd" id="spotAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>箇所を追加</button>';
- bar.innerHTML=(L||[{live:true}]).map((x,i)=>{const p=x.live?job:x;return '<button class="spb'+(x.live?" on":"")+'" data-spot="'+i+'"><i>'+(i+1)+'</i>'+lab(i)+(p.after&&!one?OK_SVG:'')+(x.live?'<span class="spedt">'+ED+'編集</span>':'')+'</button>';}).join("")+add;
+ bar.innerHTML=(L||[{live:true}]).map((x,i)=>{const p=x.live?job:x;return '<button class="spb'+(x.live?" on":"")+'" data-spot="'+i+'"><i>'+(i+1)+'</i>'+lab(i)+(p.after&&!one?OK_SVG:'')+(x.live?'<span class="spedt">'+ED+'編集</span>':'')+'</button>';}).join("");
+ const n=L?L.length:1, k=spotIdx(job);
+ $("spCnt").textContent=n>1?(k+1)+"/"+n+"か所目":"";$("memoOf").textContent=n>1||spotNamed(job)?"("+spotName(job,k)+")":"";
  spotFit();
- const on=bar.querySelector(".spb.on");if(on)on.scrollIntoView({block:"nearest",inline:"nearest"});
 }
-// At most 2 rows: places that don't fit (never the open one, and at least 2 of them) go under 「ほか」. Measured on the screen,
-// so it is done again when the screen turns.
+// The big arrows only when the tabs don't all fit; grey at the end they can't go past. The open one in the
+// middle (again when the screen turns).
 function spotFit(){
- const bar=$("spotBar");["spotMore","spotMenu"].forEach(id=>{if($(id))$(id).remove();});
- const ps=[...bar.querySelectorAll(":scope > .spb[data-spot]")];ps.forEach(b=>b.hidden=false);
- if(!bar.offsetParent)return;
- const rows=()=>new Set([...bar.children].filter(b=>!b.hidden).map(b=>b.offsetTop)).size;
- if(rows()<=2)return;
- const more=document.createElement("button");more.className="spmore";more.id="spotMore";more.setAttribute("aria-expanded","false");
- const lab=n=>{more.innerHTML='ほか '+n+'か所<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';};
- bar.insertBefore(more,$("spotAdd"));const gone=[];
- for(let i=ps.length-1;i>=0;i--){if(ps[i].classList.contains("on"))continue;lab(gone.length);if(gone.length&&rows()<=2)break;ps[i].hidden=true;gone.unshift(ps[i]);}
- lab(gone.length);
- // only one would go: showing it is clearer than 「ほか 1か所」 (a 3rd row then)
- if(gone.length<2){gone.forEach(b=>b.hidden=false);more.remove();return;}
- const menu=document.createElement("div");menu.className="spmenu";menu.id="spotMenu";menu.hidden=true;
- menu.innerHTML=gone.map(b=>b.outerHTML.replace(' hidden=""',"")).join("");bar.appendChild(menu);
+ const bar=$("spotBar");$("spPrev").hidden=$("spNext").hidden=true;
+ if(bar.offsetParent&&bar.scrollWidth>bar.clientWidth+2)$("spPrev").hidden=$("spNext").hidden=false;
+ const on=bar.querySelector(".spb.on");if(on)bar.scrollLeft=on.offsetLeft-(bar.clientWidth-on.offsetWidth)/2;
+ spotArr();
 }
+function spotArr(){const b=$("spotBar");$("spPrev").classList.toggle("end",b.scrollLeft<=2);$("spNext").classList.toggle("end",b.scrollLeft+b.clientWidth>=b.scrollWidth-2);}
+$("spotBar").addEventListener("scroll",spotArr,{passive:true});
+[["spPrev",-1],["spNext",1]].forEach(([id,d])=>$(id).addEventListener("click",()=>{const b=$("spotBar");b.scrollBy({left:d*Math.max(120,b.clientWidth*.7),behavior:"smooth"});}));
 window.addEventListener("resize",()=>{if(job&&!$("detail").hidden)spotFit();});
 // ＋箇所を追加 swells like the photo tiles when a place is done (its comparison saved, or a finished site
 // opened): as soon as the bar is on the screen, scrolled so the button shows.
 let spotHintWant=false;
 function spotHint(){spotHintWant=true;setTimeout(()=>{const r=$("spotBar").getBoundingClientRect();if(r.top>=0&&r.bottom<=innerHeight)spotHintGo();},400);}
-function spotHintGo(){if(!spotHintWant||!job||$("detail").hidden||!$("bkDlg").hidden||!$("spotAdd"))return;spotHintWant=false;
- const b=$("spotBar");b.scrollLeft=b.scrollWidth;glow($("spotAdd"),3,"ほかの箇所もここから撮れます");}
+function spotHintGo(){if(!spotHintWant||!job||$("detail").hidden||!$("bkDlg").hidden)return;spotHintWant=false;
+ glow($("spotAdd"),3,"ほかの施工箇所もここから撮れます");}
 new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))spotHintGo();},{threshold:[1]}).observe($("spotBar"));
-$("spotBar").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;
- if(b.id==="spotMore"){const m=$("spotMenu"), open=m.hidden;m.hidden=!open;b.classList.toggle("open",open);b.setAttribute("aria-expanded",String(open));return;}
- if(b.id==="spotAdd")spotAddAsk();else{const i=+b.dataset.spot;if(b.classList.contains("on"))spotEdit(i);else spotGo(i);}});
+$("spotBar").addEventListener("click",e=>{const b=e.target.closest("button[data-spot]");if(!b||!job)return;
+ const i=+b.dataset.spot;if(b.classList.contains("on"))spotEdit(i);else spotGo(i);});
+$("spotAdd").addEventListener("click",()=>{if(job)spotAddAsk();});
 // the open place's photos go into job.spots, and the chosen place's come out onto the site
 function spotSwap(j,i){const L=j.spots, cur=L.findIndex(x=>x.live), out={name:L[cur].name||""};
  for(const k of PAIR_KEYS)if(k in j){out[k]=j[k];delete j[k];}
