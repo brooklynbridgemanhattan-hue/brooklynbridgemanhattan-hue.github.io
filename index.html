@@ -272,7 +272,7 @@ textarea.t{display:block;resize:none;line-height:1.5} /* 施工内容: Enter is 
 .mdone{display:flex;align-items:center;gap:4px;margin:8px 0 0 auto;min-height:40px;padding:0 14px;border-radius:999px;font-size:15px;font-weight:800;background:var(--brand);color:#fff}
 .mdone svg.i{width:18px;height:18px;stroke:#fff;stroke-width:3}
 input.t:focus,textarea.t:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-.place{display:flex;gap:8px}
+.place{display:flex;gap:8px}.place input.t{flex:1;min-width:0;font-weight:700}.place input.t::placeholder{font-weight:500}
 /* 日付 | 伝票番号 side by side; 法人: typed, or chosen from the ones typed before (▾), each with × to take it off */
 .frow{display:flex;gap:10px}.frow .field{flex:1;min-width:0}.frow .fday{flex:0 0 54%}
 input.t[type=date]{min-height:52px;-webkit-appearance:none;appearance:none}
@@ -1053,7 +1053,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <div class="frow"><label class="field fday" for="day"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>日付</span><input class="t" id="day" type="date"></label>
    <label class="field" for="slip"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 7 20M17 4l-2 16M4 9h17M3 15h17"/></svg>伝票番号</span><input class="t" id="slip" type="text" placeholder="英数字" enterkeyhint="done" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24"></label></div>
   <div class="field"><span class="fl-l"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>場所</span>
-   <div class="place"><div class="pv none" id="placeBox"><span id="placeTxt">まだ取得していません</span></div><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
+   <div class="place"><input class="t" id="placeIn" type="text" placeholder="入力 か 現在地を取得" enterkeyhint="done" autocomplete="off" maxlength="60"><button class="chipbtn" id="bPlace"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="tx">現在地を取得</span></button></div></div>
   <div class="field"><label class="fl-l" for="corp"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 8h3M8 12h3M8 16h3"/></svg>法人</label>
    <div class="corpw"><input class="t" id="corp" type="text" placeholder="例:○○ガス株式会社" enterkeyhint="done" autocomplete="off"><button type="button" class="corpdd" id="corpDd" aria-label="前に入れた法人から選ぶ" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
    <div class="corpls" id="corpLs" hidden></div></div>
@@ -1884,7 +1884,7 @@ $("site").onchange=$("memo").onchange=$("slip").onchange=async()=>{await saveJob
 $("corp").onchange=async()=>{corpRemember($("corp").value);await saveJob();make();};
 $("slip").addEventListener("keydown",e=>{if(e.key==="Enter")$("slip").blur();});$("corp").addEventListener("keydown",e=>{if(e.key==="Enter")$("corp").blur();});
 const hasPhotos=j=>pairsOf(j).some(p=>p.before||p.after);
-const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||$("slip").value.trim()||$("corp").value.trim()||hasPhotos(job)||(job.extras||[]).length||spotList(job));
+const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||$("slip").value.trim()||$("corp").value.trim()||$("placeIn").value.trim()||hasPhotos(job)||(job.extras||[]).length||spotList(job));
 let typeT=0;["site","memo"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(typeT);typeT=setTimeout(()=>{if(worthKeeping())saveJob();},500);}));
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("detail").hidden&&worthKeeping()){clearTimeout(typeT);saveJob();}});
 // Photos just taken are still being put in (and saved): leave only once they are in, so none is
@@ -2798,7 +2798,7 @@ async function gotPhoto(mode,blob,o,shot,g,ck){
 /* ---------- place (city / ward of the current position) ---------- */
 function showPlace(){
  const t=job&&job.place&&job.place.text;
- $("placeTxt").textContent=t||"まだ取得していません";$("placeBox").classList.toggle("none",!t);
+ $("placeIn").value=t||"";
 }
 // "横浜市青葉区" / "杉並区" / "北佐久郡軽井沢町": city (+ ward for the 20 designated cities).
 const SEIREI=["札幌市","仙台市","さいたま市","千葉市","横浜市","川崎市","相模原市","新潟市","静岡市","浜松市","名古屋市","京都市","大阪市","堺市","神戸市","岡山市","広島市","北九州市","福岡市","熊本市"];
@@ -2815,12 +2815,14 @@ function placeText(a){
  const m=t.match(/^([^\s]+?郡[^\s]+?[町村]|[^\s]+?[市区町村])/);
  return m?m[1]:"";
 }
-let placeFor=null, placeQuiet=null;
+let placeFor=null, placeQuiet=null, placeAsked=0;
 function setPlace(a,err){
  const j=placeFor, quiet=placeQuiet===j;placeFor=null;placeQuiet=null;$("bPlace").disabled=false;setTx("bPlace","現在地を取得");
  if(!j)return;
  const text=a?placeText(a):"";
  if(!text){if(j===job&&!quiet)toast(err==="denied"?"位置情報が許可されていません":"場所を取得できませんでした",true);return;} // asked by itself: no answer = the place stays as it is, nothing said
+ // typed by hand while it was being fetched (or being typed now): the typed one stays
+ if((j.place&&j.place.hand&&j.place.at>=placeAsked)||(j===job&&document.activeElement===$("placeIn")&&$("placeIn").value.trim()))return;
  const old=j.place&&j.place.text;
  j.place={text,at:Date.now()};putJob(j);if(j===job)showPlace();
  // back on the list meanwhile (still at its top, nothing searched or picked): the card shows the new place
@@ -2830,7 +2832,7 @@ function setPlace(a,err){
 // The site's first 施工前 photo taken with this app's camera: then the phone is surely at the site, so the
 // place is fetched again (a site made beforehand, at the office, got the office's place; and 現在地を取得
 // is easily forgotten there). Not for a photo chosen from the phone, a retake or another place's photo.
-function placeAtShot(j){if(job!==j||placeFor)return;placeQuiet=j;getPlace();}
+function placeAtShot(j){if(job!==j||placeFor||(j.place&&j.place.hand))return;placeQuiet=j;getPlace();} // typed by hand: kept
 // A notice said once nothing else is on: the camera closed and its saving said, no other notice, hint,
 // frame screen or question (a little later than 写真を編集's hint, which goes first).
 async function toastQuiet(t,j){const w=ms=>new Promise(r=>setTimeout(r,ms));
@@ -2839,7 +2841,7 @@ async function toastQuiet(t,j){const w=ms=>new Promise(r=>setTimeout(r,ms));
 window.onAppPlace=json=>{let a=null,err="";try{const o=JSON.parse(json);if(o.error)err=o.error;else a=o;}catch(e){}setPlace(a,err);};
 function getPlace(){
  if(!job||placeFor)return;
- const j=job;placeFor=j;$("bPlace").disabled=true;setTx("bPlace","取得中…");
+ const j=job;placeFor=j;placeAsked=Date.now();$("bPlace").disabled=true;setTx("bPlace","取得中…");
  setTimeout(()=>{if(placeFor===j)setPlace(null);},20000); // never leave the button stuck
  if(window.AndroidApp&&window.AndroidApp.requestPlace){window.AndroidApp.requestPlace();return;}
  if(!navigator.geolocation){setPlace(null);return;}
@@ -2852,6 +2854,10 @@ function getPlace(){
  },e=>setPlace(null,e&&e.code===1?"denied":""),{enableHighAccuracy:false,timeout:15000,maximumAge:300000});
 }
 $("bPlace").onclick=getPlace;
+// 場所 by hand: kept as typed (the first 施工前 photo does not fetch it again); 現在地を取得 still replaces it
+$("placeIn").onchange=async()=>{if(!job)return;const t=$("placeIn").value.trim();$("placeIn").value=t;
+ if(t)job.place={text:t,at:Date.now(),hand:true};else delete job.place;await saveJob();make();};
+$("placeIn").addEventListener("keydown",e=>{if(doneKey(e)){e.preventDefault();$("placeIn").blur();}});
 
 /* ---------- other photos ---------- */
 function renderThumbs(){
