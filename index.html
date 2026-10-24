@@ -372,6 +372,13 @@ label.btn{cursor:pointer}
 .cmpsave .tx2{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3}
 .cmpsave b{font-size:19px;font-weight:800}
 .cmpsave small{font-size:14px;font-weight:600;opacity:.92}
+/* saved or not: a small label by the heading, a line over the button, the button white once saved */
+.cmpst{flex:none;display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:800;white-space:nowrap}
+.cmpst.no{background:#FFF4E5;color:#B54708;box-shadow:inset 0 0 0 1.5px #FEC84B}
+.cmpst.ok{background:#EBFBEE;color:#2B8A3E;box-shadow:inset 0 0 0 1.5px #B2F2BB}
+.cmpwarn{margin:12px 0 -2px;padding:8px 12px;border-radius:12px;background:#FFF4E5;color:#B54708;font-size:14px;font-weight:800}
+.cmpsave.cmpok{background:var(--card);color:#2B8A3E;box-shadow:inset 0 0 0 2px #40C057}
+.cmpsave.cmpok small{color:#475467;opacity:1}
 .cmpshare{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:52px;margin-top:10px;padding:8px 16px;border-radius:14px;background:#fff;color:#6741D9;border:2px solid #B197FC;font-size:17px;font-weight:800}
 .cmpshare svg.i{width:22px;height:22px}
 .cmpshare small{font-size:13px;font-weight:600;color:#7950F2}
@@ -1093,7 +1100,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </section>
 
  <section class="card c-cmp" id="result">
-  <div class="sh2"><span class="cdot"></span><h2>比較写真</h2><small>タップで拡大</small></div>
+  <div class="sh2"><span class="cdot"></span><h2>比較写真</h2><span class="cmpst" id="cmpSt" hidden></span><small>タップで拡大</small></div>
   <canvas id="out" role="img" aria-label="施工前と施工後の比較写真"></canvas>
   <div class="cmpopts">
   <div class="seg" role="radiogroup" aria-label="並べ方">
@@ -1109,7 +1116,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
    </div>
    <label class="chk" id="labDateRow" for="cDate"><input type="checkbox" id="cDate" checked><i><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></i><span>文字の横に日付を入れる</span><span class="ex" id="dateEx">2026.10.05</span></label>
   </div>
-  <button class="cmpsave" id="bSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx2"><b>比較写真を保存する</b><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
+  <p class="cmpwarn" id="cmpWarn" hidden></p>
+  <button class="cmpsave" id="bSave"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tx2"><b id="bSaveT">比較写真を保存する</b><small class="bsub" id="bSaveOk" hidden></small><small class="bsub" id="bSaveSub">横並びで保存されます</small></span></button>
   <button class="cmpshare" id="bShare"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg><span>比較写真を送る <small>LINE・メールなど</small></span></button>
  </section>
 
@@ -1461,7 +1469,7 @@ let MEM=[];
    the other places wait in job.spots, in order: [{name, live:true} | {name, before, after, …}].
    その他の写真 (extras) belong to a place too; on a site from before that (no exSpot), they were the
    site's and go to 1か所目 when it is next opened. */
-const PAIR_KEYS=["memo","extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","afterPct","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmt","cmpSavedAt","savedB","savedA","savedC","thB","thBk","thA","thAk"];
+const PAIR_KEYS=["memo","extras","cklv","before","beforeAt","beforeOri","beforeNid","after","afterAt","afterOri","afterNid","afterPct","raw","rawNid","cand","mask","tone","lvBg","rot","qt","grav","auto","adj","crop","crops","cmt","cmpSavedAt","cmpSavedSig","savedB","savedA","savedC","thB","thBk","thA","thAk"];
 const spotList=j=>j&&j.spots&&j.spots.length?j.spots:null;
 const pairsOf=j=>{const L=spotList(j);return L?L.map(s=>s.live?j:s):[j];};
 // the list's photos are of the first place that has some.
@@ -1801,7 +1809,7 @@ function glow(el,n,note){if(!el)return;el.classList.remove("glow","glow1");void 
 // 施工前 is where a site starts: it is pointed at when an un-started site opens.
 // Once both photos are there, 比較写真を保存する is pointed at the first time it comes into view.
 let cmpGlowed=false;
-const cmpSeen=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&!cmpGlowed&&job&&job.before&&job.after&&$("result").style.display!=="none"&&$("viewer").hidden){cmpGlowed=true;glow($("bSave"),3,"比較写真を保存しましょう");}});},{threshold:[0.9]});
+const cmpSeen=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&!cmpGlowed&&job&&job.before&&job.after&&$("result").style.display!=="none"&&$("viewer").hidden&&cmpState()!=="ok"){cmpGlowed=true;glow($("bSave"),3,"比較写真を保存しましょう");}});},{threshold:[0.9]});
 cmpSeen.observe($("bSave"));
 // A site with no photos yet whose place has no name starts from the name (箇所名を選ぶ); once it has one
 // (or a photo is taken anyway), 施工前. One at a time.
@@ -1830,7 +1838,7 @@ function refreshDetail(){
 // The one "next step" button at the bottom, and the 1-2-3 steps at the top.
 function showNext(){
  if(!job)return;
- const step=!job.before?"b":!job.after?"a":"c", savedCmp=!!(job.cmpSavedAt&&job.cmpSavedAt>=Math.max(job.beforeAt||0,job.afterAt||0));
+ const step=!job.before?"b":!job.after?"a":"c", savedCmp=cmpState()==="ok";
  document.querySelectorAll("#steps li").forEach(li=>{const k=li.dataset.s, order="bac";
   li.classList.toggle("done",order.indexOf(k)<order.indexOf(step)||(step==="c"&&k==="c"&&savedCmp));li.classList.toggle("cur",k===step&&!(step==="c"&&savedCmp));});
  const nb=$("nextBtn");nb.className="next "+{b:"m-before",a:"m-after",c:"m-cmp"}[step];
@@ -1839,6 +1847,22 @@ function showNext(){
  $("nextI").innerHTML=step==="c"?'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>':CAM_SVG;
  // the comparison card has its own save button, so nothing floats once both photos are taken
  $("nextBar").hidden=step==="c"||camFail;
+ cmpShow();
+}
+// The comparison photo: "ok" saved as it is now, "changed" saved once but changed since (a photo, its editing,
+// 横/縦 or the words), "none" never saved. (Saved before the settings were kept: as saved, unless a photo changed.)
+const cmpSig=()=>layout+"|"+(withLabels?labType+(labDate?"+d":""):"-");
+function cmpState(){
+ if(job.cmpSavedAt&&job.cmpSavedAt>=Math.max(job.beforeAt||0,job.afterAt||0)&&(!job.cmpSavedSig||job.cmpSavedSig===cmpSig()))return "ok";
+ return job.cmpSavedSig||(job.savedC||[]).length?"changed":"none";
+}
+function cmpShow(){
+ const s=cmpState(), ok=s==="ok", ph=window.AndroidApp?"スマホに":"";
+ const st=$("cmpSt");st.hidden=false;st.className="cmpst "+(ok?"ok":"no");st.textContent=ok?"✓ 保存済み":s==="changed"?"● 変更後 未保存":"● 未保存";
+ $("cmpWarn").hidden=ok;$("cmpWarn").textContent=s==="changed"?"⚠ 変更したので、もう一度保存してください":"⚠ まだ"+ph+"保存されていません";
+ $("bSave").classList.toggle("cmpok",ok);$("bSaveT").textContent=ok?"✓ "+ph+"保存しました":"比較写真を保存する";
+ $("bSaveSub").hidden=ok;$("bSaveOk").hidden=!ok;
+ if(ok){const d=new Date(job.cmpSavedAt);$("bSaveOk").textContent=(d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+pad2(d.getMinutes())+" ・ 押すと再保存";}
 }
 $("nextBtn").onclick=()=>{if(!job)return;if(!job.before)$("bBefore").click();else if(!job.after)$("bAfter").click();else $("bSave").click();};
 // Tapping an empty photo tile opens the camera.
@@ -4670,14 +4694,14 @@ function badge(x,q,k,en,font){
  x.restore();
 }
 $("cLabel").checked=withLabels;
-$("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}showLab();make();};
+$("cLabel").onchange=e=>{withLabels=e.target.checked;try{localStorage.setItem("ba-labels",withLabels?"1":"0");}catch(err){}showLab();make();showNext();};
 // 施工前・施工後 or BEFORE・AFTER on the photo
 let labType="ja";try{labType=localStorage.getItem("ba-labtype")==="en"?"en":"ja";}catch(e){}
 let labDate=true;try{labDate=localStorage.getItem("ba-labdate")!=="0";}catch(e){}
 $("cDate").checked=labDate;
-$("cDate").onchange=e=>{labDate=e.target.checked;try{localStorage.setItem("ba-labdate",labDate?"1":"0");}catch(err){}make();};
+$("cDate").onchange=e=>{labDate=e.target.checked;try{localStorage.setItem("ba-labdate",labDate?"1":"0");}catch(err){}make();showNext();};
 function showLab(){$("labSeg").hidden=!withLabels;$("labDateRow").hidden=!withLabels;const dd=new Date((job&&job.beforeAt)||Date.now());$("dateEx").textContent=dd.getFullYear()+"."+pad2(dd.getMonth()+1)+"."+pad2(dd.getDate());$("labSeg").querySelectorAll("button").forEach(b=>{const on=b.dataset.l===labType;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);});}
-$("labSeg").onclick=e=>{const b=e.target.closest("[data-l]");if(!b||b.dataset.l===labType)return;labType=b.dataset.l;try{localStorage.setItem("ba-labtype",labType);}catch(err){}showLab();make();};
+$("labSeg").onclick=e=>{const b=e.target.closest("[data-l]");if(!b||b.dataset.l===labType)return;labType=b.dataset.l;try{localStorage.setItem("ba-labtype",labType);}catch(err){}showLab();make();showNext();};
 showLab();
 // The save button says which layout will be saved.
 function showLayout(){$("lyV").checked=layout==="v";$("lyH").checked=layout==="h";$("bSaveSub").textContent=layout==="v"?"縦並びで保存されます":"横並びで保存されます";showNext();}
@@ -4884,7 +4908,10 @@ async function saveBlob(blob,kind,t,tag){
 $("bSave").onclick=async()=>{buzz(30);await makeDone;if(!imgs.b)return;const g=spotGen, r=await saveBlob(await fullBlob(),"施工前後",Date.now());
  if(g!==spotGen)return; // another place was opened meanwhile
  keepUri(job,"savedC",r);
- if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();await saveJob();showNext();spotHint();}};
+ if(/保存しました/.test($("saveMsg").textContent)){job.cmpSavedAt=Date.now();job.cmpSavedSig=cmpSig();await saveJob();
+  // its 「比較写真を保存しましょう」 goes at once (it would still be telling to save a saved photo)
+  if($("bSave").classList.contains("glow")){$("bSave").classList.remove("glow","glow1");document.querySelectorAll(".hint").forEach(h=>{h.classList.add("out");setTimeout(()=>h.remove(),450);});}
+  showNext();spotHint();}};
 // 送る: the comparison photo goes straight to LINE, mail … through the phone's share menu.
 // list = [{blob,name}]
 async function shareFiles(list,title){
