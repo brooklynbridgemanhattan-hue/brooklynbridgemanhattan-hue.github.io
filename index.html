@@ -679,7 +679,8 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .xcrop i:before{content:"";position:absolute;left:14px;top:14px;width:18px;height:18px;border:5px solid #fff;filter:drop-shadow(0 0 2px rgba(0,0,0,.85))}
 .xcrop i[data-h="tl"]:before{border-right:0;border-bottom:0;left:18px;top:18px}.xcrop i[data-h="tr"]:before{border-left:0;border-bottom:0;left:10px;top:18px}
 .xcrop i[data-h="bl"]:before{border-right:0;border-top:0;left:18px;top:10px}.xcrop i[data-h="br"]:before{border-left:0;border-top:0;left:10px;top:10px}
-.vedit{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:70px;z-index:3;height:48px;padding:0 16px;border-radius:999px;background:rgba(124,58,237,.85);color:#fff;font-weight:800;font-size:16px;display:inline-flex;align-items:center;gap:6px}
+.vedit{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:70px;z-index:3;height:54px;padding:0 24px 0 20px;border-radius:999px;background:#7C3AED;border:2.5px solid #fff;box-shadow:0 4px 14px rgba(124,58,237,.55);color:#fff;font-weight:800;font-size:19px;display:inline-flex;align-items:center;gap:8px}
+.vedit svg.i{width:22px;height:22px;stroke-width:2.6}
 /* an edited photo: a small ✎ on its thumbnail */
 .xedmk{position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#2563EB;color:#fff;font-size:11px;font-weight:900;display:grid;place-items:center;box-shadow:0 0 0 2px #fff;pointer-events:none}
 .scell{position:absolute;pointer-events:none;border-radius:2px}
@@ -4255,6 +4256,17 @@ $("xStage").addEventListener("pointermove",ev=>{const st=xeG.st;if(!xe||!st)retu
 ["pointerup","pointercancel"].forEach(n=>$("xStage").addEventListener(n,ev=>{const st=xeG.st;
  if(st&&st.crop){if(ev.pointerId===st.id)xeG.st=null;return;}xeG.pts.delete(ev.pointerId);if(xe)xeGStart();}));
 window.addEventListener("resize",()=>{if(xe)xeShow();});
+// App: the phone makes the edited photo from its own copy of the original (no photo passes through the
+// page, about a second); answers the new id, or null (then the page makes it)
+function natEdit(id,e){return new Promise(res=>{const A=window.AndroidApp;if(!id||!A||!A.editPhoto||!A.hasPhoto||!A.hasPhoto(id)){res(null);return;}
+ const req="l"+(++lvReq);lvWait.set(req,r=>res(String(r).startsWith("ok:")?String(r).slice(3):null));
+ setTimeout(()=>{if(lvWait.has(req)){lvWait.delete(req);res(null);}},15000);
+ try{A.editPhoto(req,id,JSON.stringify({q:e.q,deg:e.deg,s:e.s,ox:e.ox,oy:e.oy,l:e.c.l,t:e.c.t,r:e.c.r,b:e.c.b}));}catch(err){lvWait.delete(req);res(null);}});}
+// the edited photo into the phone's photos, after 保存しました (only a failure says something more)
+async function xeGallery(x,out,kn){const j=job;let r=null;
+ try{r=x.nid&&canNative()?await nativeSave(x.nid,"","",photoName(kn,Date.now(),"編集")):await toPhone(out,kn,Date.now(),"編集");}catch(err){r=null;}
+ if(okR(r)){keepUri(x,"saved",r);if(job===j&&(j.extras||[]).includes(x))await saveJob();else if((j.extras||[]).includes(x))await putJob(j);}
+ else toast("スマホの写真には保存できませんでした",true);}
 // 完了: the edited photo replaces x.blob (the one as taken stays in x.orig), and a copy goes into the phone's
 // photos as one more photo (the one taken is not touched). Back to 撮ったまま = the photo as taken again.
 $("xOk").onclick=async()=>{if(!xe||xe.busy)return;const e=xe.e, x=xe.x, j=job;
@@ -4262,14 +4274,16 @@ $("xOk").onclick=async()=>{if(!xe||xe.busy)return;const e=xe.e, x=xe.x, j=job;
  xe.busy=true;const ok=$("xOk");ok.disabled=true;setTx2("xOk","保存中…");
  try{const was=x.nid;let out=null;
   if(xeIsId(e)){if(x.orig){x.blob=x.orig;x.nid=x.origNid||null;delete x.orig;delete x.origNid;}delete x.ed;}
-  else{out=await xeRender(xe.im,e);if(!out)throw new Error("render");if(!x.orig){x.orig=x.blob;x.origNid=x.nid||null;}x.blob=out;x.nid=null;x.ed=JSON.parse(JSON.stringify(e));}
-  xe.old=xeSig(e);await saveJob();renderThumbs();ensureNid(x);
+  else{const src=x.orig?x.origNid:x.nid, nid=await natEdit(src,e);let nb=null;
+   if(nid){try{const q=await fetch("/cam/shot/"+nid,{cache:"no-store"});if(q.ok){nb=await q.blob();if(!nb.size)nb=null;}}catch(err){}}
+   out=nb||await xeRender(xe.im,e);if(!out)throw new Error("render");
+   if(!x.orig){x.orig=x.blob;x.origNid=x.nid||null;}x.blob=out;x.nid=nb?nid:null;x.ed=JSON.parse(JSON.stringify(e));}
+  xe.old=xeSig(e);await saveJob();renderThumbs();if(!x.nid)ensureNid(x);
   if(was&&was!==x.origNid&&was!==x.nid)photoGC([was]); // the copy of the edit before this one
   if(!out){toast("元の写真に戻しました");return;}
   if(!window.AndroidApp){toast("保存しました");return;}
-  const kn=x.ckl&&cklLab(x.ckl)?cklLab(x.ckl).replace(/[\\/:*?"<>|]+/g,"_"):"写真", r=await toPhone(out,kn,Date.now(),"編集");
-  if(okR(r)){keepUri(x,"saved",r);if(j===job&&(j.extras||[]).includes(x))await saveJob();toast("保存しました(スマホの写真に1枚追加)");}
-  else toast("保存しました(スマホの写真には保存できませんでした)",true);}
+  toast("保存しました(スマホの写真に1枚追加)");
+  xeGallery(x,out,x.ckl&&cklLab(x.ckl)?cklLab(x.ckl).replace(/[\\/:*?"<>|]+/g,"_"):"写真");}
  catch(err){toast("保存できませんでした",true);}
  finally{if(xe)xe.busy=false;ok.disabled=false;setTx2("xOk","完了");}};
 function xeClose(){if(!xe)return;const i=xe.i, x=xe.x;try{if(xe.pv!==xe.im&&xe.pv.close)xe.pv.close();if(xe.im.close)xe.im.close();}catch(err){}
