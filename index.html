@@ -750,7 +750,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .lvrow2{grid-template-columns:1fr 1.4fr}
 /* 補正: 傾き / 明るさ tabs; both sets of controls take the same place, so the photo keeps its size */
 /* コメント tab: in the 位置・拡大 screen (same preview); one comment on each photo, each its own */
-#adjEd.cmmode #adjSel,#adjEd.cmmode #adjPad,#adjEd.cmmode .trimrow,#adjEd.cmmode #adjReset{display:none}
+#adjEd.cmmode #adjSel,#adjEd.cmmode #adjPad,#adjEd.cmmode .trimrow{display:none}
 #adjEd.cmmode .adjbtns{grid-template-columns:1fr}
 #adjEd.cmmode .trimov{touch-action:none}
 .cmpanel{display:flex;flex-direction:column;gap:10px}
@@ -1167,7 +1167,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  </div>
  <div class="trimrow"><button class="mtrim" id="adjTrim"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg><span class="tx">手動でトリミング</span></button><button class="auto" id="adjAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg><span>余白を自動カット</span></button></div>
  <div class="cmpanel" id="cmPanel" hidden><div class="cmwho" id="cmWho" role="radiogroup"><button type="button" data-k="b" role="radio">施工前のコメント</button><button type="button" data-k="a" role="radio">施工後のコメント</button></div><textarea class="cmtext" id="cmText" rows="2" maxlength="200" placeholder="コメントを入力(例:交換前の給湯器)"></textarea><div class="cmrow cmcol"><span>文字の色</span><div class="cmsw" id="cmFg" role="radiogroup"><button type="button" data-c="#FFFFFF" role="radio" aria-label="白"><i style="background:#FFFFFF"></i></button><button type="button" data-c="#101828" role="radio" aria-label="黒"><i style="background:#101828"></i></button><button type="button" data-c="#E03131" role="radio" aria-label="赤"><i style="background:#E03131"></i></button><button type="button" data-c="#FCC419" role="radio" aria-label="黄"><i style="background:#FCC419"></i></button><button type="button" data-c="#2F9E44" role="radio" aria-label="緑"><i style="background:#2F9E44"></i></button><button type="button" data-c="#1C7ED6" role="radio" aria-label="青"><i style="background:#1C7ED6"></i></button><button type="button" data-c="#F76707" role="radio" aria-label="オレンジ"><i style="background:#F76707"></i></button></div></div><div class="cmrow"><span>背景</span><div class="cmseg" id="cmBg" role="radiogroup"><button type="button" data-v="1" role="radio">あり</button><button type="button" data-v="0" role="radio">なし(文字だけ)</button></div></div><div class="cmrow cmcol"><span>縁取り</span><div class="cmsw" id="cmOl" role="radiogroup"><button type="button" data-c="" role="radio" class="cmstd">なし</button><button type="button" data-c="#FFFFFF" role="radio" aria-label="白"><i style="background:#FFFFFF"></i></button><button type="button" data-c="#101828" role="radio" aria-label="黒"><i style="background:#101828"></i></button><button type="button" data-c="#E03131" role="radio" aria-label="赤"><i style="background:#E03131"></i></button><button type="button" data-c="#FCC419" role="radio" aria-label="黄"><i style="background:#FCC419"></i></button><button type="button" data-c="#2F9E44" role="radio" aria-label="緑"><i style="background:#2F9E44"></i></button><button type="button" data-c="#1C7ED6" role="radio" aria-label="青"><i style="background:#1C7ED6"></i></button><button type="button" data-c="#F76707" role="radio" aria-label="オレンジ"><i style="background:#F76707"></i></button></div></div><div class="cmrow" id="cmOwRow"><span>縁取りの太さ</span><div class="cmseg" id="cmOw" role="radiogroup"><button type="button" data-v="1" role="radio">細</button><button type="button" data-v="2" role="radio">中</button><button type="button" data-v="3" role="radio">太</button></div></div><button type="button" class="cmdel" id="cmDel">このコメントを消す</button></div>
- <div class="adjbtns"><button class="o2" id="adjReset">すべて元に戻す</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
+ <div class="adjbtns"><button class="o2" id="adjX"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>閉じる</button><button class="ok" id="adjOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>完了</button></div>
 </div>
 
 <div class="tfs" id="tfs" hidden>
@@ -1192,7 +1192,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="tnrow"><span>コントラスト</span><button class="tnst" data-t="ct" data-d="-1" aria-label="コントラスト −1">−</button><input type="range" id="tnCt" min="-50" max="50" step="1" value="0" aria-label="コントラスト"><button class="tnst" data-t="ct" data-d="1" aria-label="コントラスト ＋1">＋</button><b id="tnCtV">0</b></div>
  <div class="lvrow tnbtns"><button id="tnAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>自動で調整</button><button id="tnZero"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>元に戻す</button></div>
  </div></div>
- <div class="adjbtns"><button class="o2" id="lvX">キャンセル</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
+ <div class="adjbtns"><button class="o2" id="lvX"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>閉じる</button><button class="ok" id="lvOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
 </div>
 <div class="adj cand" id="cand" hidden>
  <div class="adjhd"><b id="cdT">施工前の写真を選ぶ</b><span>撮った写真から1枚を選んで「この写真を採用」を押します(下の写真を長押しすると、まとめて削除できます)</span></div>
@@ -3647,7 +3647,6 @@ function autoCrop(t){
  else{const s0=job.crop||CROP0();job.crops[t]={l:Math.max(0,c.l-s0.l),t:Math.max(0,c.t-s0.t),r:Math.max(0,c.r-s0.r),b:Math.max(0,c.b-s0.b)};} // on top of the 両方 cut
  adjDraw();toast(c.l||c.t||c.r||c.b?"余白をカットしました":"余白はありません");return true;
 }
-$("adjReset").onclick=()=>{job.adj={b:ADJ0(),a:ADJ0()};job.crop=CROP0();job.crops={b:CROP0(),a:CROP0()};adjDraw();};
 // The comment being written: a word still on the keyboard (underlined, not yet 確定) reaches the box
 // only when the box is left, which is after the tap on 完了 / a tab. So the box is left first, the
 // keyboard is given a moment, and what is in the box is what is kept.
@@ -3655,7 +3654,11 @@ async function cmFlush(){const t=$("cmText");if(edMode!=="cm")return;
  if(document.activeElement===t){t.blur();await new Promise(r=>setTimeout(r,80));}
  const v=t.value, has=job&&job.cmt&&job.cmt[cmK];if(job&&v!==(has?has.t||"":"")&&(v||has))cmOf(cmK).t=v;}
 async function adjCommit(){await cmFlush();if(trimOn)trimSet(false);if(adjSnap()!==adjOld){adjOld=adjSnap();job.cmpSavedAt=null;await saveJob();make();showNext();setSlot("sB",job.before,job.beforeAt);setSlot("sA",job.after,job.afterAt);}}
-$("adjOk").onclick=async()=>{$("adjEd").hidden=true;await adjCommit();};
+// 完了 keeps what was done and stays in the editor; 閉じる (and the back button) leaves it, asking first
+// when something was changed after the last 完了.
+const edAskClose=()=>bkDialog("保存していない変更があります","「完了」を押していない変更は消えます。","保存せずに閉じる","やめる");
+$("adjOk").onclick=async()=>{await cmFlush();const d=adjSnap()!==adjOld;await adjCommit();toast(d?"保存しました":"変更はありません");};
+$("adjX").onclick=async()=>{if(trimOn)trimSet(false);await cmFlush();if(adjSnap()!==adjOld&&!await edAskClose())return;adjClose();};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;if(o.cmt)job.cmt=o.cmt;else delete job.cmt;}$("adjEd").hidden=true;}
 
 /* ---------- 候補 (施工前・施工後) ---------- */
@@ -4012,7 +4015,8 @@ $("tnAuto").onclick=async()=>{if(!lv)return;const b=$("tnAuto");b.disabled=true;
  }catch(e){toast("自動で調整できませんでした",true);}
  b.disabled=false;};
 function lvClose(){lv=null;$("lvEd").hidden=true;}
-$("lvX").onclick=()=>{if(!lvBusy)lvClose();};
+const lvDirty=()=>!!lv&&!(lv.deg===lv.old&&lv.q===lv.oldQ&&lv.bg===lv.oldBg&&lv.tn.br===lv.oldTn.br&&lv.tn.ct===lv.oldTn.ct);
+$("lvX").onclick=async()=>{if(!lv||lvBusy)return;if(lvDirty()&&!await edAskClose())return;if(!lvBusy)lvClose();};
 let lvBusy=false;
 // makes the levelled photo (nothing when unchanged); false = it could not
 async function lvApply(){
@@ -4031,6 +4035,7 @@ async function lvApply(){
   if(dq){if(k==="b"&&job.mask)job.mask=maskTurn(job.mask,dq);if(job.adj)job.adj[k]={s:1,x:0,y:0};job.crop=null;job.crops=null;}job.lvBg=job.lvBg||{};job.lvBg[k]=bg;job.tone=job.tone||{};job.tone[k]=tn;job.cmpSavedAt=null;
   const bn=b.nid||(b===raw?rn:null)||null;
   if(k==="b"){job.before=b;job.beforeNid=bn;}else{job.after=b;job.afterNid=bn;}
+  lv.old=deg;lv.oldQ=q;lv.oldBg=bg;lv.oldTn={...lv.tn}; // what 完了 kept: 閉じる asks only about later changes
   refreshDetail();done=true;toast(deg||tn||q?"補正しました("+[q?"回転 "+q*90+"°":"",deg?"傾き "+fmtDeg(deg):"",tn?"明るさ "+fmtTn(tn.br)+" ・ コントラスト "+fmtTn(tn.ct):""].filter(Boolean).join(" ・ ")+")":"撮ったままに戻しました");
   const SK=k==="b"?"savedB":"savedA", had=job[SK]||[];job[SK]=[];
   await saveJob();photoGC([was]);make();
@@ -4038,7 +4043,7 @@ async function lvApply(){
  }catch(e){toast("補正できませんでした",true);}
  lvBusy=false;ok.disabled=false;setTx2("lvOk","完了");return done;
 }
-$("lvOk").onclick=async()=>{if(!lv||lvBusy)return;await lvApply();lvClose();};
+$("lvOk").onclick=async()=>{if(!lv||lvBusy)return;if(!lvDirty()){toast("変更はありません");return;}await lvApply();};
 window.addEventListener("resize",()=>{if(lv)lvFit();});
 
 /* ---------- トリミング (full screen) ---------- */
@@ -4947,8 +4952,8 @@ window.appBack=()=>{
  if(!$("bkDlg").hidden){if(bkDlgEnd)bkDlgEnd();return true;}
  if(!$("cand").hidden){if(cd&&cd.pick)cdSelEnd();else candClose();return true;}
  if(!$("tfs").hidden){tfsClose(false);return true;}
- if(!$("lvEd").hidden){if(!lvBusy)lvClose();return true;}
- if(!$("adjEd").hidden){adjClose();return true;}
+ if(!$("lvEd").hidden){$("lvX").click();return true;}
+ if(!$("adjEd").hidden){if(trimOn)trimSet(false);else $("adjX").click();return true;}
  if(!$("home").hidden&&hSel.size){hSelClear();return true;}
  if(!$("viewer").hidden){if(editing)noteEnd(true);else viewerBack();return true;}
  if(!$("med").hidden){$("med").hidden=true;return true;}
