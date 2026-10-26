@@ -2669,6 +2669,7 @@ function camFocus(cx,cy){
 const hasFlash=()=>NATIVE?!!(natInfo&&natInfo.flash):!!(trackCaps.torch||(photoCaps&&photoCaps.fillLightMode&&photoCaps.fillLightMode.indexOf("flash")>=0));
 function showFlash(){
  const b=$("tFlash");b.hidden=!hasFlash();
+ if(NATIVE&&window.AndroidCam.flash)window.AndroidCam.flash(flashMode); // the phone keeps it so 自動 knows when it is dark
  setTx("tFlash",{off:"オフ",on:"オン",auto:"自動"}[flashMode]);
  b.classList.toggle("on",flashMode==="on");b.classList.toggle("auto",flashMode==="auto");
 }
