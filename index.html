@@ -658,6 +658,17 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .selst.none{white-space:normal}
 .selst .chip.b{background:#5C7CFA;color:#fff}.selst .chip.a{background:#F59F00;color:#2B1D00}
 .pad1.off,.trimrow.off{opacity:.4}
+/* 拡大・縮小・傾き: a row each for 拡大 / 傾き (− slider ＋ value) and 位置 (←↑↓→), then 90°回転 / 元に戻す */
+.pad1.edz{display:flex;flex-direction:column;gap:8px}
+.edz .edzr{display:flex;align-items:center;gap:8px}
+.edz .edl{flex:none;width:34px;font-size:14px;font-weight:800;color:#E4E7EC}
+.edz .edzr button{flex:1;min-height:44px;flex-direction:row;font-size:20px;gap:6px}
+.edz .edzr input{flex:1;min-width:0;accent-color:#9C36B5;height:32px}
+.edz .eds button{flex:none;width:44px}
+.edz .edzr .zv{flex:none;width:58px;text-align:right;font-size:16px;display:block}
+.edz .ed2 button{min-height:46px;font-size:15px}
+.edz .ed2 button svg.i{width:20px;height:20px}
+.edz .edzr.off{opacity:.4}
 .scell{position:absolute;pointer-events:none;border-radius:2px}
 .scell.on{box-shadow:inset 0 0 0 4px var(--sc),0 0 0 2px var(--sc)}
 .scell.b{--sc:#748FFC}.scell.a{--sc:#FFC53D}
@@ -779,7 +790,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cmbox .cmrs::after{content:"";position:absolute;inset:7px;border-right:2.5px solid #101828;border-bottom:2.5px solid #101828}
 .cmbox:not(.on) .cmrs{display:none}
 /* 写真の編集: the same tabs on 位置・大きさ (adjEd) and 傾き / 明るさ (lvEd), which work on one photo (施工前 / 施工後) */
-.edtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0 0;padding:3px;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
+.edtabs{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:4px;margin:6px 0 0;padding:3px;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
 .edtabs button{min-height:38px;padding:0 2px;border-radius:999px;font-size:min(16px,4.2vw);font-weight:800;color:#F2F4F7;white-space:nowrap}
 .edtabs button.on{background:#fff;color:#101828;box-shadow:0 0 0 3px #9C36B5}
 .edtabs button.off{opacity:.35}
@@ -1157,13 +1168,14 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 <div class="bkov" id="bkDlg" hidden role="dialog" aria-modal="true"><div class="bkbox bkdlg"><b id="bkDT"></b><div class="bkbody" id="bkDB"></div><div class="bkbtns"><button id="bkDNo"></button><button class="bkmain" id="bkDYes"></button></div></div></div>
 <div class="waitnote" id="busy" hidden role="status"><span class="sp"></span>保存中…</div>
 <div class="adj" id="adjEd" hidden>
- <div class="adjhd"><b>写真の編集</b><div class="edtabs" role="tablist"><button data-et="pos" role="tab">位置・拡大</button><button data-et="lv" role="tab">傾き</button><button data-et="tn" role="tab">明るさ</button><button data-et="cm" role="tab">コメント</button></div><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
+ <div class="adjhd"><b>写真の編集</b><div class="edtabs" role="tablist"><button data-et="pos" role="tab">拡大・縮小・傾き</button><button data-et="tn" role="tab">明るさ</button><button data-et="cm" role="tab">コメント</button></div><span id="adjHint">動かす写真を選んで、ボタンで調整します(長押しで連続)</span></div>
  <div class="adjstage" id="adjStage"><div class="adjwrap"><canvas id="adjC"></canvas><div class="trimov" id="trimOv"></div></div></div>
  <div class="selst" id="adjSel" role="status"></div>
- <div class="pad1" id="adjPad">
-  <button data-a="in" class="z"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>拡大</span></button><button data-a="up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>上へ</span></button><button data-a="out" class="z"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><span>縮小</span></button>
-  <button data-a="left"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg><span>左へ</span></button><div class="zv" id="adjVal">100%</div><button data-a="right"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>右へ</span></button>
-  <button data-a="reset" class="rs"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg><span>元に戻す</span></button><button data-a="down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span>下へ</span></button><span></span>
+ <div class="pad1 edz" id="adjPad">
+  <div class="edzr eds"><span class="edl">拡大</span><button data-a="out" aria-label="縮小">−</button><input type="range" id="adjZr" min="0" max="100" step="0.5" value="33" aria-label="拡大"><button data-a="in" aria-label="拡大">＋</button><b class="zv" id="adjVal">100%</b></div>
+  <div class="edzr eds" id="adjTRow"><span class="edl">傾き</span><button id="adjTm" aria-label="左に0.1度">−</button><input type="range" id="adjTr" min="-15" max="15" step="0.1" value="0" aria-label="傾き"><button id="adjTp" aria-label="右に0.1度">＋</button><b class="zv" id="adjTv">0.0°</b></div>
+  <div class="edzr"><span class="edl">位置</span><button data-a="left" aria-label="左へ">←</button><button data-a="up" aria-label="上へ">↑</button><button data-a="down" aria-label="下へ">↓</button><button data-a="right" aria-label="右へ">→</button></div>
+  <div class="edzr ed2"><button id="adjTurn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>90°回転</button><button data-a="reset" class="rs"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>元に戻す</button></div>
  </div>
  <div class="trimrow"><button class="mtrim" id="adjTrim"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg><span class="tx">手動でトリミング</span></button><button class="auto" id="adjAuto"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 5.8L20 10l-5 3.6L16.2 20 12 16.4 7.8 20 9 13.6 4 10l6.1-1.2z"/></svg><span>余白を自動カット</span></button></div>
  <div class="cmpanel" id="cmPanel" hidden><div class="cmwho" id="cmWho" role="radiogroup"><button type="button" data-k="b" role="radio">施工前のコメント</button><button type="button" data-k="a" role="radio">施工後のコメント</button></div><textarea class="cmtext" id="cmText" rows="2" maxlength="200" placeholder="コメントを入力(例:交換前の給湯器)"></textarea><div class="cmrow cmcol"><span>文字の色</span><div class="cmsw" id="cmFg" role="radiogroup"><button type="button" data-c="#FFFFFF" role="radio" aria-label="白"><i style="background:#FFFFFF"></i></button><button type="button" data-c="#101828" role="radio" aria-label="黒"><i style="background:#101828"></i></button><button type="button" data-c="#E03131" role="radio" aria-label="赤"><i style="background:#E03131"></i></button><button type="button" data-c="#FCC419" role="radio" aria-label="黄"><i style="background:#FCC419"></i></button><button type="button" data-c="#2F9E44" role="radio" aria-label="緑"><i style="background:#2F9E44"></i></button><button type="button" data-c="#1C7ED6" role="radio" aria-label="青"><i style="background:#1C7ED6"></i></button><button type="button" data-c="#F76707" role="radio" aria-label="オレンジ"><i style="background:#F76707"></i></button></div></div><div class="cmrow"><span>背景</span><div class="cmseg" id="cmBg" role="radiogroup"><button type="button" data-v="1" role="radio">あり</button><button type="button" data-v="0" role="radio">なし(文字だけ)</button></div></div><div class="cmrow cmcol"><span>縁取り</span><div class="cmsw" id="cmOl" role="radiogroup"><button type="button" data-c="" role="radio" class="cmstd">なし</button><button type="button" data-c="#FFFFFF" role="radio" aria-label="白"><i style="background:#FFFFFF"></i></button><button type="button" data-c="#101828" role="radio" aria-label="黒"><i style="background:#101828"></i></button><button type="button" data-c="#E03131" role="radio" aria-label="赤"><i style="background:#E03131"></i></button><button type="button" data-c="#FCC419" role="radio" aria-label="黄"><i style="background:#FCC419"></i></button><button type="button" data-c="#2F9E44" role="radio" aria-label="緑"><i style="background:#2F9E44"></i></button><button type="button" data-c="#1C7ED6" role="radio" aria-label="青"><i style="background:#1C7ED6"></i></button><button type="button" data-c="#F76707" role="radio" aria-label="オレンジ"><i style="background:#F76707"></i></button></div></div><div class="cmrow" id="cmOwRow"><span>縁取りの太さ</span><div class="cmseg" id="cmOw" role="radiogroup"><button type="button" data-v="1" role="radio">細</button><button type="button" data-v="2" role="radio">中</button><button type="button" data-v="3" role="radio">太</button></div></div><button type="button" class="cmdel" id="cmDel">このコメントを消す</button></div>
@@ -1179,7 +1191,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
 </div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="tnF" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR id="tnFR" type="table" tableValues="0 1"/><feFuncG id="tnFG" type="table" tableValues="0 1"/><feFuncB id="tnFB" type="table" tableValues="0 1"/></feComponentTransfer></filter></svg>
 <div class="adj lved" id="lvEd" hidden>
- <div class="adjhd"><div class="edrow"><b>写真の編集</b><div class="edph" role="radiogroup" aria-label="写真"><button data-k="b" role="radio">施工前</button><button data-k="a" role="radio">施工後</button></div></div><div class="edtabs" role="tablist"><button data-et="pos" role="tab">位置・拡大</button><button data-et="lv" role="tab">傾き</button><button data-et="tn" role="tab">明るさ</button><button data-et="cm" role="tab">コメント</button></div></div>
+ <div class="adjhd"><div class="edrow"><b>写真の編集</b><div class="edph" role="radiogroup" aria-label="写真"><button data-k="b" role="radio">施工前</button><button data-k="a" role="radio">施工後</button></div></div><div class="edtabs" role="tablist"><button data-et="pos" role="tab">拡大・縮小・傾き</button><button data-et="tn" role="tab">明るさ</button><button data-et="cm" role="tab">コメント</button></div></div>
  <div class="lvstage" id="lvStage"><div class="lvbox" id="lvBox"><img id="lvImg" alt=""><div class="lvgrid"></div></div></div>
  <div class="lvpanes" id="lvPanes"><div class="lvpane" data-p="lv">
  <div class="lvval"><button id="lvM" aria-label="左に0.1度">−0.1°</button><b id="lvV">0.0°</b><button id="lvP" aria-label="右に0.1度">＋0.1°</button></div>
@@ -3511,12 +3523,12 @@ function adjSelShow(){
 function adjDraw(){
  const a=job.adj, t=adjTgt();
  $("adjVal").innerHTML=!t?"—":t==="both"?"<small>前</small> "+Math.round(a.b.s*100)+"%<br><small>後</small> "+Math.round(a.a.s*100)+"%":Math.round(a[t].s*100)+"%";
- if(imgs.b&&imgs.a){noCropDraw=trimOn;compose($("adjC"),0.5,imgs.b,imgs.a);noCropDraw=false;}
- adjSelShow();ovShow();
+ if(imgs.b&&imgs.a){noCropDraw=trimOn;edPrevOn=true;compose($("adjC"),0.5,imgs.b,imgs.a);noCropDraw=false;edPrevOn=false;}
+ adjSelShow();ovShow();edzShow();
 }
 // ---- manual trimming (点線の枠) ----
 let trimOn=false, tdrag=null, edMode="pos";
-function trimSet(on){trimOn=on;$("adjHint").textContent=edMode==="cm"?"写真の上のコメントは指で動かせます。2本の指で広げるか、角の黄色い丸を引っぱると大きさが変わります":on?"枠の角や辺を引っ張って残す範囲を決めます(枠の中を引っぱると移動)":"写真をタップして選び、ボタンで調整します(長押しで連続)";$("adjTrim").classList.toggle("on",on);setTx("adjTrim",on?"トリミング完了":"手動でトリミング");adjDraw();}
+function trimSet(on){trimOn=on;$("adjHint").textContent=edMode==="cm"?"写真の上のコメントは指で動かせます。2本の指で広げるか、角の黄色い丸を引っぱると大きさが変わります":on?"枠の角や辺を引っ張って残す範囲を決めます(枠の中を引っぱると移動)":"写真をタップして選びます。指(2本指で広げる・ひねる)でも、下のつまみでも調整できます";$("adjTrim").classList.toggle("on",on);setTx("adjTrim",on?"トリミング完了":"手動でトリミング");adjDraw();}
 $("adjTrim").onclick=()=>tfsOpen(adjTgt()||"both");
 // the crop a box shows: 両方 = shared cut; one photo = shared + its own
 const tcrop=k=>adjTgt()==="both"?job.crop:(()=>{const c=job.crop,o=job.crops[k];return {t:c.t+o.t,b:c.b+o.b,l:c.l+o.l,r:c.r+o.r};})();
@@ -3580,7 +3592,7 @@ window.addEventListener("resize",()=>{if(!$("adjEd").hidden)ovShow();});
 async function adjOpen(mode){
  if(!job||!job.before||!job.after)return;await getImgs();
  job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};
- adjOld=adjSnap();adjSel.clear();trimOn=false;$("trimOv").dataset.sig="";adjMode(mode||"pos");$("adjEd").hidden=false;trimSet(false);
+ adjOld=adjSnap();edTiltInit();adjSel.clear();trimOn=false;$("trimOv").dataset.sig="";adjMode(mode||"pos");$("adjEd").hidden=false;trimSet(false);
 }
 // the 位置・拡大 screen shows its buttons ("pos") or the comments ("cm"), on the same preview
 function adjMode(m){edMode=m;$("adjEd").classList.toggle("cmmode",m==="cm");$("cmPanel").hidden=m!=="cm";edTabsShow(m);
@@ -3628,7 +3640,7 @@ function adjStep(act){
  adjKeys().forEach(k=>{const a=job.adj[k], st=0.02;
   if(act==="in")a.s=Math.min(4,a.s*1.05);else if(act==="out")a.s=Math.max(0.5,a.s/1.05);
   else if(act==="up")a.y-=st;else if(act==="down")a.y+=st;else if(act==="left")a.x-=st;else if(act==="right")a.x+=st;
-  else if(act==="reset"){job.adj[k]=ADJ0();job.crops[k]=CROP0();}});
+  else if(act==="reset"){job.adj[k]=ADJ0();job.crops[k]=CROP0();edTilt[k]=0;}});
  if(act==="reset"&&adjTgt()==="both")job.crop=CROP0();
  adjDraw();return true;
 }
@@ -3639,6 +3651,68 @@ $("adjPad").querySelectorAll("button[data-a]").forEach(b=>{
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
  b.addEventListener("contextmenu",e=>e.preventDefault());
 });
+// 傾き on the 拡大・縮小・傾き tab: edTilt[k] = the tilt being set (degrees). On the screen the saved photo is
+// turned by the difference; 完了 (or 90°回転) makes the levelled photo the same way the 傾き screen does.
+let edTilt={}, edBusy=false;
+const tiltSaved=k=>job.raw&&job.raw[k]?((job.rot||{})[k]||0):0;
+const edTiltDelta=k=>edTilt[k]!=null?edTilt[k]-tiltSaved(k):0;
+const edTiltDirty=()=>["b","a"].some(k=>Math.abs(edTiltDelta(k))>0.04);
+function edTiltInit(){edTilt={b:tiltSaved("b"),a:tiltSaved("a")};}
+const edTiltOne=()=>adjSel.size===1?adjKeys()[0]:null;
+function edTiltSet(d){const k=edTiltOne();if(!k){toast(adjSel.size?"傾きは写真を1枚だけ選んでください":"先に画像をタップして選択してください",true);edzShow();return false;}
+ edTilt[k]=Math.round(Math.max(-LV_MAX,Math.min(LV_MAX,d))*10)/10;adjDraw();return true;}
+// makes the levelled photos for the tilts changed here; true when one was made
+async function edTiltCommit(skip){let made=false;
+ for(const k of ["b","a"]){if(k===skip||Math.abs(edTiltDelta(k))<=0.04)continue;
+  const st=await lvState(k);if(!st)continue;st.deg=edTilt[k];lv=st;try{if(await lvApply())made=true;}finally{lv=null;}}
+ if(made)await getImgs();edTiltInit();return made;}
+// the sliders and numbers follow what is chosen (拡大: 50%–400% on a even scale; 傾き: one photo only)
+const ZS=v=>0.5*Math.pow(8,v/100), ZV=sc=>Math.log(sc/0.5)/Math.log(8)*100;
+function edzShow(){const t=adjTgt(), a=t?job.adj[t==="both"?"b":t]:null;$("adjZr").value=a?ZV(a.s):ZV(1);
+ const one=edTiltOne(), d=one?(edTilt[one]!=null?edTilt[one]:tiltSaved(one)):0;
+ $("adjTr").value=d;$("adjTv").textContent=one?fmtDeg(d):"—";$("adjTRow").classList.toggle("off",!one);}
+$("adjZr").addEventListener("input",e=>{const t=adjTgt();if(!t){toast("先に画像をタップして選択してください",true);edzShow();return;}
+ const r=ZS(+e.target.value)/job.adj[t==="both"?"b":t].s;adjKeys().forEach(k=>{const a=job.adj[k];a.s=Math.max(0.5,Math.min(4,a.s*r));});adjDraw();});
+$("adjTr").addEventListener("input",e=>edTiltSet(+e.target.value));
+[["adjTm",-0.1],["adjTp",0.1]].forEach(([id,d])=>{const b=$(id);let rep=0;const stop=()=>{clearTimeout(rep);clearInterval(rep);};
+ const step=()=>{const k=edTiltOne();return edTiltSet((k?(edTilt[k]!=null?edTilt[k]:tiltSaved(k)):0)+d);};
+ b.addEventListener("pointerdown",e=>{e.preventDefault();stop();if(!step())return;rep=setTimeout(()=>{rep=setInterval(step,70);},380);});
+ ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
+// 90°回転: keeps what was done first (as 完了), then turns the chosen photo
+$("adjTurn").onclick=async()=>{const k=edTiltOne();if(!k){toast(adjSel.size?"90°回転は写真を1枚だけ選んでください":"先に画像をタップして選択してください",true);return;}
+ if(edBusy)return;edBusy=true;$("adjTurn").disabled=true;
+ try{await cmFlush();await adjCommit();const d=edTilt[k];await edTiltCommit(k); // the other photo's tilt, if any
+  // this photo's tilt and the turn in one go (one 補正しました)
+  const st=await lvState(k);if(st){st.q=(st.q+1)%4;if(d!=null)st.deg=d;lv=st;try{await lvApply();}finally{lv=null;}await getImgs();}
+  // the turn starts its zoom / position / cut again (the shape changed)
+  job.adj=job.adj||{b:ADJ0(),a:ADJ0()};job.crop=job.crop||CROP0();job.crops=job.crops||{b:CROP0(),a:CROP0()};
+  adjOld=adjSnap();edTiltInit();adjDraw();}
+ finally{edBusy=false;$("adjTurn").disabled=false;}};
+// Fingers on the photos (拡大・縮小・傾き, not while trimming): one finger on a chosen photo moves it,
+// two fingers spread / pinch = 拡大・縮小 of the chosen photo(s), turned = its 傾き (one photo chosen).
+// A tap still chooses a photo (the handlers below only watch; zgest.used stops that tap after a move).
+const zgest={pts:new Map(),st:null,used:false,raf:0};
+const zgDraw=()=>{if(!zgest.raf)zgest.raf=requestAnimationFrame(()=>{zgest.raf=0;adjDraw();});};
+function zgStart(e){const a=[...zgest.pts.values()], ks=adjKeys();zgest.st=null;if(!ks.length)return;
+ const cv=$("adjC"), r=cv.getBoundingClientRect(), k0=cv.width/r.width, lay=cv._lay;
+ // a move across the screen, as a part of the photo's full frame (what adj.x / adj.y count in)
+ const fr=k=>{const L=lay.cells[k==="b"?0:1], c=effCrop(k);return {w:L.w/(1-c.l-c.r)/k0,h:L.h/(1-c.t-c.b)/k0};};
+ const a0={};ks.forEach(k=>{a0[k]={...job.adj[k],f:fr(k)};});
+ if(a.length>=2){const [p,q]=a;zgest.st={two:true,a0,ang:Math.atan2(q.y-p.y,q.x-p.x),dist:Math.hypot(q.x-p.x,q.y-p.y)||1,t0:edTiltOne()?(edTilt[edTiltOne()]||0):null};}
+ else if(a.length===1&&e&&adjSel.has(cellAt(e)))zgest.st={two:false,a0,x:a[0].x,y:a[0].y};}
+$("trimOv").addEventListener("pointerdown",e=>{if(edMode!=="pos"||trimOn||e.target.closest("[data-h]"))return;
+ zgest.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(zgest.pts.size>1)zgest.used=true;zgStart(e);},true);
+$("trimOv").addEventListener("pointermove",e=>{if(!zgest.pts.has(e.pointerId))return;zgest.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ const st=zgest.st;if(!st)return;const a=[...zgest.pts.values()];
+ if(st.two&&a.length>=2){const [p,q]=a, f=Math.hypot(q.x-p.x,q.y-p.y)/st.dist;
+  Object.keys(st.a0).forEach(k=>{job.adj[k].s=Math.max(0.5,Math.min(4,st.a0[k].s*f));});
+  if(st.t0!=null){let da=(Math.atan2(q.y-p.y,q.x-p.x)-st.ang)*180/Math.PI;da=((da+540)%360)-180;const k=edTiltOne();
+   if(k)edTilt[k]=Math.round(Math.max(-LV_MAX,Math.min(LV_MAX,st.t0+da))*10)/10;}
+  zgDraw();}
+ else if(!st.two){const dx=e.clientX-st.x, dy=e.clientY-st.y;if(Math.hypot(dx,dy)>12)zgest.used=true;if(!zgest.used)return;
+  Object.keys(st.a0).forEach(k=>{const o=st.a0[k];job.adj[k].x=o.x+dx/o.f.w;job.adj[k].y=o.y+dy/o.f.h;});zgDraw();}},true);
+["pointerup","pointercancel"].forEach(t=>$("trimOv").addEventListener(t,e=>{if(!zgest.pts.has(e.pointerId))return;zgest.pts.delete(e.pointerId);
+ if(zgest.pts.size)zgStart(null);else{zgest.st=null;if(zgest.used)tapAt=null;setTimeout(()=>{if(!zgest.pts.size)zgest.used=false;},0);}},true));
 // 余白を自動カット: both chosen (or none) = keep only where both photos have picture; one = cut its own white edges.
 $("adjAuto").onclick=()=>autoCrop(adjTgt()||"both");
 // t = "b" | "a" | "both"; returns true when it cut
@@ -3666,8 +3740,11 @@ async function adjCommit(){await cmFlush();if(trimOn)trimSet(false);if(adjSnap()
 // 完了 keeps what was done and stays in the editor; 閉じる (and the back button) leaves it, asking first
 // when something was changed after the last 完了.
 const edAskClose=()=>bkDialog("保存していない変更があります","「完了」を押していない変更は消えます。","保存せずに閉じる","やめる");
-$("adjOk").onclick=async()=>{await cmFlush();const d=adjSnap()!==adjOld;await adjCommit();toast(d?"保存しました":"変更はありません");};
-$("adjX").onclick=async()=>{if(trimOn)trimSet(false);await cmFlush();if(adjSnap()!==adjOld&&!await edAskClose())return;adjClose();};
+$("adjOk").onclick=async()=>{if(edBusy)return;edBusy=true;const ok=$("adjOk");ok.disabled=true;
+ try{await cmFlush();const d=adjSnap()!==adjOld;await adjCommit();const t=await edTiltCommit(); // a tilt says 補正しました itself
+  if(t){adjOld=adjSnap();adjDraw();}else toast(d?"保存しました":"変更はありません");}
+ finally{edBusy=false;ok.disabled=false;}};
+$("adjX").onclick=async()=>{if(edBusy)return;if(trimOn)trimSet(false);await cmFlush();if((adjSnap()!==adjOld||edTiltDirty())&&!await edAskClose())return;adjClose();};
 function adjClose(){if(trimOn){trimSet(false);return;}if(adjOld!=null){const o=JSON.parse(adjOld);job.adj=o.adj;job.crop=o.crop;job.crops=o.crops;if(o.cmt)job.cmt=o.cmt;else delete job.cmt;}$("adjEd").hidden=true;}
 
 /* ---------- 候補 (施工前・施工後) ---------- */
@@ -3923,8 +4000,9 @@ async function rawRead(id){
 }
 // The editor: the photo as taken, turned live with the slider; 完了 makes the levelled photo.
 let lv=null;
-async function lvOpen(k,pane){
- const cur=k==="b"?job.before:job.after;if(!cur)return;
+// photo k's editing state (the photo as taken, its tilt, turn, corner colour, 明るさ); null if it has none
+async function lvState(k){
+ const cur=k==="b"?job.before:job.after;if(!cur)return null;
  job.raw=job.raw||{};job.rot=job.rot||{};
  if(!job.raw[k]&&rawPend[k])await rawPend[k];
  // not fetched yet (e.g. a 候補 chosen again): read it now, so the tilt is never applied twice
@@ -3933,11 +4011,15 @@ async function lvOpen(k,pane){
  const bg0=(job.lvBg&&job.lvBg[k])||getPref("ba-lvbg")||"white";
  const t0=job.raw[k]&&job.tone&&job.tone[k]?{...job.tone[k]}:{br:0,ct:0};
  const q0=job.raw[k]&&job.qt?(job.qt[k]||0):0;
- lv={k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,q:q0,oldQ:q0,bg:bg0,oldBg:bg0,tn:t0,oldTn:{...t0}};lvBgShow();lvTab(pane||"lv");
+ return {k,raw,deg:job.raw[k]?(job.rot[k]||0):0,old:job.raw[k]?(job.rot[k]||0):0,q:q0,oldQ:q0,bg:bg0,oldBg:bg0,tn:t0,oldTn:{...t0}};
+}
+async function lvOpen(k,pane){
+ const st=await lvState(k);if(!st)return;
+ lv=st;lvBgShow();lvTab(pane||"lv");
  document.querySelectorAll(".edph button").forEach(b=>{const on=b.dataset.k===k;b.classList.toggle("on",on);b.setAttribute("aria-checked",on);b.disabled=!(b.dataset.k==="b"?job.before:job.after);});
- $("lvEd").querySelectorAll('.edtabs [data-et="pos"],.edtabs [data-et="cm"]').forEach(b=>b.classList.toggle("off",!(job.before&&job.after)));
+ $("lvEd").querySelectorAll('.edtabs [data-et="cm"]').forEach(b=>b.classList.toggle("off",!(job.before&&job.after)));
  $("lvEd").classList.toggle("a",k==="a");
- const im=$("lvImg");im.onload=lvFit;im.src=blobUrl(raw);
+ const im=$("lvImg");im.onload=lvFit;im.src=blobUrl(lv.raw);
  $("lvEd").hidden=false;lvShow();
 }
 // The photo takes all the height left over, keeping a clear gap (LV_GAP) above キャンセル / 完了
@@ -4006,12 +4088,13 @@ function tonePreview(t){const l=toneLut(t), v=[];for(let i=0;i<256;i+=4)v.push((
  const tv=v.join(" ");["tnFR","tnFG","tnFB"].forEach(id=>$(id).setAttribute("tableValues",tv));}
 function lvTab(p){edTabsShow(p);document.querySelectorAll(".lvpane").forEach(x=>x.classList.toggle("off",x.dataset.p!==p));}
 // 写真の編集: one button opens it (with only 施工前, at 傾き). Moving to another tab or photo keeps what was done.
-function edTabsShow(t){document.querySelectorAll(".edtabs button").forEach(b=>{const on=b.dataset.et===t;b.classList.toggle("on",on);b.setAttribute("aria-selected",on);});}
+function edTabsShow(t){if(t==="lv")t="pos";document.querySelectorAll(".edtabs button").forEach(b=>{const on=b.dataset.et===t;b.classList.toggle("on",on);b.setAttribute("aria-selected",on);});}
 $("bEdit").onclick=()=>{if(!job||!job.before)return;if(job.after)adjOpen();else lvOpen("b");};
 document.querySelectorAll(".edtabs button").forEach(b=>b.onclick=async()=>{const t=b.dataset.et, two=t==="pos"||t==="cm";if(!job)return;
- if(b.classList.contains("off")){toast("位置・拡大とコメントは、施工後を撮ると使えます");return;}
- if(!$("adjEd").hidden){if(two){if(t!==edMode)adjMode(t);return;}const k=adjSel.size===1?adjKeys()[0]:"b";await adjCommit();await lvOpen(k,t);$("adjEd").hidden=true;return;}
+ if(b.classList.contains("off")){toast("コメントは、施工後を撮ると使えます");return;}
+ if(!$("adjEd").hidden){if(two){if(t!==edMode)adjMode(t);return;}const k=adjSel.size===1?adjKeys()[0]:"b";await adjCommit();await edTiltCommit();await lvOpen(k,t);$("adjEd").hidden=true;return;}
  if(!lv||lvBusy)return;if(!two){lvTab(t);return;}
+ if(t==="pos"&&!(job.before&&job.after)){lvTab("lv");return;} // only 施工前: its own 傾き
  if(!await lvApply())return;await adjOpen(t);lvClose();});
 document.querySelectorAll(".edph button").forEach(b=>b.onclick=async()=>{const k=b.dataset.k;if(!lv||lvBusy||lv.k===k||b.disabled)return;
  const p=document.querySelector("#lvEd .edtabs button.on").dataset.et;if(!await lvApply())return;await lvOpen(k,p);});
@@ -4672,7 +4755,7 @@ function compose(c,k,iB,iA){
  cells.forEach((q,i)=>{const v=vis[i];
   x.save();x.beginPath();x.rect(q.x,q.y,v.cw,v.ch);x.clip();
   x.translate(q.x,q.y);x.scale(v.s,v.s);x.translate(-v.e.l*fw,-v.e.t*fh);
-  drawAdj(x,q.im,0,0,fw,fh,adj[i?"a":"b"]);x.restore();
+  drawAdj(x,q.im,0,0,fw,fh,adj[i?"a":"b"],edPrevOn?edTiltDelta(i?"a":"b"):0);x.restore();
   const cm=(job.cmt||{})[i?"a":"b"];if(cm&&String(cm.t||"").trim())c._lay.cmts[i]=cmtDraw(x,cm,q.x,q.y,v.cw,v.ch);
   if(withLabels)badge(x,q,k,en,font);});
 }
@@ -4701,12 +4784,16 @@ function effCrop(i,j){
  [["l","r"],["t","b"]].forEach(([p,q])=>{const sum=e[p]+e[q];if(sum>0.85){e[p]*=0.85/sum;e[q]*=0.85/sum;}});
  return e;
 }
-// A photo cover-fitted into its cell, then zoomed (s) and moved (x, y = parts of the cell size).
-function drawAdj(x,im,cx,cy,w,h,a){
- if(!a||(a.s===1&&!a.x&&!a.y)){drawCover(x,im,cx,cy,w,h);return;}
+// A photo cover-fitted into its cell, then zoomed (s) and moved (x, y = parts of the cell size);
+// rd (degrees) turns it, only on the editing screen while a tilt is being set.
+let edPrevOn=false;
+function drawAdj(x,im,cx,cy,w,h,a,rd){
+ if((!a||(a.s===1&&!a.x&&!a.y))&&!rd){drawCover(x,im,cx,cy,w,h);return;}
+ a=a||{s:1,x:0,y:0};
  const iw=im.naturalWidth||im.width, ih=im.naturalHeight||im.height, r=Math.max(w/iw,h/ih)*a.s, dw=iw*r, dh=ih*r;
  x.save();x.beginPath();x.rect(cx,cy,w,h);x.clip();x.fillStyle="#FFFFFF";x.fillRect(cx,cy,w,h);
- x.drawImage(im,cx+(w-dw)/2+a.x*w,cy+(h-dh)/2+a.y*h,dw,dh);x.restore();
+ if(rd){x.translate(cx+(w-dw)/2+a.x*w+dw/2,cy+(h-dh)/2+a.y*h+dh/2);x.rotate(rd*Math.PI/180);x.drawImage(im,-dw/2,-dh/2,dw,dh);}
+ else x.drawImage(im,cx+(w-dw)/2+a.x*w,cy+(h-dh)/2+a.y*h,dw,dh);x.restore();
 }
 // The 施工前 / 施工後 (BEFORE / AFTER) badge: a glossy pill in the photo's corner with the date.
 function badge(x,q,k,en,font){
