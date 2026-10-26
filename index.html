@@ -3185,25 +3185,32 @@ function galItems(kind){
  if(kind==="pair")return [job.before&&{blob:job.before,at:job.beforeAt,name:"施工前",nid:job.beforeNid},job.after&&{blob:job.after,at:job.afterAt,name:"施工後",nid:job.afterNid}].filter(Boolean);
  return (job.extras||[]).map((x,i)=>({blob:x.blob,at:x.at,name:x.ckl&&cklLab(x.ckl)?cklLab(x.ckl):"写真"+(i+1),nid:x.nid}));
 }
+// Sliding stays with the photos seen together: a checklist item's own photos, or the その他の写真
+// (gal.i stays the place in job.extras; galGrp gives the places of the photos slid through).
+function galGrp(kind,i){const xs=job.extras||[];if(kind!=="extra"||!xs[i])return null;const x=xs[i], h=cklHides(x);
+ return xs.map((y,k)=>(h?cklHides(y)&&y.ckl===x.ckl:!cklHides(y))?k:-1).filter(k=>k>=0);}
+// the photo d steps from the one shown: {i, it} or null
+function galNb(d){if(!gal)return null;const xs=galItems(gal.kind), g=galGrp(gal.kind,gal.i);
+ const i=g?g[g.indexOf(gal.i)+d]:gal.i+d;return i!=null&&xs[i]?{i,it:xs[i]}:null;}
 // App: the photos are seen in the phone's own viewer (smooth sliding and zoom like Google Photos).
 // The page keeps gal in step and does what its buttons ask (save / delete / comment).
 const natViewer=()=>!!(window.AndroidApp&&window.AndroidApp.viewerOpen&&window.AndroidApp.photoSize);
 function natGallery(i,kind){
- const xs=galItems(kind), A=window.AndroidApp;
+ const all=galItems(kind), A=window.AndroidApp, grp=galGrp(kind,i)||all.map((x,k)=>k), xs=grp.map(k=>all[k]);
  // every photo needs the phone's own copy; one without it is seen on the page this time
  if(!xs.every(x=>x.nid&&A.hasPhoto(x.nid))){if(kind==="extra")(job.extras||[]).forEach(ensureNid);return false;}
- const items=xs.map((x,k)=>{const d=String(A.photoSize(x.nid)).split(",").map(Number), e=kind==="extra"?job.extras[k]:null;
+ const items=xs.map((x,n)=>{const k=grp[n], d=String(A.photoSize(x.nid)).split(",").map(Number), e=kind==="extra"?job.extras[k]:null;
   return {id:x.nid,label:x.name,w:d[0]||0,h:d[1]||0,notes:e?notesOf(e).filter(n=>n.tag&&n.t).map(n=>({t:n.t,x:n.tag.x,y:n.tag.y,s:n.tag.s})):[]};});
- gal={i,kind,nat:true,dims:items.map(t=>[t.w,t.h])};
- A.viewerOpen(JSON.stringify({items,index:i,deletable:kind==="extra",comment:kind==="extra"}));
+ gal={i,kind,nat:true,grp,dims:items.map(t=>[t.w,t.h])};
+ A.viewerOpen(JSON.stringify({items,index:grp.indexOf(i),deletable:kind==="extra",comment:kind==="extra"}));
  return true;
 }
 window.onAppViewer=e=>{
  if(!gal||!gal.nat||!e)return;
- if(typeof e.index==="number")gal.i=e.index;
+ if(typeof e.index==="number")gal.i=gal.grp?gal.grp[e.index]:e.index;
  if(e.type==="close"){gal=null;return;}
  // comments are written in at the photo's own size (as the page's viewer would have it)
- if(e.type==="save"){const d=gal.dims[gal.i]||[0,0];if(d[0]>0){vw.nw=d[0];vw.nh=d[1];}$("vSave").onclick();return;}
+ if(e.type==="save"){const d=gal.dims[gal.grp?gal.grp.indexOf(gal.i):gal.i]||[0,0];if(d[0]>0){vw.nw=d[0];vw.nh=d[1];}$("vSave").onclick();return;}
  if(e.type==="delete"){galDelArm=true;$("vDel").onclick();return;}
  // コメント: written on the page's own viewer (the phone's one closes)
  if(e.type==="comment"){const {i,kind}=gal;gal=null;window.AndroidApp.viewerClose();openGallery(i,kind,true);gal.fromNat=true;setTimeout(()=>{$("vNoteT").focus();},300);}
@@ -3215,7 +3222,8 @@ function openGallery(i,kind,onPage){
  gal={i,kind};galDelArm=false;setTx("vDel","削除");
  $("vDel").hidden=kind!=="extra";
  noteEnd(true);$("vNote").hidden=kind!=="extra";cur=-1;clearTimeout(noteMsgT);$("vNoteL").parentNode.classList.remove("msg");
- $("vBar").hidden=false;$("vCnt").hidden=false;$("viewer").classList.add("gal");$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):(i+1)+" / "+xs.length;
+ const grp=galGrp(kind,i);
+ $("vBar").hidden=false;$("vCnt").hidden=false;$("viewer").classList.add("gal");$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):grp?(grp.indexOf(i)+1)+" / "+grp.length:(i+1)+" / "+xs.length;
  const pv=gPrevDone.get(xs[i].blob)||galNative(xs[i].nid); // app: the phone's copy, at once
  if(pv&&pv.w)openViewer(pv.u,null,{w:pv.w,h:pv.h,full:galUrl(xs[i].blob)});else openViewer(galUrl(xs[i].blob));
  if(!vSwapping)galPreload();
@@ -3223,11 +3231,11 @@ function openGallery(i,kind,onPage){
 }
 let galNavBusy=false;
 async function galNav(d){
- if(!gal||galNavBusy)return;const xs=galItems(gal.kind), it=xs[gal.i+d], g=gal;if(!it)return;
+ if(!gal||galNavBusy)return;const nb=galNb(d), g=gal;if(!nb)return;const it=nb.it;
  galNavBusy=true;
  try{const o=gPrevDone.get(it.blob)||galNative(it.nid);
   if(o){const pre=new Image();pre.src=o.u;if(pre.decode)await pre.decode().catch(()=>{});}
-  if(gal===g)openGallery(g.i+d,g.kind);}
+  if(gal===g)openGallery(nb.i,g.kind);}
  finally{galNavBusy=false;}
 }
 let gUrls=new WeakMap();
@@ -3260,8 +3268,8 @@ function galPrev(b,nid){
  return gPrev.get(b);}
 function galPreload(){
  const xs=gal?galItems(gal.kind):[];
- [["vPrev",-1],["vNext",1]].forEach(([id,d])=>{const el=$(id), it=xs[gal?gal.i+d:-1];el.classList.remove("anim");el.style.transform="";
-  if(!it){el.hidden=true;el.dataset.for="";return;}const im=el.firstChild, key=gal.kind+":"+(gal.i+d)+":"+it.at;
+ [["vPrev",-1],["vNext",1]].forEach(([id,d])=>{const el=$(id), nb=galNb(d), it=nb&&nb.it;el.classList.remove("anim");el.style.transform="";
+  if(!it){el.hidden=true;el.dataset.for="";return;}const im=el.firstChild, key=gal.kind+":"+nb.i+":"+it.at;
   const put=u=>{if(el.dataset.for===key&&im.getAttribute("src")!==u){im.src=u;if(im.decode)im.decode().catch(()=>{});}};
   el.dataset.for=key;
   // the small copy when it is ready (made in the background); meanwhile the photo itself
@@ -3269,7 +3277,7 @@ function galPreload(){
   if(!ready)galPrev(it.blob,it.nid).then(o=>{if(!vw.sw&&!vSwapping)put(o.u);});
   el.hidden=true;});
  // then the ones two away (and the one shown), so quick slides one after another find them ready
- if(gal)[2,-2,0].forEach(d=>{const it=xs[gal.i+d];if(it)galPrev(it.blob,it.nid);});
+ if(gal)[2,-2,0].forEach(d=>{const nb=galNb(d);if(nb)galPrev(nb.it.blob,nb.it.nid);});
 }
 let vSaving=false;
 $("vSave").onclick=async()=>{if(!gal||vSaving)return;const x=galItems(gal.kind)[gal.i], j=job;if(!x)return;
@@ -3477,8 +3485,9 @@ async function withTags(x){
 $("vDel").onclick=async()=>{
  if(!gal||gal.kind!=="extra")return;
  if(!galDelArm){galDelArm=true;setTx("vDel","もう一度押すと削除");return;}
+ const g0=galGrp("extra",gal.i)||[], p0=g0.indexOf(gal.i), nx=g0[p0+1]!=null?g0[p0+1]-1:g0[p0-1]; // next one of the same set
  const rm=job.extras.splice(gal.i,1), gone=rm.map(x=>x.nid), n=dropFromPhone(rm.flatMap(x=>x.saved||[]));await saveJob();renderThumbs();toast(n?"削除しました(スマホの写真からも削除)":"削除しました");photoGC(gone);
- if(job.extras.length)openGallery(Math.min(gal.i,job.extras.length-1));else closeViewer();
+ if(nx!=null&&job.extras[nx])openGallery(nx);else closeViewer();
 };
 
 /* ---------- comparison: position / size of each photo ---------- */
@@ -4826,7 +4835,7 @@ $("viewer").addEventListener("pointermove",e=>{
 // meanwhile: moving it redrew it every frame, which caught under the finger and looked blocky.
 function swStart(x,t0){
  const W=vSize()[0], xs=galItems(gal.kind), cur=$("vCur"), ci=cur.firstChild, im=$("vImg");
- const sw=vw.sw={x0:x,h:[{x,t:t0}],dx:0,raf:0,W,G:W+16,prev:!!xs[gal.i-1],next:!!xs[gal.i+1],ready:false};
+ const sw=vw.sw={x0:x,h:[{x,t:t0}],dx:0,raf:0,W,G:W+16,prev:!!galNb(-1),next:!!galNb(1),ready:false};
  ci.src=im.currentSrc||im.src;cur.classList.remove("anim");cur.style.transform="translate3d(0,0,0)";cur.hidden=false;
  (ci.decode?ci.decode():Promise.resolve()).catch(()=>{}).then(()=>requestAnimationFrame(()=>{
   if(vw.sw!==sw)return;sw.ready=true;const st=$("vStage");st.style.visibility="hidden";vApply(false);}));
