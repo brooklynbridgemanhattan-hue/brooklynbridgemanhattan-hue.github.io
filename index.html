@@ -733,7 +733,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cand .cddel{align-self:center;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:700;color:#FFA8A8;background:rgba(255,255,255,.06)}
 .cand .cddel svg.i{width:18px;height:18px}
 .cand .cddel.arm{background:var(--danger);color:#fff}
-.lved .lvstage{flex:none;display:flex;justify-content:center;align-items:center;min-height:22vh}
+.lved .lvstage{flex:none;display:flex;justify-content:center;align-items:center;min-height:22vh;touch-action:none} /* two fingers turn / zoom the photo, not the page */
 .lvbox{position:relative;overflow:hidden;background:#fff;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
 .lvbox img{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 50%}
 .lvgrid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.75) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.75) 1px,transparent 1px);background-size:100% 12.5%,12.5% 100%;background-position:0 -.5px,-.5px 0;mix-blend-mode:difference;opacity:.55}
@@ -3958,10 +3958,27 @@ function lvGridShow(){const on=getPref("ba-lvgrid")!=="0";$("lvEd").classList.to
 document.querySelectorAll(".lvgr button").forEach(b=>b.onclick=()=>{setPref("ba-lvgrid",b.dataset.gr);lvGridShow();});
 function lvShow(){
  const d=Math.round(lv.deg*10)/10;lv.deg=d;
- $("lvImg").style.transform="rotate("+(lv.q*90+d)+"deg)";tnShow();$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
+ const z=lv.vz||1;$("lvImg").style.transform=(z>1?"translate("+(lv.vx||0)+"px,"+(lv.vy||0)+"px) scale("+z+") ":"")+"rotate("+(lv.q*90+d)+"deg)";tnShow();$("lvV").textContent=fmtDeg(d);$("lvR").value=d;
 }
 function lvSet(d){if(!lv)return;lv.deg=Math.max(-LV_MAX,Math.min(LV_MAX,d));lvShow();}
 $("lvR").addEventListener("input",e=>lvSet(+e.target.value));
+// On the photo: two fingers turned = 傾き (as the slider), spread / pinched = a closer look (only on the
+// screen, up to 5x; the photo is not cut); zoomed in, one finger moves the view; a double tap = whole photo.
+const lvGest={pts:new Map(),st:null,tap:0};
+function lvViewClamp(){const b=$("lvBox"), z=lv.vz||1, mx=(z-1)*b.offsetWidth/2, my=(z-1)*b.offsetHeight/2;
+ lv.vx=Math.max(-mx,Math.min(mx,lv.vx||0));lv.vy=Math.max(-my,Math.min(my,lv.vy||0));}
+function lvGestStart(){const a=[...lvGest.pts.values()];
+ if(a.length>=2){const [p,q]=a;lvGest.st={two:true,ang:Math.atan2(q.y-p.y,q.x-p.x),dist:Math.hypot(q.x-p.x,q.y-p.y)||1,deg:lv.deg,z:lv.vz||1,cx:(p.x+q.x)/2,cy:(p.y+q.y)/2,vx:lv.vx||0,vy:lv.vy||0};}
+ else if(a.length===1)lvGest.st={two:false,x:a[0].x,y:a[0].y,vx:lv.vx||0,vy:lv.vy||0};else lvGest.st=null;}
+$("lvStage").addEventListener("pointerdown",e=>{if(!lv)return;lvGest.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{$("lvStage").setPointerCapture(e.pointerId);}catch(_){}lvGestStart();
+ if(lvGest.pts.size===1){const now=Date.now();if(now-lvGest.tap<300){lv.vz=1;lv.vx=lv.vy=0;lvShow();lvGest.tap=0;}else lvGest.tap=now;}});
+$("lvStage").addEventListener("pointermove",e=>{if(!lv||!lvGest.pts.has(e.pointerId))return;lvGest.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});const st=lvGest.st;if(!st)return;
+ const a=[...lvGest.pts.values()];
+ if(st.two&&a.length>=2){const [p,q]=a, ang=Math.atan2(q.y-p.y,q.x-p.x);let da=(ang-st.ang)*180/Math.PI;da=((da+540)%360)-180;
+  lv.vz=Math.max(1,Math.min(5,st.z*Math.hypot(q.x-p.x,q.y-p.y)/st.dist));if(lv.vz<1.03)lv.vz=1;
+  lv.vx=st.vx+(p.x+q.x)/2-st.cx;lv.vy=st.vy+(p.y+q.y)/2-st.cy;lvViewClamp();lvSet(st.deg+da);}
+ else if(!st.two&&(lv.vz||1)>1){lv.vx=st.vx+e.clientX-st.x;lv.vy=st.vy+e.clientY-st.y;lvViewClamp();lvShow();}});
+["pointerup","pointercancel"].forEach(t=>$("lvStage").addEventListener(t,e=>{lvGest.pts.delete(e.pointerId);if(lv)lvGestStart();}));
 [["lvM",-0.1],["lvP",0.1]].forEach(([id,st])=>{let rep=0;const b=$(id), stop=()=>{clearTimeout(rep);clearInterval(rep);};
  b.addEventListener("pointerdown",e=>{e.preventDefault();stop();lvSet(lv.deg+st);rep=setTimeout(()=>{rep=setInterval(()=>lvSet(lv.deg+st),60);},380);});
  ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
