@@ -3070,7 +3070,7 @@ $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(
  else if(d.new)cklNew();
  else if(d.lsdel)cklLsDel();
  else if(d.name)spotEdit(spotIdx(job));
- else if(d.pair!=null)openGallery(+d.pair,"pair");
+ else if(d.pair!=null)openGallery(+d.pair,"pair",false,true); // that photo only (no sliding to the other)
  else if(d.up){ // 施工前 本体 / 施工後 本体: to the 施工前 / 施工後 tile (施工後 needs the 施工前 first)
   const el=$(d.up==="a_body"&&job.before?"sA":"sB"), top=$("detail").querySelector(".topbar").offsetHeight;
   window.scrollTo({top:Math.max(0,el.getBoundingClientRect().top+window.scrollY-top-60),behavior:"smooth"});
@@ -3224,21 +3224,22 @@ function galItems(kind){
 }
 // Sliding stays with the photos seen together: a checklist item's own photos, or the その他の写真
 // (gal.i stays the place in job.extras; galGrp gives the places of the photos slid through).
-function galGrp(kind,i){const xs=job.extras||[];if(kind!=="extra"||!xs[i])return null;const x=xs[i], h=cklHides(x);
+function galGrp(kind,i,solo){if(solo)return [i]; // 施工前 / 施工後 本体 opened from the checklist: that photo only
+ const xs=job.extras||[];if(kind!=="extra"||!xs[i])return null;const x=xs[i], h=cklHides(x);
  return xs.map((y,k)=>(h?cklHides(y)&&y.ckl===x.ckl:!cklHides(y))?k:-1).filter(k=>k>=0);}
 // the photo d steps from the one shown: {i, it} or null
-function galNb(d){if(!gal)return null;const xs=galItems(gal.kind), g=galGrp(gal.kind,gal.i);
+function galNb(d){if(!gal)return null;const xs=galItems(gal.kind), g=galGrp(gal.kind,gal.i,gal.solo);
  const i=g?g[g.indexOf(gal.i)+d]:gal.i+d;return i!=null&&xs[i]?{i,it:xs[i]}:null;}
 // App: the photos are seen in the phone's own viewer (smooth sliding and zoom like Google Photos).
 // The page keeps gal in step and does what its buttons ask (save / delete / comment).
 const natViewer=()=>!!(window.AndroidApp&&window.AndroidApp.viewerOpen&&window.AndroidApp.photoSize);
-function natGallery(i,kind){
- const all=galItems(kind), A=window.AndroidApp, grp=galGrp(kind,i)||all.map((x,k)=>k), xs=grp.map(k=>all[k]);
+function natGallery(i,kind,solo){
+ const all=galItems(kind), A=window.AndroidApp, grp=galGrp(kind,i,solo)||all.map((x,k)=>k), xs=grp.map(k=>all[k]);
  // every photo needs the phone's own copy; one without it is seen on the page this time
  if(!xs.every(x=>x.nid&&A.hasPhoto(x.nid))){if(kind==="extra")(job.extras||[]).forEach(ensureNid);return false;}
  const items=xs.map((x,n)=>{const k=grp[n], d=String(A.photoSize(x.nid)).split(",").map(Number), e=kind==="extra"?job.extras[k]:null;
   return {id:x.nid,label:x.name,w:d[0]||0,h:d[1]||0,notes:e?notesOf(e).filter(n=>n.tag&&n.t).map(n=>({t:n.t,x:n.tag.x,y:n.tag.y,s:n.tag.s})):[]};});
- gal={i,kind,nat:true,grp,dims:items.map(t=>[t.w,t.h])};
+ gal={i,kind,nat:true,grp,solo:!!solo,dims:items.map(t=>[t.w,t.h])};
  A.viewerOpen(JSON.stringify({items,index:grp.indexOf(i),deletable:kind==="extra",comment:kind==="extra",edit:kind==="extra"}));
  return true;
 }
@@ -3253,15 +3254,15 @@ window.onAppViewer=e=>{
  // コメント: written on the page's own viewer (the phone's one closes)
  if(e.type==="comment"){const {i,kind}=gal;gal=null;window.AndroidApp.viewerClose();openGallery(i,kind,true);gal.fromNat=true;setTimeout(()=>{$("vNoteT").focus();},300);}
 };
-function openGallery(i,kind,onPage){
+function openGallery(i,kind,onPage,solo){
  kind=kind||"extra";const xs=galItems(kind);if(!xs.length){closeViewer();return;}
  i=Math.max(0,Math.min(xs.length-1,i));
- if(!onPage&&natViewer()&&natGallery(i,kind))return;
- gal={i,kind};galDelArm=false;setTx("vDel","削除");$("vEdit").hidden=kind!=="extra";
+ if(!onPage&&natViewer()&&natGallery(i,kind,solo))return;
+ gal={i,kind,solo:!!solo};galDelArm=false;setTx("vDel","削除");$("vEdit").hidden=kind!=="extra";
  $("vDel").hidden=kind!=="extra";
  noteEnd(true);$("vNote").hidden=kind!=="extra";cur=-1;clearTimeout(noteMsgT);$("vNoteL").parentNode.classList.remove("msg");
- const grp=galGrp(kind,i);
- $("vBar").hidden=false;$("vCnt").hidden=false;$("viewer").classList.add("gal");$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1?"  "+(i+1)+" / "+xs.length:""):grp?(grp.indexOf(i)+1)+" / "+grp.length:(i+1)+" / "+xs.length;
+ const grp=galGrp(kind,i,solo);
+ $("vBar").hidden=false;$("vCnt").hidden=false;$("viewer").classList.add("gal");$("vCnt").textContent=kind==="pair"?xs[i].name+(xs.length>1&&!solo?"  "+(i+1)+" / "+xs.length:""):grp?(grp.indexOf(i)+1)+" / "+grp.length:(i+1)+" / "+xs.length;
  const pv=gPrevDone.get(xs[i].blob)||galNative(xs[i].nid); // app: the phone's copy, at once
  if(pv&&pv.w)openViewer(pv.u,null,{w:pv.w,h:pv.h,full:galUrl(xs[i].blob)});else openViewer(galUrl(xs[i].blob));
  if(!vSwapping)galPreload();
