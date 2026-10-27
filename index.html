@@ -911,6 +911,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cam.ckcam .shotn{top:84px}
 /* a checklist item's 戻る: wider, by the shutter (as 完了 for 施工前 / 施工後), with a gap so it is not hit by mistake */
 .cam.ckcam .shoot .cancel{justify-self:end;margin-right:14px;padding:0 22px;min-width:118px}
+.cam.ckcam .shoot .fl{margin-right:14px;min-width:118px} /* lined up with 戻る */
 .cam.ckcam .camhud .cmode small{display:none}.cam.ckcam .camhud .cmode{left:10px;right:auto;padding:7px 12px}.cam.ckcam .camhud.mir .cmode{left:auto;right:10px} /* sideways: one line, where the title was */
 .cam.ckcam .camhud .cmode b{font-size:20px;gap:6px}.cam.ckcam .camhud .cmode .ckltg{font-size:16px}
 .cam.ckcam .camhud .shotn{top:102px}
@@ -995,14 +996,15 @@ html.natcam #vid,html.app #vid{display:none}
 .cam .tools .lg{display:none}
 .cam .tools button span{max-width:100%;overflow:hidden;text-overflow:clip} /* a long name stays inside its button */
 /* やめる - round shutter - flash */
-.cam .shoot{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding-top:2px}
+/* the shutter in the middle; left of it the フラッシュ above やめる / 完了 / 戻る (same width, next to the shutter) */
+.cam .shoot{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0 10px;padding-top:2px}
 .cam .cancel.fin{background:#2F9E44;font-weight:800;justify-self:end;margin-right:8px}.cam .cancel .ck,.cam .cancel.fin .x{display:none}.cam .cancel.fin .ck{display:block}
-.cam .cancel{justify-self:start;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:52px;padding:0 14px;white-space:nowrap;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:17px;font-weight:700}
-.cam .shot{grid-column:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:84px;height:84px;border-radius:50%;background:var(--mode);color:var(--mode-ink);font-size:18px;font-weight:800;line-height:1.15;box-shadow:0 0 0 4px #0B0D12,0 0 0 7px #fff}
+.cam .cancel{grid-column:1;grid-row:2;justify-self:end;width:min(112px,100%);margin-right:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:52px;padding:0 14px;white-space:nowrap;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:17px;font-weight:700}
+.cam .shot{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:84px;height:84px;border-radius:50%;background:var(--mode);color:var(--mode-ink);font-size:18px;font-weight:800;line-height:1.15;box-shadow:0 0 0 4px #0B0D12,0 0 0 7px #fff}
 .cam .shot svg.i{width:26px;height:26px}
 .cam .shot.busy{filter:brightness(.75)}
 .cam .shot.busy svg.i{display:none}
-.cam .fl{grid-column:3;justify-self:end;display:inline-flex;align-items:center;justify-content:center;gap:5px;height:52px;padding:0 14px;white-space:nowrap;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:16px;font-weight:700}
+.cam .fl{grid-column:1;grid-row:1;justify-self:end;width:min(112px,100%);margin:0 8px 8px 0;display:inline-flex;align-items:center;justify-content:center;gap:5px;height:52px;padding:0 14px;white-space:nowrap;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:16px;font-weight:700}
 .cam .fl svg.i{width:20px;height:20px}
 .cam .fl.on{background:#FACC15;color:#1A1400}
 .cam .fl.auto{background:rgba(250,204,21,.18);color:#FACC15;box-shadow:inset 0 0 0 1.5px #FACC15}
@@ -1028,7 +1030,7 @@ html.natcam #vid,html.app #vid{display:none}
 .cam .camhud .tools{position:static;width:100%;display:grid;grid-template-columns:repeat(3,1fr);align-content:center;gap:4px 2px;pointer-events:auto;padding:6px;border-radius:18px;background:rgba(11,13,18,.55)}
 .cam .camhud .tools button svg.i,.cam .camhud .tools .fl svg.i{width:50px;height:50px;padding:13px}
 .cam .camhud .tools button{max-width:none;font-size:12px;gap:4px} /* 4-letter names (自動撮影・表示オフ) side by side fit */
-.cam .camhud .tools .fl{grid-column:auto;justify-self:center;flex-direction:column;height:auto;padding:0;background:none;gap:4px;font-size:14px;color:#D0D5DD}
+.cam .camhud .tools .fl{grid-column:auto;grid-row:auto;width:auto;margin:0;justify-self:center;flex-direction:column;height:auto;padding:0;background:none;gap:4px;font-size:14px;color:#D0D5DD}
 .cam .camhud .tools .fl svg.i{border-radius:50%;background:rgba(255,255,255,.1)}
 .cam .camhud .tools .fl.on svg.i{background:#FACC15;color:#1A1400}
 .cam .camhud .tools .fl.auto svg.i{background:rgba(250,204,21,.18);color:#FACC15}
