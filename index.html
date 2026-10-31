@@ -2241,6 +2241,16 @@ $("cCancel").onclick=()=>stopCam();
 $("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
 $("tGrid").onclick=()=>{$("tGrid").classList.toggle("on");$("grid").classList.toggle("on");};
 $("tGhost").onclick=()=>{$("tGhost").classList.toggle("on");ghostLook();};
+// カメラの確認表: hold the camera's title 2 s to see what the phone and the camera are set to (asked for
+// when a phone shows the picture wrong; nothing is changed)
+{let t=0;const m=$("camMode"), end=()=>clearTimeout(t);
+ m.addEventListener("pointerdown",()=>{end();t=setTimeout(()=>{
+  const r=$("stage").getBoundingClientRect();
+  let tx="ページ: 画面 "+innerWidth+"x"+innerHeight+" 倍率 "+devicePixelRatio+" / 枠 "+[r.left,r.top,r.width,r.height].map(Math.round).join(",")+
+   " / 小さい絵 "+(natFrame?natFrame.width+"x"+natFrame.height:"なし")+" / 横向き "+sideDeg+"° / 置き場所 "+(natPlace||"なし")+"\n";
+  try{if(NATIVE&&window.AndroidCam.camDiag)tx+=window.AndroidCam.camDiag();}catch(e){}
+  alert("カメラの確認表(この画面を写して送ってください)\n\n"+tx);},2000);});
+ ["pointerup","pointercancel","pointerleave"].forEach(e=>m.addEventListener(e,end));}
 $("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").style.display=on?"block":"none";$("cam").classList.toggle("judging",on);};
 // Outlines don't hide the live view, so they show at full strength without the slider.
 // The 施工前 picture over the camera: shown when 重ねる or 線表示 is on (線表示 = its outlines only).
