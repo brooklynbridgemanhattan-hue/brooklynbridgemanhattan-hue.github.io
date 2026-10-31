@@ -2241,16 +2241,20 @@ $("cCancel").onclick=()=>stopCam();
 $("op").oninput=e=>$("ghost").style.opacity=e.target.value/100;
 $("tGrid").onclick=()=>{$("tGrid").classList.toggle("on");$("grid").classList.toggle("on");};
 $("tGhost").onclick=()=>{$("tGhost").classList.toggle("on");ghostLook();};
-// カメラの確認表: hold the camera's title 2 s to see what the phone and the camera are set to (asked for
-// when a phone shows the picture wrong; nothing is changed)
-{let t=0;const m=$("camMode"), end=()=>clearTimeout(t);
- m.addEventListener("pointerdown",()=>{end();t=setTimeout(()=>{
-  const r=$("stage").getBoundingClientRect();
-  let tx="ページ: 画面 "+innerWidth+"x"+innerHeight+" 倍率 "+devicePixelRatio+" / 枠 "+[r.left,r.top,r.width,r.height].map(Math.round).join(",")+
-   " / 小さい絵 "+(natFrame?natFrame.width+"x"+natFrame.height:"なし")+" / 横向き "+sideDeg+"° / 置き場所 "+(natPlace||"なし")+"\n";
-  try{if(NATIVE&&window.AndroidCam.camDiag)tx+=window.AndroidCam.camDiag();}catch(e){}
-  alert("カメラの確認表(この画面を写して送ってください)\n\n"+tx);},2000);});
- ["pointerup","pointercancel","pointerleave"].forEach(e=>m.addEventListener(e,end));}
+// カメラの確認表: tap the camera's title 3 times quickly to see what the phone and the camera are set to (asked
+// for when a phone shows the picture wrong; nothing is changed). Not a long press: that selects the title's text.
+{let taps=[];const m=$("camMode");
+ const what=(x,y)=>document.elementsFromPoint(x,y).slice(0,4).map(e=>e.id?"#"+e.id:(e.className&&e.className.baseVal==null?"."+String(e.className).split(" ")[0]:e.tagName.toLowerCase())).join(" > ");
+ m.addEventListener("pointerup",()=>{const now=performance.now();taps=taps.filter(t=>now-t<1500);taps.push(now);if(taps.length<3)return;taps=[];
+  const r=$("stage").getBoundingClientRect(), v=document.querySelector("#cam .view").getBoundingClientRect(), cx=r.left+r.width/2;
+  let tx="ページ: 画面 "+innerWidth+"x"+innerHeight+" 倍率 "+devicePixelRatio+"\n枠 "+[r.left,r.top,r.width,r.height].map(Math.round).join(",")+" / 映る所 "+[v.left,v.top,v.width,v.height].map(Math.round).join(",")+
+   "\n小さい絵 "+(natFrame?natFrame.width+"x"+natFrame.height:"なし")+" / 横向き "+sideDeg+"° / 置き場所 "+(natPlace||"なし")+
+   "\n上の方: "+what(cx,r.top+r.height*0.2)+"\n真ん中: "+what(cx,r.top+r.height/2)+"\n";
+  try{if(NATIVE&&window.AndroidCam.camDiag)tx+=window.AndroidCam.camDiag();}catch(e){tx+="(スマホ側: "+e.message+")";}
+  let b=$("camDiagBox");if(!b){b=document.createElement("div");b.id="camDiagBox";
+   b.style.cssText="position:fixed;left:10px;right:10px;top:70px;z-index:99;background:#fff;color:#111;border-radius:14px;padding:14px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-all;box-shadow:0 6px 24px rgba(0,0,0,.5)";
+   b.onclick=()=>b.remove();}
+  b.textContent="カメラの確認表(この画面を写して送ってください。押すと閉じます)\n\n"+tx;$("cam").appendChild(b);});}
 $("tDiff").onclick=()=>{const on=$("tDiff").classList.toggle("on");$("frame").style.display=on?"block":"none";$("cam").classList.toggle("judging",on);};
 // Outlines don't hide the live view, so they show at full strength without the slider.
 // The 施工前 picture over the camera: shown when 重ねる or 線表示 is on (線表示 = its outlines only).
