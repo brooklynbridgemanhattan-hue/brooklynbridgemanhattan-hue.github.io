@@ -2159,7 +2159,7 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
   // App: the phone's camera runs natively (full resolution); its preview shows under the page.
   const info=await natOpen();
   if(seq!==camSeq||(info&&info.stale))return; // cancelled meanwhile (stopCam has closed the phone's camera)
-  if(!info||info.error){$("cam").style.display="none";window.AndroidCam.close();noCam();return;}
+  if(!info||info.error){console.info("camera: open failed",info&&info.error);$("cam").style.display="none";window.AndroidCam.close();noCam();return;}
   stream={getTracks:()=>[]};natInfo=info;natFrame=null;
   document.documentElement.classList.add("natcam");
   natPull(++natGen);natSetup(info);
@@ -2196,14 +2196,18 @@ async function startCamRun(mode,seq){document.querySelectorAll(".hint").forEach(
  if(NATIVE){const t0=Date.now();while(!natFrame&&stream&&Date.now()-t0<4000)await sleep(50);}
  else await new Promise(r=>{if(v.videoWidth)r();else v.onloadedmetadata=()=>r();});
  if(!stream)return;
+ // the camera was slow to start (no small frame yet): the picture is placed as 3:4 now and sized again,
+ // and the 施工後 comparison started, when the first frame comes (it used to stay black and at 一致 0 %)
+ alignWait=NATIVE&&!natFrame;
  fitStage();
- if(after)startAlign();
+ if(after&&!alignWait)startAlign();
 }
 // Size the stage to the camera picture's aspect (no cropping), centred in the view.
+let alignWait=false;
 function fitStage(){
  const st=$("stage"), box=st.parentElement;
- if(!srcW())return;
- const ar=srcW()/srcH();let w=box.clientWidth, h=w/ar;
+ if(!srcW()&&!NATIVE)return;
+ const ar=srcW()?srcW()/srcH():3/4;let w=box.clientWidth, h=w/ar; // no frame yet: the phone camera's usual 3:4 (portrait)
  if(h>box.clientHeight){h=box.clientHeight;w=h*ar;}
  st.style.width=w+"px";st.style.height=h+"px";
  natLayout();
@@ -2212,6 +2216,7 @@ function fitStage(){
 window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
 let stopWanted=false, stopT=0;
 function stopCam(force){
+ if(NATIVE)console.info("camera: close",(new Error().stack||"").split("\n").slice(2,4).join(" < ")); // for the emulator check
  // pressed while a picture is being taken: close once it is in (it used to be thrown away), but
  // wait 3 s at most (a camera that stopped answering would otherwise hold it for 20 s)
  if(!force&&shooting&&camSess&&$("cam").style.display==="flex"){
@@ -2533,7 +2538,8 @@ function natOpen(){
 async function natPull(gen){
  while(gen===natGen){
   try{const r=await fetch("/cam/frame?"+Date.now(),{cache:"no-store"});
-   if(r.ok){const bm=await createImageBitmap(await r.blob());if(gen!==natGen){bm.close();break;}const old=natFrame;natFrame=bm;if(old)old.close();}}catch(e){}
+   if(r.ok){const bm=await createImageBitmap(await r.blob());if(gen!==natGen){bm.close();break;}const old=natFrame;natFrame=bm;if(old)old.close();
+    if(!old&&alignWait){alignWait=false;fitStage();if(camMode==="after"&&job&&job.before)startAlign();}}}catch(e){}
   await sleep(90);
  }
 }
@@ -4745,6 +4751,7 @@ function drawCoverTo(ctx,src,sw,sh,w,h){
 }
 let beforeImg=null, alignRot=null;
 async function startAlign(){
+ if(!srcW())return; // no frame yet: started when it comes
  AH=Math.round(AW*srcH()/srcW());
  beforeImg=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=photoSrc;});
  alignRot=null;prepAlign();
@@ -4768,9 +4775,10 @@ function maskBuf(m,iw,ih,W,H,deg){
 }
 // (Re)build the comparison target when the phone is turned; also turns the overlay.
 function prepAlign(){
- const rot=camRot();if(rot===alignRot||!beforeImg)return;alignRot=rot;
+ const rot=camRot();if(rot===alignRot||!beforeImg||!(AH>0))return;
  const im=beforeImg, iw=im.naturalWidth, ih=im.naturalHeight, deg=-rot;
- Bgray=grayOf(ctx=>drawRotCover(ctx,im,iw,ih,AW,AH,deg));
+ try{Bgray=grayOf(ctx=>drawRotCover(ctx,im,iw,ih,AW,AH,deg));}catch(e){return;} // not ready: tried again
+ alignRot=rot;
  Bmask=maskBuf(job.mask,iw,ih,AW,AH,deg);
  est={tx:0,ty:0,s:1,r:0};estScore=-1;estId=-1;lvlShown=null;gdVal=null;
  const st=$("stage"), g=$("ghost");
