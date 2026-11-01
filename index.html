@@ -955,6 +955,26 @@ html.natcam #vid,html.app #vid{display:none}
 .flab .fbar{display:block;height:8px;margin:6px 2px 2px;border-radius:4px;background:rgba(5,46,20,.25);overflow:hidden}
 .flab .fbar i{display:block;height:100%;width:0;background:#fff;border-radius:4px}
 .flab .fpct{font-size:24px;font-weight:900;margin-left:6px;vertical-align:-2px;font-variant-numeric:tabular-nums}
+/* 電子小黒板 (施工前 配管・施工後 配管): on the picture, moved with a finger, sized by its corner or two fingers */
+.bdlay{position:absolute;inset:0;z-index:5;pointer-events:none}
+.bdbox{position:absolute;pointer-events:auto;touch-action:none;box-shadow:0 3px 12px rgba(0,0,0,.45)}
+.bdbox canvas{display:block;width:100%;height:100%}
+.bdsz{position:absolute;right:-12px;top:-12px;width:28px;height:28px;border-radius:50%;background:#FACC15;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.bdsheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+.bdsheet[hidden]{display:none}
+.bdpanel{width:100%;max-width:520px;max-height:100%;overflow:auto;background:#fff;color:#101828;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.bdpanel h3{margin:0 0 10px;font-size:19px}
+.bdrow{display:flex;align-items:center;gap:8px;min-height:50px;flex-wrap:wrap}
+.bdrow>span{width:92px;font-weight:800;font-size:15px;color:#344054}
+.bdrow b{font-size:16px}
+.bdrow input{font-size:18px;padding:8px 10px;border:1.5px solid #D0D5DD;border-radius:10px;min-width:0}
+#bdKpa{width:84px;text-align:right}
+.bdrow em{font-style:normal;font-weight:700}
+.bdnote{margin:0 0 4px 100px;font-size:12px;color:#667085}
+.bdseg{display:flex;gap:6px}
+.bdseg button{min-height:44px;padding:0 14px;border-radius:10px;border:1.5px solid #D0D5DD;background:#fff;font-size:16px;font-weight:700;color:#344054}
+.bdseg button.on{background:#1D4ED8;border-color:#1D4ED8;color:#fff}
+.bdok{display:block;width:100%;margin-top:12px;min-height:52px;border-radius:12px;background:#101828;color:#fff;font-size:18px;font-weight:800}
 /* after camera: the before photo small in the bottom-left corner, for lining up */
 .pip{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:auto}
 .pipbox{touch-action:none;cursor:move;position:relative;border-radius:10px;overflow:hidden;box-shadow:0 0 0 2px #fff,0 4px 14px rgba(0,0,0,.5);background:#000;line-height:0}
@@ -1267,8 +1287,19 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <div class="pill sidew" id="sideW" hidden>横向きで保存</div>
   <div class="frame" id="frame"><span class="flab" id="fLabel"></span></div>
   <div class="pip" id="pip" hidden><div class="pipbox" id="pipBox"><img id="pipImg" alt="施工前の写真" draggable="false"><span class="piptag">施工前</span><i class="pipsz" id="pipSz" aria-hidden="true"></i></div><button class="piptg" id="pipT"><span class="tx">非表示</span></button></div>
+  <div class="bdlay" id="bdLay" hidden><div class="bdbox" id="bdBox"><canvas id="bdCv"></canvas><i class="bdsz" id="bdSz" aria-hidden="true"></i></div></div>
  </div></div>
  <div class="camhud" id="camHud" hidden><div class="hudcol" id="hudCol"><div class="hudshot" id="hudShot"></div></div></div>
+ <div class="bdsheet" id="bdSheet" hidden><div class="bdpanel">
+  <h3>黒板の内容</h3>
+  <div class="bdrow"><span>工事名</span><b id="bdName"></b></div>
+  <p class="bdnote">工事名は現場の「伝票番号」と「お客様名」から入ります</p>
+  <label class="bdrow"><span>工事日</span><input type="date" id="bdDay"></label>
+  <div class="bdrow"><span>ガス種</span><div class="bdseg" id="bdGas"><button data-v="都市ガス">都市ガス</button><button data-v="LPガス">LPガス</button></div></div>
+  <div class="bdrow" id="bdLeakRow"><span>漏えい検査</span><div class="bdseg" id="bdLeak"><button data-v="圧力測定器">圧力測定器</button><button data-v="検知液/検知器">検知液/検知器</button></div></div>
+  <div class="bdrow" id="bdMeasRow"><span>測定値</span><input id="bdKpa" inputmode="decimal" placeholder="0.00" maxlength="6"><em>kPa</em><div class="bdseg" id="bdMin"><button data-v="2">2分</button><button data-v="5">5分</button></div></div>
+  <button class="bdok" id="bdOk">閉じる</button>
+ </div></div>
  <div class="bar">
   <div class="r zr" id="zoomRow"><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span><input type="range" id="zm" min="1.6" max="6.4" step="0.1" value="1.6" aria-label="ズーム"><b id="zmV">標準</b></div>
   <div class="r" id="evRow" hidden><span class="rl"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>明るさ</span><input type="range" id="ev" min="-2" max="2" step="1" value="0" aria-label="明るさ"><button type="button" id="evV" aria-label="明るさを元に戻す">±0</button></div>
@@ -2212,10 +2243,12 @@ function fitStage(){
  st.style.width=w+"px";st.style.height=h+"px";
  natLayout();
  if(sideDeg){sidePanel();pipFit();} // the band beside the picture follows its size
+ bdLayout();
 }
 window.addEventListener("resize",()=>{if($("cam").style.display==="flex")fitStage();});
 let stopWanted=false, stopT=0;
 function stopCam(force){
+ $("bdLay").hidden=true;$("bdSheet").hidden=true;turnFixed($("bdSheet"),0);
  if(NATIVE)console.info("camera: close",(new Error().stack||"").split("\n").slice(2,4).join(" < ")); // for the emulator check
  // pressed while a picture is being taken: close once it is in (it used to be thrown away), but
  // wait 3 s at most (a camera that stopped answering would otherwise hold it for 20 s)
@@ -2405,7 +2438,8 @@ $("cShot").onclick=async()=>{
  // pressed: the button says so at once and can't be pressed again; the flash and a buzz
  // come when the picture is really taken (shotMoment), then a big "撮れました" with the photo
  $("cShot").classList.add("busy");setTx2("cShot","撮影中…");$("holdStill").style.transform="translateX(-50%)"+(sideDeg?" rotate("+sideDeg+"deg)":"");$("holdStill").style.top=sideDeg?"45%":"";$("holdStill").hidden=false;
- let b=null;try{b=await grab();if(b)b.pct=pct;}finally{$("holdStill").hidden=true;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
+ const bsn=mode==="extra"?bdSnap():null; // 電子小黒板: where it is and what it says when pressed
+ let b=null;try{b=await grab();if(b)b.pct=pct;if(b&&bsn)b.board=bsn;}finally{$("holdStill").hidden=true;$("cShot").classList.remove("busy");setTx2("cShot","撮影");}
  if(s.cut){ // the camera was closed while waiting for it: keep it if it came after all
   if(b&&mode!=="extra"){s.n++;s.got=camGot=s.got.then(()=>gotPhoto(mode,b,o,true,g)).then(()=>{if(job)justShot(mode==="before"?"sB":"sA");}).catch(()=>{});}
   else if(b)s.got=camGot=s.got.then(()=>gotPhoto("extra",b,o,true,null,s.ckl)).catch(()=>{});
@@ -2500,8 +2534,79 @@ function setSideUI(deg){
   const free=(cam.clientHeight-$("stage").clientHeight)/2;
   const w=Math.max(186,free)+"px";$("hudCol").style.width=w;hud.style.setProperty("--hudw",w); // room for 3 large tool buttons a row
  }
- sidePanel();pipFit();
+ sidePanel();pipFit();bdLayout();
 }
+/* ---------- 電子小黒板 (撮影チェックリストの 施工前 配管・施工後 配管) ----------
+   The board shows bottom-left on the picture; a finger moves it, its yellow corner or two fingers size it, a
+   tap opens its contents. Its place is kept in the photo's own frame (as the phone is held: the layer turns
+   with the phone), so the photo gets it where it was seen. 施工者 and the number are fixed. */
+const BD_KEYS={pipe:"b",a_pipe:"a"}, BD_WHO="廣田憲治", BD_NO="2686-008", BD_AR=1160/1536, BD_DASH="----------";
+function bdKind(){const c=camSess&&camSess.ckl;return c&&BD_KEYS[c.k]||null;}
+function bdData(){const b=job.board=job.board||{};if(!b.gas)b.gas="都市ガス";if(!b.leak)b.leak="圧力測定器";if(b.min!==5)b.min=2;if(b.kpa==null)b.kpa="";b.pos=b.pos||{};return b;}
+const bdDayOf=b=>b.date||job.day||defDay(job);
+function bdTexts(k){const b=bdData(), d=bdDayOf(b).split("-").map(Number), site=bareName(job.site||"");
+ return {name:[job.slip,site&&site+" 様"].filter(Boolean).join(" "),date:d[0]+"年"+d[1]+"月"+d[2]+"日",kind:k==="b"?"施工前":"施工後",gas:b.gas,
+  leak:k==="b"?BD_DASH:b.leak,meas:k==="b"?BD_DASH:(b.kpa||"    ")+"kPa/"+b.min+"分",who:BD_WHO+" "+BD_NO};}
+// one line of the board, as large as its cell takes; a long one is narrowed (like the paper boards)
+function bdText(c,t,x,y,w,h,center){c.save();const fs=h*0.6;c.font="500 "+fs+"px "+rpFont();c.fillStyle="#000";c.textBaseline="middle";
+ const tw=c.measureText(t).width, k=tw>w?w/tw:1;c.translate(center?x+w/2-tw*k/2:x,y+h/2);c.scale(k,1);c.fillText(t,0,0);c.restore();}
+function bdDraw(c,X,Y,W,t){const H=W*BD_AR, u=W/1536;
+ c.save();c.fillStyle="#000";c.fillRect(X,Y,W,H);const o=20*u;c.fillStyle="#fff";c.fillRect(X+o,Y+o,W-2*o,H-2*o);
+ const ix=X+o+16*u, iy=Y+o+16*u, iw=W-2*o-32*u, ih=H-2*o-32*u, rh=ih/7, lw=iw*0.205, pad=10*u;
+ c.strokeStyle="#000";c.lineWidth=Math.max(1,5*u);c.strokeRect(ix,iy,iw,ih);c.beginPath();c.moveTo(ix+lw,iy);c.lineTo(ix+lw,iy+ih);
+ for(let r=1;r<7;r++){c.moveTo(r===1?ix+lw:ix,iy+rh*r);c.lineTo(ix+iw,iy+rh*r);}c.stroke();
+ bdText(c,"工事名/撮影日",ix+pad,iy+rh/2,lw-2*pad,rh,true); // across its two rows
+ ["内容","ガス種","漏えい検査","測定値/時間","施工者"].forEach((l,i)=>bdText(c,l,ix+pad,iy+rh*(i+2),lw-2*pad,rh,true));
+ [t.name,t.date,t.kind,t.gas,t.leak,t.meas,t.who].forEach((v,i)=>bdText(c,v,ix+lw+pad,iy+rh*i,iw-lw-2*pad,rh,false));
+ c.restore();}
+function bdRender(){const k=bdKind(), box=$("bdBox"), cv=$("bdCv");if(!k||!box.offsetWidth)return;
+ const d=window.devicePixelRatio||1, w=Math.round(box.offsetWidth*d);cv.width=w;cv.height=Math.round(w*BD_AR);bdDraw(cv.getContext("2d"),0,0,w,bdTexts(k));}
+// the layer has the photo's frame: the stage itself, or turned with the phone when it is held sideways
+function bdLayout(){const k=bdKind(), lay=$("bdLay");lay.hidden=!k||$("cam").style.display!=="flex";if(lay.hidden)return;
+ const st=$("stage"), W=sideDeg?st.clientHeight:st.clientWidth, H=sideDeg?st.clientWidth:st.clientHeight;
+ if(sideDeg){lay.style.inset="auto";lay.style.left="50%";lay.style.top="50%";lay.style.width=W+"px";lay.style.height=H+"px";lay.style.transform="translate(-50%,-50%) rotate("+sideDeg+"deg)";}
+ else lay.style.inset=lay.style.left=lay.style.top=lay.style.width=lay.style.height=lay.style.transform="";
+ const p=bdPos(k,W,H), box=$("bdBox"), bw=p.s*W;box.style.width=bw+"px";box.style.height=bw*BD_AR+"px";box.style.left=p.x*W+"px";box.style.top=p.y*H+"px";bdRender();}
+// where the board is (0-1 of the photo's width / height, s = its width), bottom-left to start with
+function bdPos(k,W,H){const b=bdData();let p=b.pos[k]||{x:0.02,y:null,s:0.48};const s=Math.min(1,Math.max(0.2,p.s)), hf=s*W*BD_AR/H;
+ const y=p.y==null?1-0.02-hf:p.y;return {s,x:Math.min(Math.max(0,p.x),Math.max(0,1-s)),y:Math.min(Math.max(0,y),Math.max(0,1-hf))};}
+function bdSnap(){const k=bdKind();if(!k)return null;const st=$("stage"), W=sideDeg?st.clientHeight:st.clientWidth, H=sideDeg?st.clientWidth:st.clientHeight;
+ return {...bdPos(k,W,H),t:bdTexts(k)};}
+// the photo with the board in it (full size)
+async function bdBurn(blob,sn){const im=await createImageBitmap(blob), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
+ const x=c.getContext("2d");x.drawImage(im,0,0);if(im.close)im.close();bdDraw(x,sn.x*c.width,sn.y*c.height,sn.s*c.width,sn.t);
+ return await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));}
+// a finger on the board: moves it (its corner: sizes it), two fingers size it, a tap opens its contents
+{const g={pts:new Map(),st:null};const box=$("bdBox");
+ const toLay=(dx,dy)=>{const a=sideDeg*Math.PI/180;return [dx*Math.cos(a)+dy*Math.sin(a),-dx*Math.sin(a)+dy*Math.cos(a)];};
+ const start=()=>{const k=bdKind();if(!k)return;const lay=$("bdLay"), W=lay.offsetWidth, H=lay.offsetHeight, p=bdPos(k,W,H), v=[...g.pts.values()];
+  g.st={k,W,H,p,v:v.map(q=>({...q})),d:v.length>1?Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y)||1:0,moved:false,t:performance.now()};};
+ box.addEventListener("pointerdown",e=>{e.stopPropagation();e.preventDefault();g.pts.set(e.pointerId,{x:e.clientX,y:e.clientY,sz:e.target===$("bdSz")});try{box.setPointerCapture(e.pointerId);}catch(_){}start();});
+ box.addEventListener("pointermove",e=>{if(!g.pts.has(e.pointerId))return;e.stopPropagation();g.pts.set(e.pointerId,{...g.pts.get(e.pointerId),x:e.clientX,y:e.clientY});const st=g.st;if(!st)return;
+  const v=[...g.pts.values()], b=bdData(), p={...st.p};
+  if(v.length>1&&st.d){p.s=st.p.s*Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y)/st.d;}
+  else{const [lx,ly]=toLay(v[0].x-st.v[0].x,v[0].y-st.v[0].y);if(Math.hypot(lx,ly)>8)st.moved=true;
+   if(st.v[0].sz){p.s=st.p.s+lx/st.W;p.y=st.p.y+st.p.s*st.W*BD_AR/st.H-p.s*st.W*BD_AR/st.H;} // the corner: the bottom-left stays put
+   else{p.x=st.p.x+lx/st.W;p.y=st.p.y+ly/st.H;}}
+  if(v.length>1)st.moved=true;b.pos[st.k]=p;b.pos[st.k]=bdPos(st.k,st.W,st.H);bdLayout();});
+ const end=e=>{if(!g.pts.has(e.pointerId))return;e.stopPropagation();const st=g.st;g.pts.delete(e.pointerId);
+  g.tap=!!(st&&!st.moved&&!g.pts.size&&performance.now()-st.t<500&&!st.v[0].sz&&e.type==="pointerup");
+  if(g.pts.size)start();else{g.st=null;if(st&&st.moved)saveJob();}};
+ box.addEventListener("pointerup",end);box.addEventListener("pointercancel",end);
+ // opened on the tap's click (opened on pointerup, that same click landed on the sheet's dim edge and closed it)
+ box.addEventListener("click",e=>{e.stopPropagation();if(g.tap){g.tap=false;bdOpen();}});}
+// the board's contents: 工事日, ガス種, 漏えい検査 and 測定値 (施工後 only)
+function bdSeg(id,v){$(id).querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===String(v)));}
+function bdOpen(){const k=bdKind();if(!k)return;const b=bdData(), t=bdTexts(k);
+ $("bdName").textContent=t.name||"(伝票番号・お客様名が未入力)";$("bdDay").value=bdDayOf(b);bdSeg("bdGas",b.gas);bdSeg("bdLeak",b.leak);bdSeg("bdMin",b.min);$("bdKpa").value=b.kpa;
+ $("bdLeakRow").hidden=$("bdMeasRow").hidden=k==="b";turnFixed($("bdSheet"),sideDeg);$("bdSheet").hidden=false;}
+const bdSet=f=>{if(!job)return;f(bdData());bdRender();saveJob();};
+[["bdGas","gas"],["bdLeak","leak"],["bdMin","min"]].forEach(([id,key])=>$(id).addEventListener("click",e=>{const btn=e.target.closest("button");if(!btn)return;
+ bdSet(b=>{b[key]=key==="min"?+btn.dataset.v:btn.dataset.v;});bdSeg(id,btn.dataset.v);}));
+$("bdDay").addEventListener("change",()=>bdSet(b=>{const v=$("bdDay").value;if(v&&v!==(job.day||defDay(job)))b.date=v;else delete b.date;}));
+$("bdKpa").addEventListener("input",()=>{const e=$("bdKpa"), v=e.value.replace(/[０-９．]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[^0-9.]/g,"");if(v!==e.value)e.value=v;bdSet(b=>{b.kpa=v;});});
+$("bdOk").onclick=()=>{$("bdSheet").hidden=true;turnFixed($("bdSheet"),0);};
+$("bdSheet").addEventListener("click",e=>{if(e.target===$("bdSheet"))$("bdOk").click();});
 // Sideways, the sliders go beside the picture (sideways they lay over the bottom of it) when that black band is
 // wide enough for them (150px: most phones; a short one keeps the low band). Their top: under 施工前を撮影 /
 // 横向きで保存 (fixed for the camera, so nothing moves while shooting); their length: the rest above やめる.
@@ -2843,10 +2948,14 @@ $("fExtra").onchange=async e=>{const f=e.target.files[0], k=cklFile;cklFile=null
 $("fAfter").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(f)await gotPhoto("after",f,null);};
 async function gotPhoto(mode,blob,o,shot,g,ck){
  const now=Date.now();
- if(mode==="extra"){const j=job, ex=blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now};if(ck){ex.ckl=ck.k;ex.cklT=ck.t;}(j.extras=j.extras||[]).push(ex);await saveJob();renderThumbs();
+ if(mode==="extra"){const j=job, ex=blob.nid?{blob,at:now,nid:blob.nid}:{blob,at:now};if(ck){ex.ckl=ck.k;ex.cklT=ck.t;}
+  // 電子小黒板: the photo gets the board; the photo as taken is kept as its original (x.orig, like an edit's)
+  if(blob.board){let out=null;try{out=await bdBurn(blob,blob.board);}catch(e){}
+   if(out){ex.orig=blob;ex.origNid=blob.nid||null;ex.blob=out;delete ex.nid;ex.board=blob.board;}else toast("黒板を写真に入れられませんでした",true);}
+  (j.extras=j.extras||[]).push(ex);await saveJob();renderThumbs();if(ex.board)ensureNid(ex);
   // App: other photos also go straight into the phone's photos (Google Photos), like a camera.
   const kn=ck?cklLab(ck.k).replace(/[\\/:*?"<>|]+/g,"_")||"写真":"写真";
-  const r=!shot||!window.AndroidApp?null:blob.nid&&canNative()?await nativeSave(blob.nid,"","",photoName(kn,now)):await toPhone(blob,kn,now);
+  const r=!shot||!window.AndroidApp?null:ex.board?await toPhone(ex.blob,kn,now,"黒板"):blob.nid&&canNative()?await nativeSave(blob.nid,"","",photoName(kn,now)):await toPhone(blob,kn,now);
   const ok=r==null?null:okR(r);if(ok){keepUri(ex,"saved",r);if((j.extras||[]).includes(ex)&&!goneIds.has(j.id)){if(j===job)saveJob();else putJob(j);}else dropFromPhone([uriR(r)]);}
   if(stream){if(ok!=null)$("shotN").textContent=shotCount+"枚 "+(ok?"保存しました":"保存できませんでした");}
   else toast(ok===false?"保存できませんでした":ok?"スマホに保存しました":"写真を追加しました",ok===false);
@@ -4231,6 +4340,8 @@ async function xeRender(im,e){const f=xeFrame(e,im.width,im.height), c=e.c;
  const x=cv.getContext("2d");x.translate(-c.l*f.W,-c.t*f.H);xeDraw(x,im.width,im.height,im,e,1);
  return await new Promise(r=>cv.toBlob(r,"image/jpeg",0.92));}
 async function xeOpen(i){const x=(job.extras||[])[i];if(!x||xe)return;
+ // 電子小黒板 in the photo: editing starts from the photo as taken, so the board would be lost
+ if(x.board){toast("黒板入りの写真は編集できません");return;}
  let im=null, pv=null;try{im=await createImageBitmap(x.orig||x.blob);const r=Math.min(1,1600/Math.max(im.width,im.height));
   pv=r<1?await createImageBitmap(im,{resizeWidth:Math.round(im.width*r),resizeHeight:Math.round(im.height*r),resizeQuality:"medium"}):im;}
  catch(err){toast("写真を開けませんでした",true);return;}
