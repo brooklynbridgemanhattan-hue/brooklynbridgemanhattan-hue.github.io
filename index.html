@@ -2566,15 +2566,17 @@ function bdLayout(){const k=bdKind(), lay=$("bdLay");lay.hidden=!k||$("cam").sty
  const st=$("stage"), W=sideDeg?st.clientHeight:st.clientWidth, H=sideDeg?st.clientWidth:st.clientHeight;
  if(sideDeg){lay.style.inset="auto";lay.style.left="50%";lay.style.top="50%";lay.style.width=W+"px";lay.style.height=H+"px";lay.style.transform="translate(-50%,-50%) rotate("+sideDeg+"deg)";}
  else lay.style.inset=lay.style.left=lay.style.top=lay.style.width=lay.style.height=lay.style.transform="";
- const p=bdPos(k,W,H), box=$("bdBox"), bw=p.s*W;box.style.width=bw+"px";box.style.height=bw*BD_AR+"px";box.style.left=p.x*W+"px";box.style.top=p.y*H+"px";bdRender();}
-// where the board is (0-1 of the photo's width / height, s = its width), bottom-left to start with
-function bdPos(k,W,H){const b=bdData();let p=b.pos[k]||{x:0.02,y:null,s:0.48};const s=Math.min(1,Math.max(0.2,p.s)), hf=s*W*BD_AR/H;
- const y=p.y==null?1-0.02-hf:p.y;return {s,x:Math.min(Math.max(0,p.x),Math.max(0,1-s)),y:Math.min(Math.max(0,y),Math.max(0,1-hf))};}
+ const p=bdPos(k,W,H), box=$("bdBox"), bw=p.w*W;box.style.width=bw+"px";box.style.height=bw*BD_AR+"px";box.style.left=p.x*W+"px";box.style.top=p.y*H+"px";bdRender();}
+// where the board is (0-1 of the photo's width / height), bottom-left to start with. Its size s is a share of the
+// photo's short side, so it is as large on a sideways photo as on an upright one (a share of the width made it
+// a third larger sideways); w = its width as a share of the photo's width.
+function bdPos(k,W,H){const b=bdData();let p=b.pos[k]||{x:0.02,y:null,s:0.48};const m=Math.min(W,H)/W, s=Math.min(1,Math.max(0.2,p.s)), w=s*m, hf=w*W*BD_AR/H;
+ const y=p.y==null?1-0.02-hf:p.y;return {s,w,x:Math.min(Math.max(0,p.x),Math.max(0,1-w)),y:Math.min(Math.max(0,y),Math.max(0,1-hf))};}
 function bdSnap(){const k=bdKind();if(!k)return null;const st=$("stage"), W=sideDeg?st.clientHeight:st.clientWidth, H=sideDeg?st.clientWidth:st.clientHeight;
  return {...bdPos(k,W,H),t:bdTexts(k)};}
 // the photo with the board in it (full size)
 async function bdBurn(blob,sn){const im=await createImageBitmap(blob), c=document.createElement("canvas");c.width=im.width;c.height=im.height;
- const x=c.getContext("2d");x.drawImage(im,0,0);if(im.close)im.close();bdDraw(x,sn.x*c.width,sn.y*c.height,sn.s*c.width,sn.t);
+ const x=c.getContext("2d");x.drawImage(im,0,0);if(im.close)im.close();bdDraw(x,sn.x*c.width,sn.y*c.height,sn.w*c.width,sn.t);
  return await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));}
 // a finger on the board: moves it (its corner: sizes it), two fingers size it, a tap opens its contents
 {const g={pts:new Map(),st:null};const box=$("bdBox");
@@ -2586,7 +2588,7 @@ async function bdBurn(blob,sn){const im=await createImageBitmap(blob), c=documen
   const v=[...g.pts.values()], b=bdData(), p={...st.p};
   if(v.length>1&&st.d){p.s=st.p.s*Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y)/st.d;}
   else{const [lx,ly]=toLay(v[0].x-st.v[0].x,v[0].y-st.v[0].y);if(Math.hypot(lx,ly)>8)st.moved=true;
-   if(st.v[0].sz){p.s=st.p.s+lx/st.W;p.y=st.p.y+st.p.s*st.W*BD_AR/st.H-p.s*st.W*BD_AR/st.H;} // the corner: the bottom-left stays put
+   if(st.v[0].sz){const m=Math.min(st.W,st.H);p.s=st.p.s+lx/m;p.y=st.p.y+(st.p.s-p.s)*m*BD_AR/st.H;} // the corner: the bottom-left stays put
    else{p.x=st.p.x+lx/st.W;p.y=st.p.y+ly/st.H;}}
   if(v.length>1)st.moved=true;b.pos[st.k]=p;b.pos[st.k]=bdPos(st.k,st.W,st.H);bdLayout();});
  const end=e=>{if(!g.pts.has(e.pointerId))return;e.stopPropagation();const st=g.st;g.pts.delete(e.pointerId);
