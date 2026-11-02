@@ -2542,7 +2542,7 @@ function setSideUI(deg){
    The board shows bottom-left on the picture; a finger moves it, its yellow corner or two fingers size it, a
    tap opens its contents. Its place is kept in the photo's own frame (as the phone is held: the layer turns
    with the phone), so the photo gets it where it was seen. 施工者 and the number are fixed. */
-const BD_KEYS={pipe:"b",a_pipe:"a"}, BD_WHO="廣田憲治", BD_NO="2686-008", BD_ROWS=[0.78,0.78,0.78,1,1,1,1,1], BD_AR=(72+1088/7*BD_ROWS.reduce((a,b)=>a+b))/1536, BD_DASH="----------";
+const BD_KEYS={pipe:"b",a_pipe:"a"}, BD_WHO="廣田憲治", BD_NO="2686-008", BD_ROWS=[0.7,0.92,0.7,1,1,1,1,1], BD_AR=(72+1088/7*BD_ROWS.reduce((a,b)=>a+b))/1536, BD_DASH="----------";
 function bdKind(){const c=camSess&&camSess.ckl;return c&&BD_KEYS[c.k]||null;}
 function bdData(){const b=job.board=job.board||{};if(!b.gas)b.gas="都市ガス";if(!b.leak)b.leak="圧力測定器";if(b.min!==5)b.min=2;if(b.kpa==null)b.kpa="";b.pos=b.pos||{};return b;}
 const bdDayOf=b=>b.date||job.day||defDay(job);
@@ -2555,7 +2555,8 @@ function bdText(c,t,x,y,w,h,center,big){c.save();const fs=h*(big?0.72:0.6);c.fon
 function bdDraw(c,X,Y,W,t){const H=W*BD_AR, u=W/1536;
  c.save();c.fillStyle="#000";c.fillRect(X,Y,W,H);const o=20*u;c.fillStyle="#fff";c.fillRect(X+o,Y+o,W-2*o,H-2*o);
  const ix=X+o+16*u, iy=Y+o+16*u, iw=W-2*o-32*u, ih=H-2*o-32*u, ru=ih/BD_ROWS.reduce((a,b)=>a+b), lw=iw*0.205, pad=10*u;
- // 管理番号・お客様名・撮影日: three lower rows under one name, so the board grows only a little
+ // 管理番号・お客様名・撮影日: three lower rows under one name, so the board grows only a little; お客様名's
+ // row is the tallest of them, its name a little larger than 内容's
  const ys=[iy];BD_ROWS.forEach(r=>ys.push(ys[ys.length-1]+r*ru));
  c.strokeStyle="#000";c.lineWidth=Math.max(1,5*u);c.strokeRect(ix,iy,iw,ih);c.beginPath();c.moveTo(ix+lw,iy);c.lineTo(ix+lw,iy+ih);
  for(let r=1;r<BD_ROWS.length;r++){c.moveTo(r<3?ix+lw:ix,ys[r]);c.lineTo(ix+iw,ys[r]);}c.stroke();
