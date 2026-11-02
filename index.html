@@ -117,6 +117,10 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .jimg img+img{margin-left:-2px}
 .jimg .noimg{width:56px;height:70px;border-radius:12px;background:var(--before-soft);display:grid;place-items:center;color:var(--before)}
 .jbody{flex:1;min-width:0}
+.jtr{display:flex;align-items:flex-start;gap:8px}
+.jtw{flex:1;min-width:0;container-type:inline-size}
+.jt.jt2{font-size:min(18px,calc(100cqw / 10.4));line-height:1.3;text-overflow:clip}
+.jdate{flex:none;min-width:44px;text-align:right;font-size:14px;font-weight:800;color:#475467;line-height:25px}
 .jt{font-size:18px;font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jd{font-size:14px;color:var(--sub);display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jd svg.i{width:15px;height:15px}
@@ -182,7 +186,8 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 #home .wrap{padding-bottom:110px}
 #home:has(#lHit:not([hidden])) .hhero{padding-bottom:22px} /* searching: the round tabs are set aside */
 .newjob.hfab{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;width:auto;margin:0;height:60px;padding:0 24px 0 18px;border-radius:30px;gap:6px;
- box-shadow:0 10px 24px rgba(37,99,235,.4)}
+ background:#101828;color:#fff;border:3px solid #fff;box-shadow:0 10px 26px rgba(16,24,40,.45)}
+.newjob.hfab:active{background:#344054}
 .newjob.hfab svg.i{width:26px;height:26px;stroke-width:2.6}
 .newjob.hfab b{font-size:18px;font-weight:900}
 body:has(#hSelBar:not([hidden])) .newjob.hfab{display:none}
@@ -1671,6 +1676,9 @@ async function cardTo(id,at){for(let n=0;n<4;n++){const c=homeCard(id);if(!c)ret
 function ddOpen(id){document.querySelectorAll('[data-job="'+id+'"]').forEach(x=>{const m=x.querySelector(".jdm");if(m){m.hidden=false;x.classList.add("jopen");}});}
 async function homeBackTo(){const a=homeAt;homeAt=null;if(!a||!homeCard(a.id))return;
  if(a.open)ddOpen(a.id);const c=await cardTo(a.id);if(c)glow(c,1);}
+// the name on a site's card: up to 9 letters as it is; 10 a little smaller; longer ones in 2 lines of 10 (a little smaller), "…" after 19
+function jobName(n){const a=[...n];if(a.length<=9)return '<div class="jt">'+esc(n)+'</div>';if(a.length===10)return '<div class="jt jt2">'+esc(n)+'</div>';
+ return '<div class="jt jt2">'+esc(a.slice(0,10).join(""))+'<br>'+esc(a.length>20?a.slice(10,19).join("")+"…":a.slice(10).join(""))+'</div>';}
 function jobDd(j){const L=jobLeft(j);
  if(!L.length)return '<div class="jdd jall">✓ 写真がそろいました</div>';
  return '<div class="jdd"><button type="button" class="jddb" data-jdd>'+CAM_SVG+'<span>未撮影（あと'+L.length+'）</span><i class="jar"></i></button><div class="jdm" hidden>'+
@@ -1715,10 +1723,10 @@ async function showHome(){
  const js=(await allJobs()).sort((a,b)=>b.created-a.created);
  // the site's card: its 施工前 / 施工後 as two round pictures (施工後 not yet: striped), the name, 伝票番号・places・場所・day, and the dots
  const card=j=>{const P=pairsOf(j), p=P.find(q=>q.before)||P[0], U=spotsUsed(j), many=P.length>1||(spotList(j)&&spotList(j)[0].name);
-  const info=[j.slip,many?(U.length?U:P).map(q=>spotName(j,P.indexOf(q))).join("・"):"",j.place&&j.place.text,fmtD(j.beforeAt||j.created)].filter(Boolean).map(esc).join("・");
+  const info=[j.slip,many?(U.length?U:P).map(q=>spotName(j,P.indexOf(q))).join("・"):"",j.place&&j.place.text].filter(Boolean).map(esc).join("・");
   return '<div class="job'+(jobDone(j)?" done":"")+'" data-job="'+j.id+'" role="button" tabindex="0"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+
   (p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'<span class="jaft"></span>')+'</span>'+
-  '<div class="jbody"><div class="jt">'+esc(custName(j)||"お客様名なし")+'</div><div class="jd">'+info+'</div>'+jobDots(j)+'</div>'+jobDd(j)+'</div>';};
+  '<div class="jbody"><div class="jtr"><div class="jtw">'+jobName(custName(j)||"お客様名なし")+'</div><span class="jdate">'+fmtD(j.beforeAt||j.created)+'</span></div><div class="jd">'+info+'</div>'+jobDots(j)+'</div>'+jobDd(j)+'</div>';};
  const w=js.filter(j=>!jobDone(j)), d=js.filter(jobDone);
  $("lWait").innerHTML=homeList(w,card,"w",'施工後待ちの現場はありません');
  $("lDone").innerHTML=homeList(d,card,"d",'完了した現場はまだありません');
