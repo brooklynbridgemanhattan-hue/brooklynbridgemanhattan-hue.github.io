@@ -2542,7 +2542,7 @@ function setSideUI(deg){
    The board shows bottom-left on the picture; a finger moves it, its yellow corner or two fingers size it, a
    tap opens its contents. Its place is kept in the photo's own frame (as the phone is held: the layer turns
    with the phone), so the photo gets it where it was seen. 施工者 and the number are fixed. */
-const BD_KEYS={pipe:"b",a_pipe:"a"}, BD_WHO="廣田憲治", BD_NO="2686-008", BD_ROWS=[0.8,0.92,0.7,1,1,1,1,1], BD_AR=(72+1088/7*BD_ROWS.reduce((a,b)=>a+b))/1536, BD_DASH="----------";
+const BD_KEYS={pipe:"b",a_pipe:"a"}, BD_WHO="廣田憲治", BD_NO="2686-008", BD_ROWS=[0.8,0.92,0.8,1,1,1,1,1], BD_AR=(72+1088/7*BD_ROWS.reduce((a,b)=>a+b))/1536, BD_DASH="----------";
 function bdKind(){const c=camSess&&camSess.ckl;return c&&BD_KEYS[c.k]||null;}
 function bdData(){const b=job.board=job.board||{};if(!b.gas)b.gas="都市ガス";if(!b.leak)b.leak="圧力測定器";if(b.min!==5)b.min=2;if(b.kpa==null)b.kpa="";b.pos=b.pos||{};return b;}
 const bdDayOf=b=>b.date||job.day||defDay(job);
@@ -2560,8 +2560,10 @@ function bdDraw(c,X,Y,W,t){const H=W*BD_AR, u=W/1536;
  const ys=[iy];BD_ROWS.forEach(r=>ys.push(ys[ys.length-1]+r*ru));
  c.strokeStyle="#000";c.lineWidth=Math.max(1,5*u);c.strokeRect(ix,iy,iw,ih);c.beginPath();c.moveTo(ix+lw,iy);c.lineTo(ix+lw,iy+ih);
  for(let r=1;r<BD_ROWS.length;r++){c.moveTo(ix,ys[r]);c.lineTo(ix+iw,ys[r]);}c.stroke();
- ["管理番号","お客様名","撮影日","内容","ガス種","漏えい検査","測定値/時間","施工者"].forEach((l,i)=>bdText(c,l,ix+pad,ys[i],lw-2*pad,ys[i+1]-ys[i],true));
- [t.no,t.cust,t.date,t.kind,t.gas,t.leak,t.meas,t.who].forEach((v,i)=>bdText(c,v,ix+lw+pad,ys[i],iw-lw-2*pad,ys[i+1]-ys[i],false,i===0?0.6/BD_ROWS[0]:i<3)); // the slimmer rows: larger letters (管理番号 as large as 施工者's)
+ // every letter as large as a full row's (圧力測定器), only the お客様名 itself larger; the slimmer rows' letters fill more of them
+ const fs=i=>0.6/BD_ROWS[i];
+ ["管理番号","お客様名","撮影日","内容","ガス種","漏えい検査","測定値/時間","施工者"].forEach((l,i)=>bdText(c,l,ix+pad,ys[i],lw-2*pad,ys[i+1]-ys[i],true,fs(i)));
+ [t.no,t.cust,t.date,t.kind,t.gas,t.leak,t.meas,t.who].forEach((v,i)=>bdText(c,v,ix+lw+pad,ys[i],iw-lw-2*pad,ys[i+1]-ys[i],false,i===1?0.72:fs(i)));
  c.restore();}
 function bdRender(){const k=bdKind(), box=$("bdBox"), cv=$("bdCv");if(!k||!box.offsetWidth)return;
  const d=window.devicePixelRatio||1, w=Math.round(box.offsetWidth*d);cv.width=w;cv.height=Math.round(w*BD_AR);bdDraw(cv.getContext("2d"),0,0,w,bdTexts(k));}
