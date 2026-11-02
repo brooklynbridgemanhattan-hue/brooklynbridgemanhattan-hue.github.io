@@ -662,6 +662,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .pad1.edz{display:flex;flex-direction:column;gap:8px}
 .edz .edzr{display:flex;align-items:center;gap:8px}
 .edz .edl{flex:none;width:34px;font-size:14px;font-weight:800;color:#E4E7EC}
+#xEd .edz .edl{width:44px;white-space:nowrap} /* 明るさ: three letters on one line */
 .edz .edzr button{flex:1;min-height:44px;flex-direction:row;font-size:20px;gap:6px}
 .edz .edzr input{flex:1;min-width:0;accent-color:#9C36B5;height:32px}
 .edz .eds button{flex:none;width:44px}
@@ -1248,6 +1249,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="pad1 edz">
   <div class="edzr eds"><span class="edl">拡大</span><button id="xZm" aria-label="縮小">−</button><input type="range" id="xZr" min="0" max="100" step="0.5" value="0" aria-label="拡大"><button id="xZp" aria-label="拡大">＋</button><b class="zv" id="xZv">100%</b></div>
   <div class="edzr eds"><span class="edl">傾き</span><button id="xTm" aria-label="左に0.1度">−</button><input type="range" id="xTr" min="-15" max="15" step="0.1" value="0" aria-label="傾き"><button id="xTp" aria-label="右に0.1度">＋</button><b class="zv" id="xTv">0.0°</b></div>
+  <div class="edzr eds"><span class="edl">明るさ</span><button id="xBm" aria-label="明るさ −1">−</button><input type="range" id="xBr" min="-50" max="50" step="1" value="0" aria-label="明るさ"><button id="xBp" aria-label="明るさ ＋1">＋</button><b class="zv" id="xBv">0</b></div>
   <div class="edzr ed2"><button id="xTurn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>90°回転</button><button id="xReset" class="rs"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>元の写真に戻す</button></div>
  </div>
  <div class="adjbtns"><button class="o2" id="xX"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>閉じる</button><button class="ok" id="xOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
@@ -4323,9 +4325,9 @@ window.addEventListener("resize",()=>{if(lv)lvFit();});
 // The photo as taken stays in x.orig (and x.origNid on the phone) for good, so 元の写真に戻す always works
 // and every edit starts from it; x.ed keeps the settings, x.blob is the edited photo everything else uses.
 let xe=null;
-const XE0=()=>({q:0,deg:0,s:1,ox:0,oy:0,c:{l:0,t:0,r:0,b:0}});
+const XE0=()=>({q:0,deg:0,s:1,ox:0,oy:0,c:{l:0,t:0,r:0,b:0},br:0});
 const xeSig=e=>JSON.stringify(e);
-const xeIsId=e=>!e.q&&!e.deg&&e.s===1&&!e.ox&&!e.oy&&!e.c.l&&!e.c.t&&!e.c.r&&!e.c.b;
+const xeIsId=e=>!e.q&&!e.deg&&e.s===1&&!e.ox&&!e.oy&&!e.c.l&&!e.c.t&&!e.c.r&&!e.c.b&&!e.br;
 function xeFrame(e,iw,ih){const W=e.q%2?ih:iw, H=e.q%2?iw:ih, t=Math.abs(e.deg)*Math.PI/180, co=Math.cos(t), si=Math.sin(t);
  return {W,H,k:Math.max((W*co+H*si)/W,(W*si+H*co)/H)};}
 // draws the photo (iw × ih; src may be a smaller copy) into ctx, the frame at scale sc
@@ -4338,10 +4340,14 @@ function xeClamp(e){if(!xe)return;const f=xeFrame(e,xe.im.width,xe.im.height), z
  const ok=(dx,dy)=>[[-1,-1],[1,-1],[1,1],[-1,1]].every(([sx,sy])=>{const x=sx*f.W/2-dx, y=sy*f.H/2-dy, u=x*co-y*si, v=x*si+y*co;return Math.abs(u)<=hw+0.5&&Math.abs(v)<=hh+0.5;});
  const dx=e.ox*f.W, dy=e.oy*f.H;if(ok(dx,dy))return;let lo=0, hi=1;for(let n=0;n<14;n++){const m=(lo+hi)/2;if(ok(dx*m,dy*m))lo=m;else hi=m;}
  e.ox=e.ox*lo;e.oy=e.oy*lo;}
+// 明るさ: the same curve as 施工前・施工後 (toneLut), on a canvas's pixels (a band of rows at a time)
+function xeTone(cv,br){if(!br)return;const x=cv.getContext("2d",{willReadFrequently:true}), l=toneLut({br,ct:0}), W=cv.width, rows=Math.max(1,Math.floor((1<<20)/W));
+ for(let y=0;y<cv.height;y+=rows){const n=Math.min(rows,cv.height-y), d=x.getImageData(0,y,W,n), p=d.data;
+  for(let i=0;i<p.length;i+=4){p[i]=l[p[i]];p[i+1]=l[p[i+1]];p[i+2]=l[p[i+2]];}x.putImageData(d,0,y);}}
 // the edited photo, at the photo's own size (the cut part of it)
 async function xeRender(im,e){const f=xeFrame(e,im.width,im.height), c=e.c;
  const cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(f.W*(1-c.l-c.r)));cv.height=Math.max(1,Math.round(f.H*(1-c.t-c.b)));
- const x=cv.getContext("2d");x.translate(-c.l*f.W,-c.t*f.H);xeDraw(x,im.width,im.height,im,e,1);
+ const x=cv.getContext("2d");x.translate(-c.l*f.W,-c.t*f.H);xeDraw(x,im.width,im.height,im,e,1);x.setTransform(1,0,0,1,0,0);xeTone(cv,e.br);
  return await new Promise(r=>cv.toBlob(r,"image/jpeg",0.92));}
 async function xeOpen(i){const x=(job.extras||[])[i];if(!x||xe)return;
  // 電子小黒板 in the photo: editing starts from the photo as taken, so the board would be lost
@@ -4355,18 +4361,21 @@ async function xeOpen(i){const x=(job.extras||[])[i];if(!x||xe)return;
 function xeShow(){if(!xe)return;const e=xe.e, st=$("xStage"), cv=$("xC"), im=xe.im, f=xeFrame(e,im.width,im.height);
  const ds=Math.min(st.clientWidth/f.W,st.clientHeight/f.H), dpr=window.devicePixelRatio||1;xe.ds=ds;
  cv.width=Math.round(f.W*ds*dpr);cv.height=Math.round(f.H*ds*dpr);cv.style.width=Math.round(f.W*ds)+"px";cv.style.height=Math.round(f.H*ds)+"px";
- xeDraw(cv.getContext("2d"),im.width,im.height,xe.pv,e,ds*dpr);
+ xeDraw(cv.getContext("2d"),im.width,im.height,xe.pv,e,ds*dpr);xeTone(cv,e.br);
  const r=cv.getBoundingClientRect(), sr=st.getBoundingClientRect(), c=e.c;
  Object.assign($("xCrop").style,{left:(r.left-sr.left+c.l*r.width)+"px",top:(r.top-sr.top+c.t*r.height)+"px",width:((1-c.l-c.r)*r.width)+"px",height:((1-c.t-c.b)*r.height)+"px"});
  $("xCrop").querySelectorAll("i").forEach(n=>{const h=n.dataset.h;n.style.left=h[1]==="l"?"0":"100%";n.style.top=h[0]==="t"?"0":"100%";});
- $("xZr").value=Math.log(e.s)/Math.log(4)*100;$("xZv").textContent=Math.round(e.s*100)+"%";$("xTr").value=e.deg;$("xTv").textContent=fmtDeg(e.deg);}
+ $("xZr").value=Math.log(e.s)/Math.log(4)*100;$("xZv").textContent=Math.round(e.s*100)+"%";$("xTr").value=e.deg;$("xTv").textContent=fmtDeg(e.deg);
+ $("xBr").value=e.br||0;$("xBv").textContent=(e.br>0?"+":"")+(e.br||0);}
 let xeRaf=0;const xeDrawSoon=()=>{if(!xeRaf)xeRaf=requestAnimationFrame(()=>{xeRaf=0;xeShow();});};
 const xeZoom=v=>{if(!xe)return;xe.e.s=Math.max(1,Math.min(4,v));xeClamp(xe.e);xeDrawSoon();};
 const xeTilt=v=>{if(!xe)return;xe.e.deg=Math.round(Math.max(-LV_MAX,Math.min(LV_MAX,v))*10)/10;xeClamp(xe.e);xeDrawSoon();};
 $("xZr").addEventListener("input",ev=>xeZoom(Math.pow(4,+ev.target.value/100)));
 $("xTr").addEventListener("input",ev=>xeTilt(+ev.target.value));
+const xeBright=v=>{if(!xe)return;xe.e.br=Math.round(Math.max(-50,Math.min(50,v)));xeDrawSoon();};
+$("xBr").addEventListener("input",ev=>xeBright(+ev.target.value));
 // − / ＋ (held down: again and again)
-[["xZm",()=>xeZoom(xe.e.s/1.05)],["xZp",()=>xeZoom(xe.e.s*1.05)],["xTm",()=>xeTilt(xe.e.deg-0.1)],["xTp",()=>xeTilt(xe.e.deg+0.1)]].forEach(([id,f])=>{const b=$(id);let t=0;
+[["xZm",()=>xeZoom(xe.e.s/1.05)],["xZp",()=>xeZoom(xe.e.s*1.05)],["xTm",()=>xeTilt(xe.e.deg-0.1)],["xTp",()=>xeTilt(xe.e.deg+0.1)],["xBm",()=>xeBright((xe.e.br||0)-1)],["xBp",()=>xeBright((xe.e.br||0)+1)]].forEach(([id,f])=>{const b=$(id);let t=0;
  const stop=()=>{clearTimeout(t);clearInterval(t);};
  b.addEventListener("pointerdown",ev=>{ev.preventDefault();stop();if(!xe)return;f();t=setTimeout(()=>{t=setInterval(()=>{if(xe)f();},70);},380);});
  ["pointerup","pointercancel","pointerleave"].forEach(n=>b.addEventListener(n,stop));b.addEventListener("contextmenu",ev=>ev.preventDefault());});
@@ -4399,7 +4408,7 @@ window.addEventListener("resize",()=>{if(xe)xeShow();});
 function natEdit(id,e){return new Promise(res=>{const A=window.AndroidApp;if(!id||!A||!A.editPhoto||!A.hasPhoto||!A.hasPhoto(id)){res(null);return;}
  const req="l"+(++lvReq);lvWait.set(req,r=>res(String(r).startsWith("ok:")?String(r).slice(3):null));
  setTimeout(()=>{if(lvWait.has(req)){lvWait.delete(req);res(null);}},15000);
- try{A.editPhoto(req,id,JSON.stringify({q:e.q,deg:e.deg,s:e.s,ox:e.ox,oy:e.oy,l:e.c.l,t:e.c.t,r:e.c.r,b:e.c.b}));}catch(err){lvWait.delete(req);res(null);}});}
+ try{A.editPhoto(req,id,JSON.stringify({q:e.q,deg:e.deg,s:e.s,ox:e.ox,oy:e.oy,l:e.c.l,t:e.c.t,r:e.c.r,b:e.c.b,br:e.br||0}));}catch(err){lvWait.delete(req);res(null);}});}
 // the edited photo into the phone's photos, after 保存しました (only a failure says something more)
 async function xeGallery(x,out,kn){const j=job;let r=null;
  try{r=x.nid&&canNative()?await nativeSave(x.nid,"","",photoName(kn,Date.now(),"編集")):await toPhone(out,kn,Date.now(),"編集");}catch(err){r=null;}
