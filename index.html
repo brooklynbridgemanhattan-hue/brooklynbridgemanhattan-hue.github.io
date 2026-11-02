@@ -2540,24 +2540,26 @@ function setSideUI(deg){
    The board shows bottom-left on the picture; a finger moves it, its yellow corner or two fingers size it, a
    tap opens its contents. Its place is kept in the photo's own frame (as the phone is held: the layer turns
    with the phone), so the photo gets it where it was seen. 施工者 and the number are fixed. */
-const BD_KEYS={pipe:"b",a_pipe:"a"}, BD_WHO="廣田憲治", BD_NO="2686-008", BD_AR=1160/1536, BD_DASH="----------";
+const BD_KEYS={pipe:"b",a_pipe:"a"}, BD_WHO="廣田憲治", BD_NO="2686-008", BD_ROWS=[0.78,0.78,0.78,1,1,1,1,1], BD_AR=(72+1088/7*BD_ROWS.reduce((a,b)=>a+b))/1536, BD_DASH="----------";
 function bdKind(){const c=camSess&&camSess.ckl;return c&&BD_KEYS[c.k]||null;}
 function bdData(){const b=job.board=job.board||{};if(!b.gas)b.gas="都市ガス";if(!b.leak)b.leak="圧力測定器";if(b.min!==5)b.min=2;if(b.kpa==null)b.kpa="";b.pos=b.pos||{};return b;}
 const bdDayOf=b=>b.date||job.day||defDay(job);
 function bdTexts(k){const b=bdData(), d=bdDayOf(b).split("-").map(Number), site=bareName(job.site||"");
- return {name:[job.slip,site&&site+" 様"].filter(Boolean).join(" "),date:d[0]+"年"+d[1]+"月"+d[2]+"日",kind:k==="b"?"施工前":"施工後",gas:b.gas,
+ return {no:job.slip||"",cust:site?site+" 様":"",date:d[0]+"年"+d[1]+"月"+d[2]+"日",kind:k==="b"?"施工前":"施工後",gas:b.gas,
   leak:k==="b"?BD_DASH:b.leak,meas:k==="b"?BD_DASH:(b.kpa||"    ")+"kPa/"+b.min+"分",who:BD_WHO+" "+BD_NO};}
 // one line of the board, as large as its cell takes; a long one is narrowed (like the paper boards)
-function bdText(c,t,x,y,w,h,center){c.save();const fs=h*0.6;c.font="500 "+fs+"px "+rpFont();c.fillStyle="#000";c.textBaseline="middle";
+function bdText(c,t,x,y,w,h,center,big){c.save();const fs=h*(big?0.72:0.6);c.font="500 "+fs+"px "+rpFont();c.fillStyle="#000";c.textBaseline="middle";
  const tw=c.measureText(t).width, k=tw>w?w/tw:1;c.translate(center?x+w/2-tw*k/2:x,y+h/2);c.scale(k,1);c.fillText(t,0,0);c.restore();}
 function bdDraw(c,X,Y,W,t){const H=W*BD_AR, u=W/1536;
  c.save();c.fillStyle="#000";c.fillRect(X,Y,W,H);const o=20*u;c.fillStyle="#fff";c.fillRect(X+o,Y+o,W-2*o,H-2*o);
- const ix=X+o+16*u, iy=Y+o+16*u, iw=W-2*o-32*u, ih=H-2*o-32*u, rh=ih/7, lw=iw*0.205, pad=10*u;
+ const ix=X+o+16*u, iy=Y+o+16*u, iw=W-2*o-32*u, ih=H-2*o-32*u, ru=ih/BD_ROWS.reduce((a,b)=>a+b), lw=iw*0.205, pad=10*u;
+ // 管理番号・お客様名・撮影日: three lower rows under one name, so the board grows only a little
+ const ys=[iy];BD_ROWS.forEach(r=>ys.push(ys[ys.length-1]+r*ru));
  c.strokeStyle="#000";c.lineWidth=Math.max(1,5*u);c.strokeRect(ix,iy,iw,ih);c.beginPath();c.moveTo(ix+lw,iy);c.lineTo(ix+lw,iy+ih);
- for(let r=1;r<7;r++){c.moveTo(r===1?ix+lw:ix,iy+rh*r);c.lineTo(ix+iw,iy+rh*r);}c.stroke();
- bdText(c,"工事名/撮影日",ix+pad,iy+rh/2,lw-2*pad,rh,true); // across its two rows
- ["内容","ガス種","漏えい検査","測定値/時間","施工者"].forEach((l,i)=>bdText(c,l,ix+pad,iy+rh*(i+2),lw-2*pad,rh,true));
- [t.name,t.date,t.kind,t.gas,t.leak,t.meas,t.who].forEach((v,i)=>bdText(c,v,ix+lw+pad,iy+rh*i,iw-lw-2*pad,rh,false));
+ for(let r=1;r<BD_ROWS.length;r++){c.moveTo(r<3?ix+lw:ix,ys[r]);c.lineTo(ix+iw,ys[r]);}c.stroke();
+ bdText(c,"工事名/撮影日",ix+pad,(ys[0]+ys[3])/2-ru/2,lw-2*pad,ru,true); // across its three rows
+ ["内容","ガス種","漏えい検査","測定値/時間","施工者"].forEach((l,i)=>bdText(c,l,ix+pad,ys[i+3],lw-2*pad,ys[i+4]-ys[i+3],true));
+ [t.no,t.cust,t.date,t.kind,t.gas,t.leak,t.meas,t.who].forEach((v,i)=>bdText(c,v,ix+lw+pad,ys[i],iw-lw-2*pad,ys[i+1]-ys[i],false,i<3)); // the slimmer rows: larger letters
  c.restore();}
 function bdRender(){const k=bdKind(), box=$("bdBox"), cv=$("bdCv");if(!k||!box.offsetWidth)return;
  const d=window.devicePixelRatio||1, w=Math.round(box.offsetWidth*d);cv.width=w;cv.height=Math.round(w*BD_AR);bdDraw(cv.getContext("2d"),0,0,w,bdTexts(k));}
@@ -2600,7 +2602,7 @@ async function bdBurn(blob,sn){const im=await createImageBitmap(blob), c=documen
 // the board's contents: 工事日, ガス種, 漏えい検査 and 測定値 (施工後 only)
 function bdSeg(id,v){$(id).querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===String(v)));}
 function bdOpen(){const k=bdKind();if(!k)return;const b=bdData(), t=bdTexts(k);
- $("bdName").textContent=t.name||"(伝票番号・お客様名が未入力)";$("bdDay").value=bdDayOf(b);bdSeg("bdGas",b.gas);bdSeg("bdLeak",b.leak);bdSeg("bdMin",b.min);$("bdKpa").value=b.kpa;
+ $("bdName").textContent=[t.no,t.cust].filter(Boolean).join(" ")||"(伝票番号・お客様名が未入力)";$("bdDay").value=bdDayOf(b);bdSeg("bdGas",b.gas);bdSeg("bdLeak",b.leak);bdSeg("bdMin",b.min);$("bdKpa").value=b.kpa;
  $("bdLeakRow").hidden=$("bdMeasRow").hidden=k==="b";turnFixed($("bdSheet"),sideDeg);$("bdSheet").hidden=false;}
 const bdSet=f=>{if(!job)return;f(bdData());bdRender();saveJob();};
 [["bdGas","gas"],["bdLeak","leak"],["bdMin","min"]].forEach(([id,key])=>$(id).addEventListener("click",e=>{const btn=e.target.closest("button");if(!btn)return;
