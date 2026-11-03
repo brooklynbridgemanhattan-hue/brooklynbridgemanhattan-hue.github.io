@@ -192,8 +192,11 @@ body:has(#hSelBar:not([hidden])) #home .wrap{padding-bottom:110px}
 .newjob.hfab b{font-size:18px;font-weight:900}
 body:has(#hSelBar:not([hidden])) .newjob.hfab{display:none}
 #home .job{border-radius:26px;padding:12px 14px}
-#home .jimg img,#home .jimg .noimg,#home .jimg .jaft{width:58px;height:58px;border-radius:50%;border:3px solid var(--card);object-fit:cover}
-#home .jimg img+img,#home .jimg img+.jaft,#home .jimg .noimg+.jaft{margin-left:-16px}
+/* 施工前 | 施工後 side by side in one rounded square, a thin white line between, small 前 / 後 tags */
+#home .jimg{position:relative;gap:2px;border-radius:14px;overflow:hidden;background:var(--card)}
+#home .jimg img,#home .jimg .noimg,#home .jimg .jaft{width:54px;height:70px;border-radius:0;border:0;margin:0;object-fit:cover}
+#home .jimg .jlb,#home .jimg .jla{position:absolute;bottom:4px;font-style:normal;font-size:10.5px;font-weight:900;line-height:16px;color:#fff;padding:0 5px;border-radius:6px}
+#home .jimg .jlb{left:4px;background:#4C6EF5}#home .jimg .jla{left:60px;background:#F59E0B}
 #home .jimg .noimg{display:grid;place-items:center}
 #home .jimg .noimg svg.i{width:22px;height:22px}
 .jaft{display:block;background:repeating-linear-gradient(45deg,#EDEFF3 0 6px,#F7F8FA 6px 12px)}
@@ -1725,7 +1728,7 @@ async function showHome(){
  const card=j=>{const P=pairsOf(j), p=P.find(q=>q.before)||P[0], U=spotsUsed(j), many=P.length>1||(spotList(j)&&spotList(j)[0].name);
   const info=[j.slip,many?(U.length?U:P).map(q=>spotName(j,P.indexOf(q))).join("・"):"",j.place&&j.place.text].filter(Boolean).map(esc).join("・");
   return '<div class="job'+(jobDone(j)?" done":"")+'" data-job="'+j.id+'" role="button" tabindex="0"><span class="jck"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"/></svg></span><span class="jimg">'+
-  (p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'<span class="jaft"></span>')+'</span>'+
+  (p.before?'<img'+(p.thB?' src="'+p.thB+'"':'')+' data-th="b" alt="" decoding="async">':'<span class="noimg">'+CAM_SVG+'</span>')+(p.after?'<img'+(p.thA?' src="'+p.thA+'"':'')+' data-th="a" alt="" decoding="async">':'<span class="jaft"></span>')+'<i class="jlb">前</i><i class="jla">後</i></span>'+
   '<div class="jbody"><div class="jtr"><div class="jtw">'+jobName(custName(j)||"お客様名なし")+'</div><span class="jdate">'+fmtD(j.beforeAt||j.created)+'</span></div><div class="jd">'+info+'</div>'+jobDots(j)+'</div>'+jobDd(j)+'</div>';};
  const w=js.filter(j=>!jobDone(j)), d=js.filter(jobDone);
  $("lWait").innerHTML=homeList(w,card,"w",'施工後待ちの現場はありません');
