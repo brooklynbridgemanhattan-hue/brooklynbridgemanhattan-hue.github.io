@@ -610,6 +610,13 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit.ckldrag .cklhd{color:var(--ink)}
 .cklit.ckledit .cklx{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:10px;color:#B42318;background:#FEF3F2}
 .cklit.ckledit .cklx svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.6;fill:none}
+.cklshr{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;margin-top:14px;border-radius:14px;border:0;background:#0B6E7D;color:#fff;font-size:16px;font-weight:900}
+.cklshr svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cklshp{margin:0 0 8px;font-size:14px;color:var(--sub);font-weight:700}
+.cklshl{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto;text-align:left}
+.cklsho{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;border-radius:12px;background:var(--fill);font-size:15.5px;font-weight:800;color:var(--ink)}
+.cklsho input{width:22px;height:22px;flex:none;accent-color:#0B6E7D}.cklsho span{flex:1;min-width:0}.cklsho small{font-size:13px;color:var(--sub);font-weight:800}
+.cklsha{display:flex;gap:8px;margin-top:8px}.cklsha button{flex:1;height:38px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-size:13.5px;font-weight:800;color:#475467}
 .ckladd{display:block;width:100%;min-height:48px;margin-top:8px;border-radius:12px;font-size:15px;font-weight:800;background:transparent;color:#0B6E7D;box-shadow:inset 0 0 0 2px var(--extra);border:0}
 .cklhidt{margin:14px 2px 2px;font-size:13px;font-weight:800;color:var(--sub)}
 .cklit.cklhid{min-height:52px;flex-wrap:nowrap}
@@ -2080,7 +2087,7 @@ $("sA").addEventListener("click",()=>{if(job&&job.before&&!job.after&&!camFail)$
 // お客様名 is kept without 様 (an older "山田様" is read the same); shown as "山田様".
 const bareName=t=>String(t||"").trim().replace(/\s*(様|さま)$/,"").trim();
 const custName=j=>{const n=bareName(j&&j.site);return n?n+"様":"";};
-async function saveJob(){job.site=bareName($("site").value);job.memo=$("memo").value.trim();
+async function saveJob(){while(infoAsking)await infoAsking;job.site=bareName($("site").value);job.memo=$("memo").value.trim();
  const sl=$("slip").value.trim(), co=$("corp").value.trim();if(sl)job.slip=sl;else delete job.slip;if(co)job.corp=co;else delete job.corp;await putJob(job);}
 // 日付: the day of the work (the report's 施工日); until it is set by hand, the day of the first photo (or the day the
 // site was made), as the report would have it
@@ -2119,8 +2126,20 @@ $("memo").addEventListener("focus",()=>{$("memoDone").hidden=false;});
 $("memo").addEventListener("blur",()=>{$("memoDone").hidden=true;});
 $("memoDone").addEventListener("pointerdown",e=>e.preventDefault());
 $("memoDone").addEventListener("click",e=>{e.preventDefault();$("memo").blur();});
-$("site").onchange=$("memo").onchange=$("slip").onchange=async()=>{await saveJob();make();};
-$("corp").onchange=async()=>{corpRemember($("corp").value);await saveJob();make();};
+// 現場の情報: a filled-in 伝票番号・法人・お客様名・場所 typed over asks before it is kept
+// (保存する / キャンセル = back as it was). Filling an empty one, or a 場所 found by the phone, does not ask.
+const INFO_LAB={slip:"伝票番号",corp:"法人",site:"お客様名",placeIn:"場所"}, infoWas={};let infoAsking=null;
+Object.keys(INFO_LAB).forEach(id=>$(id).addEventListener("focus",()=>{infoWas[id]=$(id).value.trim();}));
+async function infoKeep(id){while(infoAsking)await infoAsking;
+ const was=infoWas[id], now=$(id).value.trim();infoWas[id]=now;if(!was||was===now)return true;
+ if(id==="placeIn"&&!(job&&job.place&&job.place.hand))return true; // the place the phone found by itself: changing it does not ask
+ const p=bkDialog("入力内容が変更されました",INFO_LAB[id]+"を「"+esc(was)+"」から「"+(now?esc(now):"(空)")+"」に変えます。保存しますか?","保存する","キャンセル").then(ok=>{
+  if(!ok){$(id).value=was;infoWas[id]=was;if(id==="site")$("site").dispatchEvent(new Event("input"));toast(INFO_LAB[id]+"を元に戻しました");}
+  if(infoAsking===p)infoAsking=null;return ok;});
+ infoAsking=p;return p;}
+$("memo").onchange=async()=>{await saveJob();make();};
+$("site").onchange=$("slip").onchange=async e=>{if(!(await infoKeep(e.target.id)))return;await saveJob();make();};
+$("corp").onchange=async()=>{if(!(await infoKeep("corp")))return;corpRemember($("corp").value);await saveJob();make();};
 $("slip").addEventListener("keydown",e=>{if(e.key==="Enter")$("slip").blur();});$("corp").addEventListener("keydown",e=>{if(e.key==="Enter")$("corp").blur();});
 const hasPhotos=j=>pairsOf(j).some(p=>p.before||p.after);
 const worthKeeping=()=>job&&($("site").value.trim()||$("memo").value.trim()||$("slip").value.trim()||$("corp").value.trim()||$("placeIn").value.trim()||hasPhotos(job)||(job.extras||[]).length||spotList(job));
@@ -2129,7 +2148,7 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("detail
 // Photos just taken are still being put in (and saved): leave only once they are in, so none is
 // lost or lands in another site.
 let leaving=false;
-$("dBack").onclick=async()=>{if(leaving)return;leaving=true;try{await busyWait(camGot);if(job&&(hasPhotos(job)||job.site||spotList(job)))await saveJob();await showHome();}finally{leaving=false;}};
+$("dBack").onclick=async()=>{if(leaving)return;leaving=true;try{const ae=document.activeElement;if(ae&&ae.blur&&ae!==document.body)ae.blur();await busyWait(camGot);if(job&&(hasPhotos(job)||job.site||spotList(job)))await saveJob();await showHome();}finally{leaving=false;}};
 /* ---------- 複数か所 ---------- */
 // The bar above 1-2-3: one button per place (tap = open it, tap the open one = name / delete) and ＋.
 const SPOT_PRE0=["ビルトインコンロ","レンジフード","給湯器"]; // the ready names until the person changes them
@@ -3198,7 +3217,7 @@ function getPlace(){
 }
 $("bPlace").onclick=getPlace;
 // 場所 by hand: kept as typed (the first 施工前 photo does not fetch it again); 現在地を取得 still replaces it
-$("placeIn").onchange=async()=>{if(!job)return;const t=$("placeIn").value.trim();$("placeIn").value=t;
+$("placeIn").onchange=async()=>{if(!job||!(await infoKeep("placeIn")))return;const t=$("placeIn").value.trim();$("placeIn").value=t;
  if(t)job.place={text:t,at:Date.now(),hand:true};else delete job.place;await saveJob();make();};
 $("placeIn").addEventListener("keydown",e=>{if(doneKey(e)){e.preventDefault();$("placeIn").blur();}});
 
@@ -3326,12 +3345,26 @@ function cklRender(){
    (k==="air"?'<span class="cklair">'+Object.keys(CKL_AIR).map(m=>'<button type="button" data-air="'+m+'" class="'+(v.air===m?"on":"")+'">'+CKL_AIR[m]+'</button>').join("")+'</span>':'')+'</div>';}
  h+='</div>';}
  if(/data-x="/.test(h))h+='<p class="cklbkn">写真を長押しすると、その他の写真に戻せます</p>';
+ if(st.ks.some(k=>!cklSkipped(p,k,t)&&cklShareOf(p,k,t).length))h+='<button type="button" class="cklshr" data-share="1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>チェックリストの写真を共有</button>';
  box.innerHTML=h;box.hidden=false;
 }
+// チェックリストの写真を共有: the items that have photos, each with a box (all ticked at first); the ticked ones' photos
+// go to the phone's share menu (LINE, mail…). 施工前 / 施工後 本体 are the photos at the top.
+function cklShareOf(p,k,t){if(CKL_PAIR[k]){const w=CKL_PAIR[k];return p[w]?[{blob:p[w],at:p[w+"At"]}]:[];}return cklPh(p,k,t).map(x=>({blob:x.blob,at:x.at}));}
+async function cklShare(){if(!job)return;const i=spotIdx(job), t=cklTplOf(job,i);if(!t)return;const j=job;
+ const ks=cklStat(j,i).ks.filter(k=>!cklSkipped(j,k,t)&&cklShareOf(j,k,t).length);if(!ks.length)return;
+ const wait=bkDialog("チェックリストの写真を共有",'<p class="cklshp">共有する項目を選んでください</p><div class="cklshl">'+ks.map(k=>'<label class="cklsho"><input type="checkbox" value="'+k+'" checked><span>'+esc(cklLab(k))+'</span><small>'+cklShareOf(j,k,t).length+'枚</small></label>').join("")+
+  '</div><div class="cklsha"><button type="button" data-all="1">すべて選ぶ</button><button type="button" data-all="0">すべて外す</button></div>',"共有する","キャンセル");
+ const box=$("bkDB"), upd=()=>{const n=[...box.querySelectorAll("input:checked")].reduce((a,c)=>a+cklShareOf(j,c.value,t).length,0);$("bkDYes").disabled=!n;setTx("bkDYes",n?"共有する("+n+"枚)":"共有する");};
+ box.onchange=upd;box.querySelectorAll("[data-all]").forEach(b=>b.onclick=()=>{box.querySelectorAll("input").forEach(c=>c.checked=b.dataset.all==="1");upd();});upd();
+ const ok=await wait;box.onchange=null;$("bkDYes").disabled=false;if(!ok)return;
+ const list=[];for(const c of box.querySelectorAll("input:checked")){const k=c.value, xs=cklShareOf(j,k,t);xs.forEach((x,n)=>list.push({blob:x.blob,name:photoName(cklLab(k),x.at||Date.now(),xs.length>1?String(n+1):"")}));}
+ if(!list.length)return;toast(list.length+"枚の写真を準備しています");await shareFiles(list,"チェックリストの写真を送る");}
 $("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)renderThumbs();};
 let cklNext=null, cklFile=null; // the item the next その他の写真 camera / file is for
 async function cklSet(f){if(!job)return;job.cklv=job.cklv||{};f(job.cklv);await saveJob();renderThumbs();}
 $("cklList").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!job)return;const d=b.dataset;
+ if(d.share){cklShare();return;}
  if(d.ed){cklEd=cklTplOf(job,spotIdx(job));cklRender();cklSee();}
  else if(d.eddone){cklEd=null;cklRender();}
  else if(d.edreset)cklReset();
