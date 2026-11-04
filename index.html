@@ -3975,13 +3975,18 @@ function adjStep(act){
  if(act==="reset"&&adjTgt()==="both")job.crop=CROP0();
  adjDraw();return true;
 }
-$("adjPad").querySelectorAll("button[data-a]").forEach(b=>{
- const stop=()=>{clearTimeout(adjRep);clearInterval(adjRep);};
- b.addEventListener("pointerdown",e=>{e.preventDefault();stop();if(!adjStep(b.dataset.a))return;
-  if(b.dataset.a!=="reset")adjRep=setTimeout(()=>{adjRep=setInterval(()=>adjStep(b.dataset.a),70);},380);});
- ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));
- b.addEventListener("contextmenu",e=>e.preventDefault());
-});
+// The editors' −／＋／← → buttons work when the finger is let go, not when it touches: a thumb swiping in from the
+// screen's edge to go back touches them on the way, and that moved the photo (then 「保存しますか」 on closing).
+// Moved more than a little, or taken by the phone (the back swipe): nothing happens. Held still: after 0.38 s it
+// starts, again and again, until let go.
+function holdBtn(b,step,ms,once){let t=0, at=null, fired=false;const stop=()=>{clearTimeout(t);clearInterval(t);t=0;};
+ b.addEventListener("pointerdown",e=>{e.preventDefault();stop();at={x:e.clientX,y:e.clientY};fired=false;
+  if(!once)t=setTimeout(()=>{if(!at)return;fired=true;if(step()===false){at=null;return;}t=setInterval(()=>{if(at)step();},ms||70);},380);});
+ b.addEventListener("pointermove",e=>{if(at&&Math.hypot(e.clientX-at.x,e.clientY-at.y)>10){at=null;stop();}});
+ b.addEventListener("pointerup",()=>{const go=at&&!fired;at=null;stop();if(go)step();});
+ ["pointercancel","pointerleave"].forEach(n=>b.addEventListener(n,()=>{at=null;stop();}));
+ b.addEventListener("contextmenu",e=>e.preventDefault());}
+$("adjPad").querySelectorAll("button[data-a]").forEach(b=>holdBtn(b,()=>adjStep(b.dataset.a),70,b.dataset.a==="reset"));
 // 傾き on the 拡大・縮小・傾き tab: edTilt[k] = the tilt being set (degrees). On the screen the saved photo is
 // turned by the difference; 完了 (or 90°回転) makes the levelled photo the same way the 傾き screen does.
 let edTilt={}, edBusy=false;
@@ -4005,10 +4010,7 @@ function edzShow(){const t=adjTgt(), a=t?job.adj[t==="both"?"b":t]:null;$("adjZr
 $("adjZr").addEventListener("input",e=>{const t=adjTgt();if(!t){toast("先に画像をタップして選択してください",true);edzShow();return;}
  const r=ZS(+e.target.value)/job.adj[t==="both"?"b":t].s;adjKeys().forEach(k=>{const a=job.adj[k];a.s=Math.max(0.5,Math.min(4,a.s*r));});adjDraw();});
 $("adjTr").addEventListener("input",e=>edTiltSet(+e.target.value));
-[["adjTm",-0.1],["adjTp",0.1]].forEach(([id,d])=>{const b=$(id);let rep=0;const stop=()=>{clearTimeout(rep);clearInterval(rep);};
- const step=()=>{const k=edTiltOne();return edTiltSet((k?(edTilt[k]!=null?edTilt[k]:tiltSaved(k)):0)+d);};
- b.addEventListener("pointerdown",e=>{e.preventDefault();stop();if(!step())return;rep=setTimeout(()=>{rep=setInterval(step,70);},380);});
- ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
+[["adjTm",-0.1],["adjTp",0.1]].forEach(([id,d])=>holdBtn($(id),()=>{const k=edTiltOne();return edTiltSet((k?(edTilt[k]!=null?edTilt[k]:tiltSaved(k)):0)+d);}));
 // 90°回転: keeps what was done first (as 完了), then turns the chosen photo
 $("adjTurn").onclick=async()=>{const k=edTiltOne();if(!k){toast(adjSel.size?"90°回転は写真を1枚だけ選んでください":"先に画像をタップして選択してください",true);return;}
  if(edBusy)return;edBusy=true;$("adjTurn").disabled=true;
@@ -4401,9 +4403,7 @@ $("lvStage").addEventListener("pointermove",e=>{if(!lv||!lvGest.pts.has(e.pointe
   lv.vx=st.vx+(p.x+q.x)/2-st.cx;lv.vy=st.vy+(p.y+q.y)/2-st.cy;lvViewClamp();lvSet(st.deg+da);}
  else if(!st.two&&(lv.vz||1)>1){lv.vx=st.vx+e.clientX-st.x;lv.vy=st.vy+e.clientY-st.y;lvViewClamp();lvShow();}});
 ["pointerup","pointercancel"].forEach(t=>$("lvStage").addEventListener(t,e=>{lvGest.pts.delete(e.pointerId);if(lv)lvGestStart();}));
-[["lvM",-0.1],["lvP",0.1]].forEach(([id,st])=>{let rep=0;const b=$(id), stop=()=>{clearTimeout(rep);clearInterval(rep);};
- b.addEventListener("pointerdown",e=>{e.preventDefault();stop();lvSet(lv.deg+st);rep=setTimeout(()=>{rep=setInterval(()=>lvSet(lv.deg+st),60);},380);});
- ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
+[["lvM",-0.1],["lvP",0.1]].forEach(([id,st])=>holdBtn($(id),()=>{if(lv)lvSet(lv.deg+st);},60));
 $("lvZero").onclick=()=>{if(!lv)return;const t=lv.q%2;lv.q=0;lvSet(0);if(t)lvFit();};
 // 90°回転: the photo itself, a quarter turn clockwise each press
 $("lvTurn").onclick=()=>{if(!lv)return;lv.q=(lv.q+1)%4;lvShow();lvFit();};
@@ -4436,9 +4436,7 @@ function tnShow(){if(!lv)return;const t=lv.tn;
 function tnSet(key,v){if(!lv)return;lv.tn[key]=Math.max(-50,Math.min(50,Math.round(v)));tnShow();}
 $("tnBr").addEventListener("input",e=>tnSet("br",+e.target.value));
 $("tnCt").addEventListener("input",e=>tnSet("ct",+e.target.value));
-document.querySelectorAll(".tnst").forEach(b=>{let rep=0;const stop=()=>{clearTimeout(rep);clearInterval(rep);}, step=()=>{if(lv)tnSet(b.dataset.t,lv.tn[b.dataset.t]+(+b.dataset.d));};
- b.addEventListener("pointerdown",e=>{e.preventDefault();stop();step();rep=setTimeout(()=>{rep=setInterval(step,70);},380);});
- ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,stop));b.addEventListener("contextmenu",e=>e.preventDefault());});
+document.querySelectorAll(".tnst").forEach(b=>holdBtn(b,()=>{if(lv)tnSet(b.dataset.t,lv.tn[b.dataset.t]+(+b.dataset.d));}));
 $("tnZero").onclick=()=>{if(!lv)return;lv.tn={br:0,ct:0};tnShow();};
 // 自動で調整: the middle of the picture's brightness to the middle, its range spread to nearly full
 $("tnAuto").onclick=async()=>{if(!lv)return;const b=$("tnAuto");b.disabled=true;
@@ -4542,10 +4540,7 @@ $("xTr").addEventListener("input",ev=>xeTilt(+ev.target.value));
 const xeBright=v=>{if(!xe)return;xe.e.br=Math.round(Math.max(-50,Math.min(50,v)));xeDrawSoon();};
 $("xBr").addEventListener("input",ev=>xeBright(+ev.target.value));
 // − / ＋ (held down: again and again)
-[["xZm",()=>xeZoom(xe.e.s/1.05)],["xZp",()=>xeZoom(xe.e.s*1.05)],["xTm",()=>xeTilt(xe.e.deg-0.1)],["xTp",()=>xeTilt(xe.e.deg+0.1)],["xBm",()=>xeBright((xe.e.br||0)-1)],["xBp",()=>xeBright((xe.e.br||0)+1)]].forEach(([id,f])=>{const b=$(id);let t=0;
- const stop=()=>{clearTimeout(t);clearInterval(t);};
- b.addEventListener("pointerdown",ev=>{ev.preventDefault();stop();if(!xe)return;f();t=setTimeout(()=>{t=setInterval(()=>{if(xe)f();},70);},380);});
- ["pointerup","pointercancel","pointerleave"].forEach(n=>b.addEventListener(n,stop));b.addEventListener("contextmenu",ev=>ev.preventDefault());});
+[["xZm",()=>xeZoom(xe.e.s/1.05)],["xZp",()=>xeZoom(xe.e.s*1.05)],["xTm",()=>xeTilt(xe.e.deg-0.1)],["xTp",()=>xeTilt(xe.e.deg+0.1)],["xBm",()=>xeBright((xe.e.br||0)-1)],["xBp",()=>xeBright((xe.e.br||0)+1)]].forEach(([id,f])=>holdBtn($(id),()=>{if(!xe)return false;f();}));
 // 90°回転: the frame turns, so the cut and the move start again
 $("xTurn").onclick=()=>{if(!xe)return;const e=xe.e;e.q=(e.q+1)%4;e.c={l:0,t:0,r:0,b:0};e.ox=e.oy=0;xeShow();};
 $("xReset").onclick=()=>{if(!xe)return;xe.e=XE0();xeShow();};
