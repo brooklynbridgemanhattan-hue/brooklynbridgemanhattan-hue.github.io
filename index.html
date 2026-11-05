@@ -612,6 +612,9 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cklit.ckledit .cklx svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.6;fill:none}
 .cklshr{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;margin-top:14px;border-radius:14px;border:0;background:#0B6E7D;color:#fff;font-size:16px;font-weight:900}
 .cklshr svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cklshto{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}.cklshto button{min-height:52px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);font-size:16px;font-weight:900;color:var(--ink)}
+#bkDlg.shto #bkDYes{background:var(--fill);color:#475467;box-shadow:none}
+.cklshto button.ln{background:#06C755;border-color:#06C755;color:#fff}
 .cklshp{margin:0 0 8px;font-size:14px;color:var(--sub);font-weight:700}
 .cklshl{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto;text-align:left}
 .cklsho{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;border-radius:12px;background:var(--fill);font-size:15.5px;font-weight:800;color:var(--ink)}
@@ -3375,12 +3378,33 @@ async function cklShare(){if(!job)return;const i=spotIdx(job), t=cklTplOf(job,i)
  box.onchange=upd;box.querySelectorAll("[data-all]").forEach(b=>b.onclick=()=>{box.querySelectorAll("input").forEach(c=>c.checked=b.dataset.all==="1");upd();});upd();
  const ok=await wait;box.onchange=null;$("bkDYes").disabled=false;if(!ok)return;
  const picked=[...box.querySelectorAll("input:checked")].map(c=>c.value), cnt=picked.reduce((a,k)=>a+cklShareOf(j,k,t).length,0);if(!cnt)return;
+ const tx=[j.place&&j.place.text,custName(j)].filter(Boolean).join(" "); // 「横浜市青葉区 山田様」 before the photos
+ // LINE takes text and photos sent together badly (drops the text or puts it after), so for LINE: the text first,
+ // then, back in the app, the photos (the same talk is picked twice). Others (mail …): all in one, the text as the body.
+ const A=window.AndroidApp, two=!!(tx&&A&&A.shareTextTo&&A.shareFilesTo);let to="other";
+ if(two){to=null;const ask=bkDialog("どこに送りますか?",'<div class="cklshto"><button type="button" class="ln" data-to="line">LINE</button><button type="button" data-to="other">ほかのアプリ(メールなど)</button></div><p class="cklshp">LINEは「'+esc(tx)+'」を先に送り、続けて写真を送ります(トークを2回選びます)</p>',"やめる");
+  $("bkDlg").classList.add("shto");$("bkDB").querySelectorAll("[data-to]").forEach(b=>b.onclick=()=>{to=b.dataset.to;if(bkDlgEnd)bkDlgEnd();});
+  await ask;$("bkDlg").classList.remove("shto");if(!to)return;}
  toast(cnt+"枚の写真を準備しています");
  const list=[];for(const k of picked){const xs=cklShareOf(j,k,t);for(let n=0;n<xs.length;n++){const x=xs[n], cm=!!(x.x&&notesOf(x.x).length); // comments written in, as 保存 does
   list.push({blob:cm?await burned(x.x):x.blob,name:photoName(cklLab(k),x.at||Date.now(),[xs.length>1?String(n+1):"",cm?"コメント入り":""].filter(Boolean).join("_"))});}}
  if(!list.length)return;
- const tx=[j.place&&j.place.text,custName(j)].filter(Boolean).join(" "); // 「横浜市青葉区 山田様」 before the photos
+ if(to==="line"){const ng=()=>toast("送れませんでした。もう一度お試しください。",true);let json;
+  try{const arr=[];for(const f of list)arr.push({b64:await b64Of(f.blob),name:f.name,type:f.blob.type||"image/jpeg"});json=JSON.stringify(arr);}catch(e){ng();return;} // ready before going to LINE
+  if(String(A.shareTextTo(tx,LINE_PKG))==="error:noapp"){toast("LINEが見つかりません",true);return;}
+  await backFromApp(); // sent the text (or came back without): now the photos
+  toast("続けて写真を送ります。同じトークを選んでください");
+  try{if(!okR(String(A.shareFilesTo(json,"チェックリストの写真を送る","",LINE_PKG))))ng();}catch(e){ng();}
+  return;}
  await shareFiles(list,"チェックリストの写真を送る",tx);}
+const LINE_PKG="jp.naver.line.android";
+// resolves when the app is back from the one just opened (the phone says so: onAppPause / onAppResume); not opened within 6 s: at once
+function backFromApp(){return new Promise(res=>{let away=false, done=false;const end=()=>{if(done)return;done=true;window.onAppResume=window.onAppPause=null;document.removeEventListener("visibilitychange",vc);res();};
+ window.onAppPause=()=>{away=true;};
+ const vc=()=>{if(document.hidden)away=true;else if(away)setTimeout(end,300);};document.addEventListener("visibilitychange",vc);
+ window.onAppResume=()=>{if(away)setTimeout(end,300);};
+ setTimeout(()=>{if(!away&&!document.hidden)end();},6000);
+ const t=setInterval(()=>{if(done){clearInterval(t);return;}if(document.hidden)away=true;},200);});}
 $("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)renderThumbs();};
 let cklNext=null, cklFile=null; // the item the next その他の写真 camera / file is for
 async function cklSet(f){if(!job)return;job.cklv=job.cklv||{};f(job.cklv);await saveJob();renderThumbs();}
