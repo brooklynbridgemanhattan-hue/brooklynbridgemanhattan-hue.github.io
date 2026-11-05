@@ -2701,7 +2701,7 @@ function bdData(){const b=job.board=job.board||{};if(!b.gas)b.gas="都市ガス"
 const bdDayOf=b=>b.date||job.day||defDay(job);
 function bdTexts(k){const b=bdData(), d=bdDayOf(b).split("-").map(Number), site=bareName(job.site||"");
  return {no:job.slip||"",cust:site?site+" 様":"",date:d[0]+"年"+d[1]+"月"+d[2]+"日",kind:k==="b"?"施工前":"施工後",gas:b.gas,
-  leak:k==="b"?BD_DASH:b.leak,meas:k==="b"?BD_DASH:(b.kpa||"    ")+"kPa/"+b.min+"分",who:BD_WHO+" "+BD_NO};}
+  leak:k==="b"?BD_DASH:b.leak,meas:k==="b"||b.leak==="検知液/検知器"?BD_DASH:(b.kpa||"    ")+"kPa/"+b.min+"分",who:BD_WHO+" "+BD_NO};}
 // one line of the board, as large as its cell takes; a long one is narrowed (like the paper boards)
 function bdText(c,t,x,y,w,h,center,big){c.save();const fs=h*(typeof big==="number"?big:big?0.72:0.6);c.font="500 "+fs+"px "+rpFont();c.fillStyle="#000";c.textBaseline="middle";
  const tw=c.measureText(t).width, k=tw>w?w/tw:1;c.translate(center?x+w/2-tw*k/2:x,y+h/2);c.scale(k,1);c.fillText(t,0,0);c.restore();}
