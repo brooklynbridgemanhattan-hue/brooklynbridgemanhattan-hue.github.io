@@ -3366,7 +3366,7 @@ function cklRender(){
 }
 // チェックリストの写真を共有: the items that have photos, each with a box (all ticked at first); the ticked ones' photos
 // go to the phone's share menu (LINE, mail…). 施工前 / 施工後 本体 are the photos at the top.
-function cklShareOf(p,k,t){if(CKL_PAIR[k]){const w=CKL_PAIR[k];return p[w]?[{blob:p[w],at:p[w+"At"]}]:[];}return cklPh(p,k,t).map(x=>({blob:x.blob,at:x.at}));}
+function cklShareOf(p,k,t){if(CKL_PAIR[k]){const w=CKL_PAIR[k];return p[w]?[{blob:p[w],at:p[w+"At"]}]:[];}return cklPh(p,k,t).map(x=>({blob:x.blob,at:x.at,x}));}
 async function cklShare(){if(!job)return;const i=spotIdx(job), t=cklTplOf(job,i);if(!t)return;const j=job;
  const ks=cklStat(j,i).ks.filter(k=>!cklSkipped(j,k,t)&&cklShareOf(j,k,t).length);if(!ks.length)return;
  const wait=bkDialog("チェックリストの写真を共有",'<p class="cklshp">共有する項目を選んでください</p><div class="cklshl">'+ks.map(k=>'<label class="cklsho"><input type="checkbox" value="'+k+'" checked><span>'+esc(cklLab(k))+'</span><small>'+cklShareOf(j,k,t).length+'枚</small></label>').join("")+
@@ -3374,8 +3374,11 @@ async function cklShare(){if(!job)return;const i=spotIdx(job), t=cklTplOf(job,i)
  const box=$("bkDB"), upd=()=>{const n=[...box.querySelectorAll("input:checked")].reduce((a,c)=>a+cklShareOf(j,c.value,t).length,0);$("bkDYes").disabled=!n;setTx("bkDYes",n?"共有する("+n+"枚)":"共有する");};
  box.onchange=upd;box.querySelectorAll("[data-all]").forEach(b=>b.onclick=()=>{box.querySelectorAll("input").forEach(c=>c.checked=b.dataset.all==="1");upd();});upd();
  const ok=await wait;box.onchange=null;$("bkDYes").disabled=false;if(!ok)return;
- const list=[];for(const c of box.querySelectorAll("input:checked")){const k=c.value, xs=cklShareOf(j,k,t);xs.forEach((x,n)=>list.push({blob:x.blob,name:photoName(cklLab(k),x.at||Date.now(),xs.length>1?String(n+1):"")}));}
- if(!list.length)return;toast(list.length+"枚の写真を準備しています");
+ const picked=[...box.querySelectorAll("input:checked")].map(c=>c.value), cnt=picked.reduce((a,k)=>a+cklShareOf(j,k,t).length,0);if(!cnt)return;
+ toast(cnt+"枚の写真を準備しています");
+ const list=[];for(const k of picked){const xs=cklShareOf(j,k,t);for(let n=0;n<xs.length;n++){const x=xs[n], cm=!!(x.x&&notesOf(x.x).length); // comments written in, as 保存 does
+  list.push({blob:cm?await burned(x.x):x.blob,name:photoName(cklLab(k),x.at||Date.now(),[xs.length>1?String(n+1):"",cm?"コメント入り":""].filter(Boolean).join("_"))});}}
+ if(!list.length)return;
  const tx=[j.place&&j.place.text,custName(j)].filter(Boolean).join(" "); // 「横浜市青葉区 山田様」 before the photos
  await shareFiles(list,"チェックリストの写真を送る",tx);}
 $("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)renderThumbs();};
