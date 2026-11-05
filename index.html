@@ -3375,7 +3375,9 @@ async function cklShare(){if(!job)return;const i=spotIdx(job), t=cklTplOf(job,i)
  box.onchange=upd;box.querySelectorAll("[data-all]").forEach(b=>b.onclick=()=>{box.querySelectorAll("input").forEach(c=>c.checked=b.dataset.all==="1");upd();});upd();
  const ok=await wait;box.onchange=null;$("bkDYes").disabled=false;if(!ok)return;
  const list=[];for(const c of box.querySelectorAll("input:checked")){const k=c.value, xs=cklShareOf(j,k,t);xs.forEach((x,n)=>list.push({blob:x.blob,name:photoName(cklLab(k),x.at||Date.now(),xs.length>1?String(n+1):"")}));}
- if(!list.length)return;toast(list.length+"枚の写真を準備しています");await shareFiles(list,"チェックリストの写真を送る");}
+ if(!list.length)return;toast(list.length+"枚の写真を準備しています");
+ const tx=[j.place&&j.place.text,custName(j)].filter(Boolean).join(" "); // 「横浜市青葉区 山田様」 before the photos
+ await shareFiles(list,"チェックリストの写真を送る",tx);}
 $("cklSw").onchange=()=>{setPref("ba-ckl",$("cklSw").checked?"1":"");if(job)renderThumbs();};
 let cklNext=null, cklFile=null; // the item the next その他の写真 camera / file is for
 async function cklSet(f){if(!job)return;job.cklv=job.cklv||{};f(job.cklv);await saveJob();renderThumbs();}
@@ -5520,15 +5522,16 @@ $("bSave").onclick=async()=>{buzz(30);await makeDone;if(!imgs.b)return;const g=s
   showNext();spotHint();}};
 // 送る: the comparison photo goes straight to LINE, mail … through the phone's share menu.
 // list = [{blob,name}]
-async function shareFiles(list,title){
- const ng=()=>toast("送れませんでした。もう一度お試しください。",true);
- if(window.AndroidApp&&window.AndroidApp.shareFiles){
+// text: a line sent before the photos (チェックリストの写真: 「横浜市青葉区 山田様」), where the app sent to takes it
+async function shareFiles(list,title,text){
+ const ng=()=>toast("送れませんでした。もう一度お試しください。",true), A=window.AndroidApp;
+ if(A&&A.shareFiles){
   try{const arr=[];for(const f of list)arr.push({b64:await b64Of(f.blob),name:f.name,type:f.blob.type||"image/jpeg"});
-   if(!okR(String(window.AndroidApp.shareFiles(JSON.stringify(arr),title))))ng();}catch(e){ng();}
+   if(!okR(String(text&&A.shareFilesText?A.shareFilesText(JSON.stringify(arr),title,text):A.shareFiles(JSON.stringify(arr),title))))ng();}catch(e){ng();}
   return;
  }
  const files=list.map(f=>new File([f.blob],f.name,{type:f.blob.type||"image/jpeg"}));
- if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share({files});}catch(e){if(!(e&&e.name==="AbortError"))ng();}return;}
+ if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share(text?{files,text}:{files});}catch(e){if(!(e&&e.name==="AbortError"))ng();}return;}
  toast("この端末ではここから送れません。保存してから送ってください。",true);
 }
 let shareBusy=false;
