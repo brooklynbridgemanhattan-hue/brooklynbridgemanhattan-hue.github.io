@@ -828,7 +828,7 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cand.a #cdSelX{width:44px;padding:0;justify-content:center;font-size:0;gap:0}
 .cand.a #cdSelX svg.i{width:20px;height:20px}
 .cand.a .cddel{white-space:nowrap;padding:0 14px}
-.cand .cdact{min-height:46px;display:flex;align-items:center;justify-content:center}
+.cand .cdact{min-height:46px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;row-gap:6px}
 .cand .cdsel{display:flex;align-items:center;justify-content:center;gap:10px}
 .cand .cdsel[hidden]{display:none}
 .cand .cdsel span{font-size:15px;font-weight:800;color:#fff}
@@ -839,6 +839,11 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 .cand .cddel{align-self:center;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;font-size:15px;font-weight:700;color:#FFA8A8;background:rgba(255,255,255,.06)}
 .cand .cddel svg.i{width:18px;height:18px}
 .cand .cddel.arm{background:var(--danger);color:#fff}
+.cand .cddel.cdck{color:#9EE6F0;margin-left:8px}.cand .cdsel button.ck{color:#9EE6F0}
+/* 選択中: やめる / 枚数 / チェックリストへ / 削除 in one line (やめる as ✕ only) */
+.cand .cdsel{gap:6px;white-space:nowrap}.cand .cdsel span{font-size:13.5px}.cand .cdsel button{padding:0 11px;font-size:13.5px}
+.cand #cdSelX{width:44px;padding:0;justify-content:center;font-size:0;gap:0}.cand #cdSelX svg.i{width:20px;height:20px}
+.cand.a:has(#cdSel:not([hidden])) .cdbef{display:none} /* 施工後: while choosing, the 施工前 photo steps aside for the buttons */
 .lved .lvstage{flex:none;display:flex;justify-content:center;align-items:center;min-height:22vh;touch-action:none} /* two fingers turn / zoom the photo, not the page */
 .lvbox{position:relative;overflow:hidden;background:#fff;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
 .lvbox img{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 50%}
@@ -1338,13 +1343,13 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
  <div class="adjbtns"><button class="o2" id="xX"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>閉じる</button><button class="ok" id="xOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>完了</span></button></div>
 </div>
 <div class="adj cand" id="cand" hidden>
- <div class="adjhd"><b id="cdT">施工前の写真を選ぶ</b><span>撮った写真から1枚を選んで「この写真を採用」を押します(下の写真を長押しすると、まとめて削除できます)</span></div>
+ <div class="adjhd"><b id="cdT">施工前の写真を選ぶ</b><span>撮った写真から1枚を選んで「この写真を採用」を押します(下の写真を長押しすると、まとめて削除・チェックリストへ移動できます)</span></div>
  <div class="cdview" id="cdView"><img id="cdImg" alt=""><span class="cdpct" id="cdPct" hidden></span><button class="cdnav p" id="cdP" aria-label="前の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="cdnav n" id="cdN" aria-label="次の写真"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>
  <div class="cdlow"><div class="cdbef" id="cdBef"><img id="cdBefImg" alt="施工前の写真"><span class="piptag">施工前</span></div><div class="cdright">
  <div class="cdinfo"><span id="cdNo"></span><span id="cdDt"></span><span class="cdcur" id="cdCur">採用中</span></div>
  <div class="cdstrip" id="cdStrip"></div>
- <div class="cdact"><div class="cdsel" id="cdSel" hidden><button id="cdSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>やめる</button><span id="cdSelN"></span><button class="del" id="cdSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
- <button class="cddel" id="cdDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この候補を削除</span></button></div></div></div>
+ <div class="cdact"><div class="cdsel" id="cdSel" hidden><button id="cdSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>やめる</button><span id="cdSelN"></span><button class="ck" id="cdSelCk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></svg><span class="tx">チェックリストへ</span></button><button class="del" id="cdSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
+ <button class="cddel" id="cdDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">この候補を削除</span></button><button class="cddel cdck" id="cdCk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></svg><span class="tx">チェックリストへ</span></button></div></div></div>
  <div class="adjbtns"><button class="o2" id="cdX">閉じる</button><button class="ok" id="cdOk"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>この写真を採用</span></button></div>
 </div>
 <div class="selbar" id="hSelBar" hidden><button class="x" id="hSelX" aria-label="選択をやめる"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span class="cnt" id="hSelN"></span><button class="del" id="hSelDel"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span class="tx">削除</span></button></div>
@@ -3515,22 +3520,25 @@ $("selDel").onclick=async()=>{
 // チェックリストへ: photos taken here by mistake (a 銘板, 施工途中 …) go to a checklist item: they only get
 // its mark (x.ckl), as if taken from its 撮る; the photo itself stays. The items: photo ones with room for them all.
 $("selCk").onclick=async()=>{
- if(!sel.size||!job)return;const t=cklTplOf(job,spotIdx(job));if(!t)return;
- const n=sel.size, v=job.cklv||{}, all=cklKeys(t), a0=all.findIndex(k=>/^a_/.test(k)), GRP={b:["施工前"," cklpb"],m:["施工中"," cklpx"],a:["施工後"," cklpa"]};
- const ok=k=>!CKL_PAIR[k]&&!cklChk(k)&&!(k==="air"&&!v.air)&&cklPh(job,k,t).length+n<=cklMax(k);
- if(!all.some(ok)){toast("入れられる項目がありません(1つの項目に5枚まで)",true);return;}
- let h='<p class="rpxn">選んだ写真 '+n+'枚を入れます。その他の写真からチェックリストへ移ります(写真は消えません)。</p>', g0="";
- all.forEach((k,i)=>{if(!ok(k))return;const g=/^b_|^pipe$/.test(k)?"b":/^a_/.test(k)||(a0>=0&&i>a0)?"a":"m", G=GRP[g], m=cklPh(job,k,t).length;
-  if(g!==g0){h+='<div class="cklsec'+G[1]+'">'+G[0]+'</div>';g0=g;}
-  h+='<button type="button" class="cklit cklbx'+G[1]+(m?" ckldone":"")+'" data-mv="'+k+'"><span class="cklmk">'+(m?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(k==="air"?"("+CKL_AIR[v.air]+")":"")+'<small>'+(m?m+'枚 ・ あと'+(cklMax(k)-m)+'枚入ります':'まだ')+'</small></span></button>';});
- let pick=null;const ask=bkDialog("どの項目に入れますか?",h,"やめる");$("bkDlg").classList.add("ckmv");
- $("bkDB").querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{pick=b.dataset.mv;if(bkDlgEnd)bkDlgEnd();});
- await ask;$("bkDlg").classList.remove("ckmv");if(!pick||!job)return;
+ if(!sel.size||!job)return;const n=sel.size, a=await cklAskItem(n,"その他の写真からチェックリストへ移ります");if(!a||!job)return;const {pick,t}=a, v=job.cklv||{};
  (job.extras||[]).forEach((x,i)=>{if(sel.has(i)){x.ckl=pick;x.cklT=t;}});
  if(v.skip&&v.skip[pick]){delete v.skip[pick];if(!Object.keys(v.skip).length)delete v.skip;} // it was 今回なし: now it has a photo
  await saveJob();selClear();renderThumbs();toast("「"+cklLab(pick)+"」に"+n+"枚入れました");
  const el=document.querySelector('#cklList [data-k="'+pick+'"]');if(el){el.scrollIntoView({block:"center",behavior:"smooth"});glow(el,1);}
 };
+// which checklist item n photos go to (photo items with room for them all): {pick, t}, or null
+async function cklAskItem(n,from){
+ const t=cklTplOf(job,spotIdx(job));if(!t)return null;
+ const v=job.cklv||{}, all=cklKeys(t), a0=all.findIndex(k=>/^a_/.test(k)), GRP={b:["施工前"," cklpb"],m:["施工中"," cklpx"],a:["施工後"," cklpa"]};
+ const ok=k=>!CKL_PAIR[k]&&!cklChk(k)&&!(k==="air"&&!v.air)&&cklPh(job,k,t).length+n<=cklMax(k);
+ if(!all.some(ok)){toast("入れられる項目がありません(1つの項目に5枚まで)",true);return null;}
+ let h='<p class="rpxn">選んだ写真 '+n+'枚を入れます。'+from+'(写真は消えません)。</p>', g0="";
+ all.forEach((k,i)=>{if(!ok(k))return;const g=/^b_|^pipe$/.test(k)?"b":/^a_/.test(k)||(a0>=0&&i>a0)?"a":"m", G=GRP[g], m=cklPh(job,k,t).length;
+  if(g!==g0){h+='<div class="cklsec'+G[1]+'">'+G[0]+'</div>';g0=g;}
+  h+='<button type="button" class="cklit cklbx'+G[1]+(m?" ckldone":"")+'" data-mv="'+k+'"><span class="cklmk">'+(m?CKL_OK:'')+'</span><span class="cklnm">'+esc(cklLab(k))+(k==="air"?"("+CKL_AIR[v.air]+")":"")+'<small>'+(m?m+'枚 ・ あと'+(cklMax(k)-m)+'枚入ります':'まだ')+'</small></span></button>';});
+ let pick=null;const ask=bkDialog("どの項目に入れますか?",h,"やめる");$("bkDlg").classList.add("ckmv");
+ $("bkDB").querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{pick=b.dataset.mv;if(bkDlgEnd)bkDlgEnd();});
+ await ask;$("bkDlg").classList.remove("ckmv");return pick&&job?{pick,t}:null;}
 // Full-screen gallery: kind "extra" = other photos (save / delete), "pair" = 施工前 / 施工後 (save).
 let gal=null, galDelArm=false;
 function galItems(kind){
@@ -4155,7 +4163,7 @@ function candShow(fromStrip){
  $("cdImg").src=cd.urls[cd.i];const pc=e.c.pct;$("cdPct").textContent=pc==null?"":"一致 "+pc+"%";$("cdPct").hidden=pc==null;cdPctAt();$("cdNo").textContent=(cd.i+1)+" / "+cd.list.length;$("cdDt").textContent=fmtDT(e.c.at);
  $("cdCur").hidden=!e.cur;$("cdP").disabled=cd.i===0;$("cdN").disabled=cd.i===cd.list.length-1;
  setTx2("cdOk",e.cur?"この写真のまま":"この写真を採用");
- $("cdDel").hidden=e.cur||!!cd.pick;cd.delArm=false;setTx("cdDel","この候補を削除");$("cdDel").classList.remove("arm");
+ $("cdDel").hidden=e.cur||!!cd.pick;$("cdCk").hidden=e.cur||!!cd.pick||!cdCklOk();cd.delArm=false;setTx("cdDel","この候補を削除");$("cdDel").classList.remove("arm");
  const S=$("cdStrip");
  if(S.childElementCount!==cd.list.length||S.dataset.sig!==cd.list.map(x=>x.c.at).join()){
   S.dataset.sig=cd.list.map(x=>x.c.at).join();
@@ -4195,12 +4203,12 @@ $("cdStrip").addEventListener("click",e=>{const b=e.target.closest("[data-i]");i
 let cdPressT=0, cdPressAt=null, cdPressFired=false;
 function cdSelShow(){
  if(!cd)return;const on=!!cd.pick;$("cdStrip").classList.toggle("sel",on);$("cdSel").hidden=!on;
- if(on){$("cdSelN").textContent=cd.pick.size+"枚を選択中";$("cdSelDel").disabled=!cd.pick.size;}
+ if(on){$("cdSelN").textContent=cd.pick.size+"枚を選択中";$("cdSelDel").disabled=!cd.pick.size;$("cdSelCk").hidden=!cdCklOk();$("cdSelCk").disabled=!cd.pick.size;}
  cd.selArm=false;setTx("cdSelDel","削除");$("cdSelDel").classList.remove("arm");
 }
 function cdPickToggle(i){
  const e=cd.list[i];if(!e)return;
- if(e.cur){toast("採用中の写真は削除できません",true);return;}
+ if(e.cur){toast("採用中の写真は選べません",true);return;}
  if(cd.pick.has(e.c))cd.pick.delete(e.c);else cd.pick.add(e.c);
  buzz(15);candShow(true);
 }
@@ -4208,7 +4216,7 @@ function cdSelEnd(){if(!cd||!cd.pick)return;cd.pick=null;candShow(true);}
 {const S=$("cdStrip");
  S.addEventListener("pointerdown",e=>{const b=e.target.closest("[data-i]");if(!b||!cd)return;cdPressFired=false;cdPressAt={x:e.clientX,y:e.clientY};
   clearTimeout(cdPressT);cdPressT=setTimeout(()=>{if(!cd)return;cdPressFired=true;const i=+b.dataset.i, en=cd.list[i];
-   if(en&&en.cur&&!cd.pick){toast("採用中の写真は削除できません",true);return;}
+   if(en&&en.cur&&!cd.pick){toast("採用中の写真は選べません",true);return;}
    if(!cd.pick)cd.pick=new Set();if(en&&!en.cur)cd.pick.add(en.c);buzz(25);candShow(true);},450);});
  S.addEventListener("pointermove",e=>{if(cdPressAt&&Math.hypot(e.clientX-cdPressAt.x,e.clientY-cdPressAt.y)>10)clearTimeout(cdPressT);});
  ["pointerup","pointercancel","pointerleave"].forEach(t=>S.addEventListener(t,()=>clearTimeout(cdPressT)));
@@ -4231,6 +4239,20 @@ $("cdX").onclick=candClose;
 $("cdOk").onclick=async()=>{if(!cd)return;const e=cd.list[cd.i], k=cd.k;
  if(e.cur){candClose();return;}
  $("cdOk").disabled=true;try{await candAdopt(k,e.c);}finally{$("cdOk").disabled=false;}candClose();};
+// 施工前・施工後の候補 → a checklist item (a 銘板, 配管 … taken as 施工前 by mistake): the photo leaves the 候補 and
+// becomes that item's photo, as if taken from its 撮る (the photo itself stays)
+const cdCklOk=()=>cklOn()&&!!job&&!!cklTplOf(job,spotIdx(job));
+async function cdToCkl(cs){if(!cd||!cs.length||!job)return;
+ const a=await cklAskItem(cs.length,"施工"+(cd.k==="b"?"前":"後")+"の候補からチェックリストへ移ります");if(!a||!cd||!job)return;const {pick,t}=a, v=job.cklv||{};
+ job.cand[cd.k]=(job.cand[cd.k]||[]).filter(c=>!cs.includes(c));
+ for(const c of cs){const x={blob:c.blob,at:c.at,ckl:pick,cklT:t};if(c.nid)x.nid=c.nid;(job.extras=job.extras||[]).push(x);}
+ if(v.skip&&v.skip[pick]){delete v.skip[pick];if(!Object.keys(v.skip).length)delete v.skip;}
+ const shown=cd.list[cd.i]&&cd.list[cd.i].c;cd.pick=null;
+ await saveJob();refreshDetail();toast("「"+cklLab(pick)+"」に"+cs.length+"枚入れました");
+ candBuild(false);if(cd.list.length<2){candClose();return;}
+ const k=cd.list.findIndex(e=>e.c===shown);cd.i=k>=0?k:Math.max(0,cd.list.findIndex(e=>e.cur));candShow();}
+$("cdCk").onclick=()=>{if(!cd)return;const e=cd.list[cd.i];if(e&&!e.cur)cdToCkl([e.c]);};
+$("cdSelCk").onclick=()=>{if(cd&&cd.pick&&cd.pick.size)cdToCkl([...cd.pick]);};
 $("cdDel").onclick=async()=>{if(!cd)return;const e=cd.list[cd.i];if(e.cur)return;
  if(!cd.delArm){cd.delArm=true;setTx("cdDel","もう一度押すと削除");$("cdDel").classList.add("arm");return;}
  const L=job.cand[cd.k], i=L.indexOf(e.c);if(i>=0)L.splice(i,1);
