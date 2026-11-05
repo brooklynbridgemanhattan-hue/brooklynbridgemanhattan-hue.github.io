@@ -1000,8 +1000,10 @@ body:has(#selBar:not([hidden])) .nextbar{display:none}
 /* the stage has the camera picture's own shape, so the preview shows exactly what is saved */
 .cam .stage{position:relative;overflow:hidden;width:100%;height:100%}
 /* ピント: the yellow square where the picture was tapped (it shrinks onto the spot, then fades) */
+.evov{position:absolute;inset:0;z-index:1;pointer-events:none} /* 明るさ shown on the screen when the phone does not */
+.focring.fok{border-color:#22C55E}.focring.fng{border-color:#EF4444}
 .focring{position:absolute;z-index:5;width:68px;height:68px;margin:-34px 0 0 -34px;border:2.5px solid #FACC15;border-radius:12px;box-shadow:0 0 0 1px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.25);pointer-events:none;animation:focring 1s ease-out forwards}
-@keyframes focring{0%{transform:scale(1.45);opacity:1}25%{transform:scale(1)}75%{opacity:1}100%{opacity:0}}
+@keyframes focring{0%{transform:scale(1.45)}25%{transform:scale(1)}100%{transform:scale(1)}} /* stays until the phone answers (green / red) */
 .cam video,.cam .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #vid{transform-origin:50% 50%}
 /* app camera: the phone's own preview shows through under the stage */
@@ -1363,6 +1365,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-
   <img class="ghost" id="ghost" alt="">
   <div class="grid" id="grid"></div>
   <div class="cmask" id="camMask" hidden><span>比べない</span></div>
+  <div class="evov" id="evOv" hidden></div>
   <div class="focring" id="focRing" hidden></div>
   <div class="flash" id="flash"></div>
   <div class="pill cmode" id="camMode"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/></svg><span>施工前を撮影</span></div>
@@ -2926,15 +2929,19 @@ function frameLuma(){if(!natFrame)return null;const c=frameLuma.c||(frameLuma.c=
  const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(natFrame,0,0,16,12);const d=x.getImageData(0,0,16,12).data;let t=0;
  for(let k=0;k<d.length;k+=4)t+=0.299*d[k]+0.587*d[k+1]+0.114*d[k+2];return t/(d.length/4)/255;}
 const evGain=ev=>Math.min(2.5,Math.max(0.4,Math.pow(2,ev/2.2))); // as bright as so many EV, on the screen's 0-255 scale
-function evScreen(i){const A=window.AndroidCam;if(!A.previewGain||!evInfo)return;
+// shown with a veil over the picture: white to brighten, black to darken (the phone's previewGain does nothing on
+// the preview it now uses (v1.207), so the screen stayed dark while the photo came out brighter)
+function evShade(g){const o=$("evOv");if(!o)return;if(!(g>0)||Math.abs(g-1)<0.01){o.hidden=true;return;}
+ o.style.background=g>1?"rgba(255,255,255,"+Math.min(0.45,(0.4*g-0.4)/0.6).toFixed(3)+")":"rgba(0,0,0,"+(1-g).toFixed(3)+")";o.hidden=false;}
+function evScreen(i){const A=window.AndroidCam;if(!evInfo)return;
  if(evApplied===0&&i!==0)evL0=frameLuma(); // the light at ±0, just before it changes
  evApplied=i;const ev=i*evInfo.step;clearTimeout(evChkT);
- A.previewGain(evNoPrev===true?evGain(ev):1);
+ evShade(evNoPrev===true?evGain(ev):1);
  if(evNoPrev!=null||!ev)return;
  evChkT=setTimeout(()=>{const L=frameLuma(), L0=evL0;if(evApplied!==i||L==null||L0==null||L0<0.06||L0>0.85)return; // too dark / bright to tell
   const r=Math.log2(Math.pow(Math.max(L,0.01)/L0,2.2)); // how far the camera itself went (EV)
   evNoPrev=r*Math.sign(ev)<Math.abs(ev)*0.35;
-  if(evNoPrev)A.previewGain(evGain(ev));},1200);}
+  if(evNoPrev)evShade(evGain(ev));},1200);}
 function setEv(i){
  if(!evInfo)return;const e=$("ev");i=Math.min(+e.max,Math.max(+e.min,Math.round(i)));
  e.value=i;$("evV").textContent=evLabel(i);evTarget=i;
@@ -2987,8 +2994,12 @@ function camFocus(cx,cy){
   let ok=false;try{ok=!!navigator.mediaDevices.getSupportedConstraints().pointsOfInterest;}catch(e){}
   if(!ok||!track)return;const z=digitalZoom||1;
   track.applyConstraints({advanced:[{pointsOfInterest:[{x:0.5+(x-0.5)/z,y:0.5+(y-0.5)/z}]}]}).catch(()=>{});}
- const g=$("focRing");g.hidden=true;g.style.left=(cx-r.left)+"px";g.style.top=(cy-r.top)+"px";void g.offsetWidth;g.hidden=false; // hidden → shown starts the square's animation again
- clearTimeout(camFocus.t);camFocus.t=setTimeout(()=>{g.hidden=true;},1000);}
+ const g=$("focRing");g.classList.remove("fok","fng");g.hidden=true;g.style.left=(cx-r.left)+"px";g.style.top=(cy-r.top)+"px";void g.offsetWidth;g.hidden=false; // hidden → shown starts the square's animation again
+ clearTimeout(camFocus.t);camFocus.t=setTimeout(()=>{g.hidden=true;},NATIVE&&window.AndroidCam.focus?2500:1000);}
+// the phone's answer to ピント: the square turns green (focused) or red (could not: often too close), then goes
+let focNgSaid=false;
+window.onAppFocus=ok=>{const g=$("focRing");if(g.hidden)return;g.classList.add(ok?"fok":"fng");clearTimeout(camFocus.t);camFocus.t=setTimeout(()=>{g.hidden=true;},ok?700:1500);
+ if(!ok&&!focNgSaid){focNgSaid=true;toast("ピントが合いませんでした。近すぎるときは少し離れて、ズームで大きくして撮ってください",true);}};
 const hasFlash=()=>NATIVE?!!(natInfo&&natInfo.flash):!!(trackCaps.torch||(photoCaps&&photoCaps.fillLightMode&&photoCaps.fillLightMode.indexOf("flash")>=0));
 function showFlash(){
  const b=$("tFlash");b.hidden=!hasFlash();
