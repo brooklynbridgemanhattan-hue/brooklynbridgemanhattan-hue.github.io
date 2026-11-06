@@ -274,7 +274,7 @@ body:has(#hSelBar:not([hidden])) .newjob.hfab{display:none}
 /* (v1.231) the places as cards, 3 a row, no arrows: all of them seen; the number in a pink square; the open one blue
    with a small point down to its frame. 「全○か所」 as a pink band by 施工箇所. 箇所名を編集 at the frame's top right. */
 .sptabs .sparr{display:none!important}
-.spots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;overflow:visible;padding:10px 0 0;align-items:stretch}
+.spots{display:flex;flex-wrap:wrap;gap:4px;overflow:visible;padding:10px 0 0;align-items:stretch}
 .spb{height:40px;min-width:0;margin:0;padding:0 3px;gap:4px;justify-content:center;border-radius:12px;border:1.5px solid #D0D5DD;background:var(--card);color:#344054;font-weight:800}
 .spb.on{height:40px;margin:0;padding:0 3px;border:2px solid #3B5BDB;border-radius:12px;background:#3B5BDB;color:#fff;position:relative}
 .spb.on:after{content:"";position:absolute;left:50%;bottom:-9px;margin-left:-8px;border:8px solid transparent;border-top-color:#3B5BDB;border-bottom:0}
@@ -2194,7 +2194,12 @@ function spotShow(){
 // The big arrows only when the tabs don't all fit; grey at the end they can't go past. The open one in the
 // middle (again when the screen turns).
 // the places as cards, 3 a row (4 or more: 2 rows); each name on one line, made smaller until it fits
-function spotNameFit(){$("spotBar").querySelectorAll(".spn").forEach(e=>{let f=15;e.style.fontSize=f+"px";
+// each row of 3 shares its width by how long the names are (a long name gets more room, a short one less)
+function spotWidths(){const bs=[...$("spotBar").querySelectorAll(".spb")];
+ const w=b=>[...b.querySelector(".spn").textContent].reduce((a,c)=>a+(c.charCodeAt(0)<256?0.6:1),0)+2.2+(b.querySelector(".ok")?1:0); // + the number (and ✓)
+ for(let r=0;r<bs.length;r+=3){const row=bs.slice(r,r+3), W=row.map(w), sum=W.reduce((a,b)=>a+b,0);
+  row.forEach((b,k)=>{b.style.flex="0 0 calc("+(100*W[k]/sum).toFixed(2)+"% - "+((row.length-1)*4/row.length).toFixed(2)+"px)";});}}
+function spotNameFit(){spotWidths();$("spotBar").querySelectorAll(".spn").forEach(e=>{let f=15;e.style.fontSize=f+"px";
  while(e.scrollWidth>e.clientWidth+0.5&&f>8){f-=0.5;e.style.fontSize=f+"px";}});}
 function spotFit(){
  const bar=$("spotBar");if(bar.offsetParent)spotNameFit();$("spPrev").hidden=$("spNext").hidden=true;
