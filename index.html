@@ -5611,6 +5611,23 @@ window.appBack=()=>{
  if(!$("detail").hidden){$("dBack").click();return true;}
  return false;
 };
+// 指で引いて戻る (Android 14): the phone shows its picture of the site page shrinking toward the thumb, with the top
+// page behind it. bkPeek: only when 戻る would go from the site page to the top (nothing else open, not typing) —
+// then the top page is put in place under that picture (where coming back puts it); bkPeekEnd(true) goes back for
+// real, (false: the thumb went back) puts the site page as it was.
+let bkPk=null;
+function bkPeekCan(){
+ if(leaving||!job||$("detail").hidden||!$("bkOv").hidden||($("rpxV")&&!$("rpxV").hidden)||!$("bkDlg").hidden||!$("cand").hidden||!$("tfs").hidden||
+  !$("xEd").hidden||!$("lvEd").hidden||!$("adjEd").hidden||!$("viewer").hidden||!$("med").hidden||$("cam").style.display==="flex"||sel.size||selPick)return false;
+ const ae=document.activeElement;return !(ae&&ae!==document.body&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)); // typing: the usual 戻る (it may ask)
+}
+window.bkPeek=()=>{if(bkPk)return true;if(!bkPeekCan())return false;
+ bkPk={y:window.scrollY};$("detail").hidden=true;$("home").hidden=false;
+ if(homeAt&&homeAt.id===job.id&&homeCard(job.id)){if(homeAt.open)ddOpen(job.id);cardTo(job.id);}else window.scrollTo(0,0);
+ return true;};
+window.bkPeekEnd=go=>{const k=bkPk;bkPk=null;if(!k)return;
+ if(go){$("dBack").click();return;} // saves and shows the top page for real (it is already there under the picture)
+ $("home").hidden=true;$("detail").hidden=false;window.scrollTo(0,k.y);};
 // Release the camera when the app goes to the background.
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&stream)stopCam();});
 
