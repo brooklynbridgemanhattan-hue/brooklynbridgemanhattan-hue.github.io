@@ -3393,7 +3393,7 @@ async function cklShare(){if(!job)return;const i=spotIdx(job), t=cklTplOf(job,i)
   try{const arr=[];for(const f of list)arr.push({b64:await b64Of(f.blob),name:f.name,type:f.blob.type||"image/jpeg"});json=JSON.stringify(arr);}catch(e){ng();return;} // ready before going to LINE
   if(String(A.shareTextTo(tx,LINE_PKG))==="error:noapp"){toast("LINEが見つかりません",true);return;}
   await backFromApp(); // sent the text (or came back without): now the photos
-  toast("続けて写真を送ります。同じトークを選んでください");
+  toast("続けて写真を送ります。「LINE」を選んで、同じ相手を選んでください");
   try{if(!okR(String(A.shareFilesTo(json,"チェックリストの写真を送る","",LINE_PKG))))ng();}catch(e){ng();}
   return;}
  await shareFiles(list,"チェックリストの写真を送る",tx);}
