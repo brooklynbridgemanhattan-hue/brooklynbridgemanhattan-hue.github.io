@@ -5631,7 +5631,7 @@ function bkPeekCan(){
 // again: drawing it then made the shrinking stutter).
 window.bkPeek=()=>{if(bkPk)return true;if(!bkPeekCan())return false;
  const k=bkPk={y:window.scrollY,j:job,ready:null};$("detail").hidden=true;$("home").hidden=false;
- const place=()=>{if(homeAt&&homeAt.id===k.j.id&&homeCard(k.j.id)){if(homeAt.open)ddOpen(k.j.id);cardTo(k.j.id);}else window.scrollTo(0,0);};
+ const place=()=>{if(homeAt&&homeAt.id===k.j.id&&homeCard(k.j.id)){k.card=true;if(homeAt.open)ddOpen(k.j.id);cardTo(k.j.id);}else window.scrollTo(0,0);};
  place();k.ready=homeRender(k.j).then(()=>{if(bkPk===k&&!k.gone)place();}).catch(()=>{});
  return true;};
 window.bkPeekEnd=go=>{const k=bkPk;if(!k)return;
@@ -5645,7 +5645,8 @@ async function bkPeekGo(k){leaving=true;
  try{selClear();}catch(e){}
  urls.forEach(u=>URL.revokeObjectURL(u));urls=[];gUrls=new WeakMap();gPrev=new WeakMap();gPrevDone=new WeakMap();
  document.querySelectorAll(".hint").forEach(x=>x.remove());
- $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");homeAt=null;}
+ $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");homeAt=null;
+ if(k.card)setTimeout(()=>{const c=homeCard(k.j.id);if(c&&!$("home").hidden)glow(c,1);},120);} // which customer it was: the card glows once, as coming back does
 // Release the camera when the app goes to the background.
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&stream)stopCam();});
 
