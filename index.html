@@ -111,6 +111,7 @@ button:disabled,label.btn.off{opacity:.38;cursor:default}
 .jspot{display:inline-block;margin-right:6px;padding:0 7px;border-radius:8px;background:#EDF2FF;color:#3B5BDB;font-weight:800;font-size:12px;line-height:20px}
 .jimg img{width:56px;height:70px;object-fit:cover;background:#E4E7EC;border:2px solid var(--card)}
 .job{content-visibility:auto;contain-intrinsic-size:auto 98px}
+#home.cvall .job{content-visibility:visible} /* for a moment: every card drawn, so their real heights can be measured */
 .jimg img:first-child{border-radius:12px 0 0 12px}
 .jimg img:last-child{border-radius:0 12px 12px 0}
 .jimg img:only-child{border-radius:12px}
@@ -1709,6 +1710,13 @@ let homeAt=null;
 function homeCard(id){return [...document.querySelectorAll('#home [data-job="'+id+'"]')].find(x=>x.offsetParent);}
 async function cardTo(id,at){for(let n=0;n<4;n++){const c=homeCard(id);if(!c)return null;const r=c.getBoundingClientRect(), v=at!=null?at:Math.max(16,(window.innerHeight-r.height)/3);
   if(Math.abs(r.top-v)<2&&n)return c;window.scrollTo(0,Math.max(0,r.top+window.scrollY-v));await new Promise(f=>requestAnimationFrame(()=>requestAnimationFrame(f)));}return homeCard(id);}
+// the same, in one go: every card's real height measured first (cards off the screen otherwise count as a guess,
+// and the page jumped when the guess was put right a moment later). Once drawn, a card keeps its height.
+function cardToNow(id){const H=$("home");H.classList.add("cvall");clearTimeout(cardToNow.t);
+ // kept drawn for 2 frames: a card remembers its real height only once it has been drawn so
+ const off=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>H.classList.remove("cvall")));
+ const c=homeCard(id);if(!c){off();return null;}const r=c.getBoundingClientRect();
+ window.scrollTo(0,Math.max(0,r.top+window.scrollY-Math.max(16,(window.innerHeight-r.height)/3)));off();return c;}
 function ddOpen(id){document.querySelectorAll('[data-job="'+id+'"]').forEach(x=>{const m=x.querySelector(".jdm");if(m){m.hidden=false;x.classList.add("jopen");}});}
 async function homeBackTo(){const a=homeAt;homeAt=null;if(!a||!homeCard(a.id))return;
  if(a.open)ddOpen(a.id);const c=await cardTo(a.id);if(c)glow(c,1);}
@@ -5631,7 +5639,7 @@ function bkPeekCan(){
 // again: drawing it then made the shrinking stutter).
 window.bkPeek=()=>{if(bkPk)return true;if(!bkPeekCan())return false;
  const k=bkPk={y:window.scrollY,j:job,ready:null};$("detail").hidden=true;$("home").hidden=false;
- const place=()=>{if(homeAt&&homeAt.id===k.j.id&&homeCard(k.j.id)){k.card=true;if(homeAt.open)ddOpen(k.j.id);cardTo(k.j.id);}else window.scrollTo(0,0);};
+ const place=()=>{if(homeAt&&homeAt.id===k.j.id&&homeCard(k.j.id)){k.card=true;if(homeAt.open)ddOpen(k.j.id);cardToNow(k.j.id);}else window.scrollTo(0,0);};
  place();k.ready=homeRender(k.j).then(()=>{if(bkPk===k&&!k.gone)place();}).catch(()=>{});
  return true;};
 window.bkPeekEnd=go=>{const k=bkPk;if(!k)return;
