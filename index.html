@@ -1756,7 +1756,17 @@ async function showHome(){
  urls.forEach(u=>URL.revokeObjectURL(u));urls=[];gUrls=new WeakMap();gPrev=new WeakMap();gPrevDone=new WeakMap();
  document.querySelectorAll(".hint").forEach(x=>x.remove());
  $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");
- const js=(await allJobs()).sort((a,b)=>b.created-a.created);
+ const js=await homeRender();
+ window.scrollTo(0,0);homeBackTo();
+ // sites from before thumbnails existed get theirs once, one by one, filled in as they come
+ (async()=>{for(const j of js){if(!spotList(j)&&((j.before&&j.thBk!==thKey(j,"b"))||(j.after&&j.thAk!==thKey(j,"a")))){if($("home").hidden)return;
+  await ensureThumbs(j);
+  document.querySelectorAll('[data-job="'+j.id+'"]').forEach(card=>card.querySelectorAll("img[data-th]").forEach(im=>{const t=im.dataset.th==="b"?j.thB:j.thA;if(t)im.src=t;}));}}})();
+}
+// the top page's lists (cards, counts, tabs); live: the site open now, as it is (it may not be saved yet)
+async function homeRender(live){
+ const js=(await allJobs()).map(j=>live&&j.id===live.id?live:j).sort((a,b)=>b.created-a.created);
+ if(live&&!js.includes(live)&&(hasPhotos(live)||live.site||spotList(live))){js.push(live);js.sort((a,b)=>b.created-a.created);}
  // the site's card: its 施工前 / 施工後 as two round pictures (施工後 not yet: striped), the name, 伝票番号・places・場所・day, and the dots
  const card=j=>{const P=pairsOf(j), p=P.find(q=>q.before)||P[0], U=spotsUsed(j), many=P.length>1||(spotList(j)&&spotList(j)[0].name);
   const info=[j.slip,many?(U.length?U:P).map(q=>spotName(j,P.indexOf(q))).join("・"):"",j.place&&j.place.text].filter(Boolean).map(esc).join("・");
@@ -1769,11 +1779,7 @@ async function showHome(){
  $("lAll").innerHTML=homeList(js,card,"a",'現場はまだありません');
  $("nW").textContent=w.length;$("nD").textContent=d.length;$("nA").textContent=js.length;showTab();hSelShow();
  homeJobs=new Map(js.map(j=>[j.id,j]));hFilter();bkShow();
- window.scrollTo(0,0);homeBackTo();
- // sites from before thumbnails existed get theirs once, one by one, filled in as they come
- (async()=>{for(const j of js){if(!spotList(j)&&((j.before&&j.thBk!==thKey(j,"b"))||(j.after&&j.thAk!==thKey(j,"a")))){if($("home").hidden)return;
-  await ensureThumbs(j);
-  document.querySelectorAll('[data-job="'+j.id+'"]').forEach(card=>card.querySelectorAll("img[data-th]").forEach(im=>{const t=im.dataset.th==="b"?j.thB:j.thA;if(t)im.src=t;}));}}})();
+ return js;
 }
 /* ---------- バックアップ・戻す ---------- */
 // すべての現場と、その写真(候補・撮ったままの写真を含む)を1つのファイルに。作るのも、確かめるのも、
@@ -5621,13 +5627,25 @@ function bkPeekCan(){
   !$("xEd").hidden||!$("lvEd").hidden||!$("adjEd").hidden||!$("viewer").hidden||!$("med").hidden||$("cam").style.display==="flex"||sel.size||selPick)return false;
  const ae=document.activeElement;return !(ae&&ae!==document.body&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)); // typing: the usual 戻る (it may ask)
 }
+// The top page is drawn fresh at the start, while the picture still covers everything (so letting go does not draw it
+// again: drawing it then made the shrinking stutter).
 window.bkPeek=()=>{if(bkPk)return true;if(!bkPeekCan())return false;
- bkPk={y:window.scrollY};$("detail").hidden=true;$("home").hidden=false;
- if(homeAt&&homeAt.id===job.id&&homeCard(job.id)){if(homeAt.open)ddOpen(job.id);cardTo(job.id);}else window.scrollTo(0,0);
+ const k=bkPk={y:window.scrollY,j:job,ready:null};$("detail").hidden=true;$("home").hidden=false;
+ const place=()=>{if(homeAt&&homeAt.id===k.j.id&&homeCard(k.j.id)){if(homeAt.open)ddOpen(k.j.id);cardTo(k.j.id);}else window.scrollTo(0,0);};
+ place();k.ready=homeRender(k.j).then(()=>{if(bkPk===k&&!k.gone)place();}).catch(()=>{});
  return true;};
-window.bkPeekEnd=go=>{const k=bkPk;bkPk=null;if(!k)return;
- if(go){$("dBack").click();return;} // saves and shows the top page for real (it is already there under the picture)
- $("home").hidden=true;$("detail").hidden=false;window.scrollTo(0,k.y);};
+window.bkPeekEnd=go=>{const k=bkPk;if(!k)return;
+ if(!go){bkPk=null;k.gone=true;$("home").hidden=true;$("detail").hidden=false;window.scrollTo(0,k.y);return;}
+ bkPeekGo(k);};
+// let go: saved and left as showHome leaves it — the lists are already drawn and in place under the picture
+async function bkPeekGo(k){leaving=true;
+ try{await busyWait(camGot);if(job&&(hasPhotos(job)||job.site||spotList(job)))await saveJob();}catch(e){}
+ finally{leaving=false;}
+ await k.ready;bkPk=null;if(job!==k.j)return;
+ try{selClear();}catch(e){}
+ urls.forEach(u=>URL.revokeObjectURL(u));urls=[];gUrls=new WeakMap();gPrev=new WeakMap();gPrevDone=new WeakMap();
+ document.querySelectorAll(".hint").forEach(x=>x.remove());
+ $("detail").hidden=true;$("home").hidden=false;job=null;setPref("ba-open","");homeAt=null;}
 // Release the camera when the app goes to the background.
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&stream)stopCam();});
 
